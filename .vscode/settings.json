@@ -1,0 +1,22 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.fixAll.eslint": "explicit"
+    },
+    "editor.formatOnSave": true,
+    // Исключение папок/файлов из поиска
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/dist": true,
+        "**/.next": true,
+        "**/build": true
+    },
+    // Исключение из файлового дерева
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/.next": true,
+        "**/dist": true
+    }
+}
