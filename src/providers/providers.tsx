@@ -5,16 +5,19 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ReactNode, useState } from 'react'
 
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { AuthProvider } from '@/providers/auth-provider'
+
+import { AuthProvider } from './auth-provider'
 
 export const Providers = ({ children }: { children: ReactNode }) => {
     const [client] = useState(() => new QueryClient())
 
     return (
         <QueryClientProvider client={client}>
-            <SidebarProvider>
-                <AuthProvider>{children}</AuthProvider>
-            </SidebarProvider>
+            <AuthProvider>
+                <SidebarProvider>
+                    {children}
+                </SidebarProvider>
+            </AuthProvider>
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
     )

@@ -33,7 +33,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-import { useAuth } from './providers'
+import { useAuth } from './auth-provider'
 
 const data = {
   user: {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "@/app/globals.css";
-import { Providers } from "@/components/providers";
+import { Providers } from "@/providers/providers";
 import { Header } from "@/components/header";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";

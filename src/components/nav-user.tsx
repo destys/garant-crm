@@ -29,6 +29,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+// Если потребуется: import { useAuth } from './auth-provider'
+
 export function NavUser({
   user,
   role,
