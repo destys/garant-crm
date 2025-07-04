@@ -28,24 +28,19 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-
-// Если потребуется: import { useAuth } from './auth-provider'
+import { useAuth } from "@/providers/auth-provider"
 
 export function NavUser({
   user,
-  role,
 }: {
   user: {
     name: string
     email: string
     avatar: string
-  },
-  role?: string | null
+  }
 }) {
-  const { isMobile } = useSidebar()
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _role = role // переменная для будущих проверок прав
+  const { isMobile } = useSidebar();
+  const { logout } = useAuth();
 
   return (
     <SidebarMenu>
@@ -105,7 +100,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>
