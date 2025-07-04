@@ -32,8 +32,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-import { useAuth } from './auth-provider'
+import { useAuth } from "@/providers/auth-provider"
 
 const data = {
   user: {
