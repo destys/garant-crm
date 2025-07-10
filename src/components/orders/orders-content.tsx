@@ -2,10 +2,12 @@
 
 import { useOrderFilterStore } from "@/stores/order-filters-store";
 import { SearchBlock } from "@/components/search-block";
-import { DEMO_DATA } from "@/constants";
+import { demoOrders } from "@/demo-data";
+
+import { DataTable } from "../data-table";
 
 import { OrdersFilters } from "./orders-filters";
-import { OrdersTable } from "./orders-table";
+import { ordersColumns } from "./orders-columns";
 
 export const OrdersContent = () => {
     const { activeTitle } = useOrderFilterStore.getState();
@@ -17,7 +19,7 @@ export const OrdersContent = () => {
                 <SearchBlock />
             </div>
             <OrdersFilters />
-            <OrdersTable data={DEMO_DATA} />
+            <DataTable data={demoOrders} columns={ordersColumns} />
         </div>
     )
 }

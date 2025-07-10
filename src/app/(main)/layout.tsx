@@ -32,7 +32,7 @@ export default function RootLayout({
         <Providers>
           <div className="flex flex-col min-h-screen">
             <main className="flex-auto p-4 pt-0">
-              <div className="flex flex-1 flex-col">
+              <div className="flex flex-1 flex-col max-w-[1600px] mx-auto">
                 <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6">
                   {children}
                 </div>
