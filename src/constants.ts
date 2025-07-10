@@ -1,3 +1,22 @@
+import {
+  Archive,
+  Calculator,
+  Check,
+  ClipboardList,
+  Clock2Icon,
+  DollarSign,
+  FilePieChart,
+  FileText,
+  ListChecks,
+  Scale,
+  Send,
+  Settings2,
+  ShoppingCart,
+  Truck,
+  Users,
+  Wrench,
+} from "lucide-react";
+
 export const API_URL = "https://admin.spbgarant.ru";
 
 export const DEMO_DATA = [
@@ -612,5 +631,153 @@ export const DEMO_DATA = [
     target: "26",
     limit: "29",
     reviewer: "Assign reviewer",
+  },
+];
+
+export const SIDEBAR_MENU = [
+  {
+    to: "/orders",
+    title: "Все заявки",
+    icon: FileText,
+    filters: {
+      $and: [
+        { order_status: { $ne: "Отказ" } },
+        { order_status: { $ne: "Выдан" } },
+      ],
+    },
+  },
+  {
+    to: "/orders",
+    title: "Новые заявки",
+    icon: ClipboardList,
+    filters: { order_status: { $eq: "Новая" } },
+  },
+  {
+    to: "/orders",
+    title: "Согласовать",
+    icon: ListChecks,
+    filters: { order_status: { $eq: "Согласовать" } },
+  },
+  {
+    to: "/orders",
+    title: "Отремонтировать",
+    icon: Wrench,
+    filters: { order_status: { $eq: "Отремонтировать" } },
+  },
+  {
+    to: "/orders",
+    title: "Купить запчасти",
+    icon: ShoppingCart,
+    filters: { order_status: { $eq: "Купить запчасти" } },
+  },
+  {
+    to: "/orders",
+    title: "Готово",
+    icon: Check,
+    filters: { order_status: { $eq: "Готово" } },
+  },
+  {
+    to: "/orders",
+    title: "Отправить курьера",
+    icon: Truck,
+    adminOnly: true,
+    filters: { order_status: { $eq: "Отправить курьера" } },
+  },
+  {
+    to: "/orders",
+    title: "Отправить инженера",
+    icon: Send,
+    adminOnly: true,
+    filters: { order_status: { $eq: "Отправить инженера" } },
+  },
+  {
+    to: "/orders",
+    title: "Продать",
+    icon: DollarSign,
+    filters: { order_status: { $eq: "Продать" } },
+  },
+  {
+    to: "/orders",
+    title: "Юридический отдел",
+    icon: Scale,
+    filters: { order_status: { $eq: "Юридический отдел" } },
+  },
+  { separator: true },
+  {
+    to: "/orders",
+    title: "Дедлайны",
+    icon: Clock2Icon,
+    adminOnly: true,
+    filters: {
+      order_status: {
+        $in: [
+          "Новая",
+          "Согласовать",
+          "Отремонтировать",
+          "Купить запчасти",
+          "Готово",
+          "Отправить курьера",
+          "Отправить инженера",
+        ],
+      },
+    },
+  },
+  {
+    to: "/orders",
+    title: "Доработка",
+    icon: Settings2,
+    hideForAdmin: true,
+    filters: {
+      $and: [{ is_revision: { $ne: true } }],
+    },
+  },
+  { separator: true },
+
+  {
+    to: "/orders",
+    title: "Проверить",
+    icon: Calculator,
+    adminOnly: true,
+    filters: {
+      $and: [
+        {
+          $or: [
+            { order_status: { $eq: "Отказ" } },
+            { order_status: { $eq: "Выдан" } },
+          ],
+        },
+        {
+          $or: [
+            { is_approve: { $null: true } },
+            { is_approve: { $eq: false } },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    to: "/orders",
+    title: "Архив",
+    icon: Archive,
+    adminOnly: true,
+    filters: {
+      $and: [
+        {
+          $or: [
+            { order_status: { $eq: "Отказ" } },
+            { order_status: { $eq: "Выдан" } },
+          ],
+        },
+        { is_approve: { $eq: true } },
+      ],
+    },
+  },
+  { to: "/clients", title: "Клиенты", icon: Users, adminOnly: true },
+  { to: "/masters", title: "Мастера", icon: Users, adminOnly: true },
+  {
+    to: "/accounting",
+    title: "Бухгалтерия и Отчёты",
+    icon: FilePieChart,
+    adminOnly: true,
   },
 ];

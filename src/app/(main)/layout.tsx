@@ -30,9 +30,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <div className="flex flex-col h-screen">
+          <div className="flex flex-col min-h-screen">
             <main className="flex-auto p-4 pt-0">
-              {children}
+              <div className="flex flex-1 flex-col">
+                <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6">
+                  {children}
+                </div>
+              </div>
             </main>
           </div>
         </Providers>
