@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useOrderFilterStore } from "@/stores/order-filters-store";
 import { SearchBlock } from "@/components/search-block";
 import { demoOrders } from "@/demo-data";
@@ -8,6 +9,7 @@ import { DataTable } from "../data-table";
 
 import { OrdersFilters } from "./orders-filters";
 import { ordersColumns } from "./orders-columns";
+import { OrdersCard } from "./orders-card";
 
 export const OrdersContent = () => {
     const { activeTitle } = useOrderFilterStore.getState();
@@ -19,7 +21,13 @@ export const OrdersContent = () => {
                 <SearchBlock />
             </div>
             <OrdersFilters />
-            <DataTable data={demoOrders} columns={ordersColumns} />
+            <DataTable
+                data={demoOrders}
+                columns={ordersColumns}
+                cardComponent={({ data }) => (
+                    <OrdersCard data={data} />
+                )}
+            />
         </div>
     )
 }

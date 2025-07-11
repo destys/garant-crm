@@ -18,26 +18,9 @@ import {
 } from "@/components/ui/select"
 import { demoMasters } from "@/demo-data"
 import { cn } from "@/lib/utils"
+import { OrderProps } from "@/types/order.types"
 
-type Order = {
-  order_number: string;
-  order_status: string;
-  departure_date: string;
-  deadline: string;
-  device: {
-    type: string
-    brand: string
-    model: string
-  };
-  payment: {
-    prepay: string;
-    total: string;
-  };
-  masters: {
-    id: number;
-    name: string;
-  }[];
-}
+
 
 const statusColorMap: Record<string, string> = {
   "Новая": "bg-blue-300 hover:bg-blue-400",
@@ -54,7 +37,7 @@ const statusColorMap: Record<string, string> = {
   "Проверить": "bg-orange-100 hover:bg-orange-200",
 }
 
-export const ordersColumns: ColumnDef<Order>[] = [
+export const ordersColumns: ColumnDef<OrderProps>[] = [
   {
     accessorKey: "order_number",
     header: "№ Заказа",

@@ -1,5 +1,7 @@
 "use strict";
 
+import { OrderProps } from "./types/order.types";
+
 export const demoMasters = [
   {
     id: 1,
@@ -226,7 +228,7 @@ export const demoClients = [
   },
 ];
 
-export const demoOrders = [
+export const demoOrders: OrderProps[] = [
   {
     order_number: "ORD-100",
     order_status: "Продать",
