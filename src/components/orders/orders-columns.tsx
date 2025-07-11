@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-table"
 import { format, differenceInDays } from "date-fns"
 import { EyeIcon, PhoneIcon, TrashIcon } from "lucide-react"
+import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -130,8 +131,10 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
     header: "",
     cell: () => (
       <div className="flex gap-2 justify-end">
-        <Button size="icon" variant="outline" title="Посмотреть">
-          <EyeIcon className="size-4" />
+        <Button size="icon" variant="outline" title="Посмотреть" asChild>
+          <Link href={'/orders/asd123123asd1312da'}>
+            <EyeIcon className="size-4" />
+          </Link>
         </Button>
         <Button size="icon" variant="outline" title="Посмотреть">
           <PhoneIcon className="size-4" />
