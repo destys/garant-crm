@@ -84,7 +84,7 @@ export function OrdersSidebarMenu() {
                             className={cn("justify-start cursor-pointer", activeTitle === item.title && "bg-muted text-primary")}
                             onClick={() => handleClick(item.title, item.filters, item.to)}
                         >
-                            <button className="w-full flex items-center gap-2 justify-between" onClick={() => isMobile ? toggleSidebar : null}>
+                            <button className="w-full flex items-center gap-2 justify-between" onClick={() => isMobile ? toggleSidebar() : null}>
                                 <span className="flex items-center gap-2">
                                     {item.icon && <item.icon className="w-4 h-4" />}
                                     <span>{item.title}</span>

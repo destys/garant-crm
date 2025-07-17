@@ -7,7 +7,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableHeader, TableRow, TableCell, TableBody, TableHead } from "@/components/ui/table"
+import {
+    Table,
+    TableHeader,
+    TableRow,
+    TableCell,
+    TableBody,
+    TableHead,
+} from "@/components/ui/table"
 import { cn } from '@/lib/utils'
 
 const mockIncomes = [
@@ -25,65 +32,63 @@ export const OrderAccounting = () => {
         data: typeof mockIncomes,
         type: "incomes" | "expenses"
     ) => (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Дата</TableHead>
-                    <TableHead>Описание</TableHead>
-                    <TableHead>Мастер</TableHead>
-                    <TableHead className="text-right">Сумма</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {data.map((item) => (
-                    <TableRow key={item.id}>
-                        <TableCell>{item.date}</TableCell>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell>{item.master}</TableCell>
-                        <TableCell className="text-right">
-                            <Badge
-                                variant={type === "incomes" ? "default" : "destructive"}
-                                className={cn(type === "incomes" && "bg-green-500")}
-                            >
-                                {item.amount.toLocaleString()} ₽
-                            </Badge>
-                        </TableCell>
+        <div className="w-full overflow-x-auto">
+            <Table className="min-w-[600px]">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="whitespace-nowrap">Дата</TableHead>
+                        <TableHead className="whitespace-nowrap">Описание</TableHead>
+                        <TableHead className="whitespace-nowrap">Мастер</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Сумма</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {data.map((item) => (
+                        <TableRow key={item.id}>
+                            <TableCell>{item.date}</TableCell>
+                            <TableCell>{item.description}</TableCell>
+                            <TableCell>{item.master}</TableCell>
+                            <TableCell className="text-right">
+                                <Badge
+                                    variant={type === "incomes" ? "default" : "destructive"}
+                                    className={cn(type === "incomes" && "bg-green-500")}
+                                >
+                                    {item.amount.toLocaleString()} ₽
+                                </Badge>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
     )
 
     return (
-        <div className="grid gap-6 mt-6 md:grid-cols-2">
+        <div className="grid gap-6 mt-6 grid-cols-1 sm:grid-cols-2">
             {/* Приходы */}
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Приходы</CardTitle>
-                    <Button size="sm" variant="default">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="text-lg">Приходы</CardTitle>
+                    <Button size="sm" variant="default" className="w-full sm:w-auto">
                         <PlusIcon className="w-4 h-4 mr-1" />
-                        Добавить приход
+                        <span>Добавить приход</span>
                     </Button>
                 </CardHeader>
                 <Separator />
-                <CardContent className="pt-4">
-                    {renderTable(mockIncomes, "incomes")}
-                </CardContent>
+                <CardContent className="pt-4">{renderTable(mockIncomes, "incomes")}</CardContent>
             </Card>
 
             {/* Расходы */}
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Расходы</CardTitle>
-                    <Button size="sm" variant="outline">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="text-lg">Расходы</CardTitle>
+                    <Button size="sm" variant="outline" className="w-full sm:w-auto">
                         <PlusIcon className="w-4 h-4 mr-1" />
-                        Добавить расход
+                        <span>Добавить расход</span>
                     </Button>
                 </CardHeader>
                 <Separator />
-                <CardContent className="pt-4">
-                    {renderTable(mockExpenses, "expenses")}
-                </CardContent>
+                <CardContent className="pt-4">{renderTable(mockExpenses, "expenses")}</CardContent>
             </Card>
         </div>
     )

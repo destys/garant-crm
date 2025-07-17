@@ -67,7 +67,7 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     const handleResize = () => {
       const isSmall = window.innerWidth < 1280
-      if (isSmall && currentView !== "card") {
+      if (isSmall && CardComponent && currentView !== "card") {
         setView(viewKey, "card")
       }
     }
@@ -76,6 +76,12 @@ export function DataTable<TData, TValue>({
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [viewKey, currentView, setView])
+
+  React.useEffect(() => {
+    if (!CardComponent && currentView !== "table") {
+      setView(viewKey, "table")
+    }
+  }, [CardComponent, currentView, setView, viewKey])
 
   const isTableView = currentView === "table"
 
