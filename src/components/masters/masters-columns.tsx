@@ -10,6 +10,7 @@ import {
   IconTrash,
   IconUserX,
 } from "@tabler/icons-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 
@@ -53,8 +54,10 @@ export const mastersColumns: ColumnDef<Master>[] = [
           <Button size="icon" variant="outline" title="Позвонить">
             <IconPhone className="size-4" />
           </Button>
-          <Button size="icon" variant="outline" title="Посмотреть">
-            <IconEye className="size-4" />
+          <Button size="icon" variant="outline" title="Посмотреть" asChild>
+            <Link href={'/masters/123'}>
+              <IconEye className="size-4" />
+            </Link>
           </Button>
           <Button size="icon" variant="destructive" title="Заблокировать">
             <IconUserX className="size-4" />

@@ -8,7 +8,6 @@ import {
   flexRender,
 } from "@tanstack/react-table"
 import {
-  IconEye,
   IconPhone,
   IconTrash,
 } from "@tabler/icons-react"
@@ -44,9 +43,14 @@ const columns: ColumnDef<Client>[] = [
     cell: ({ row }) => row.original.phone,
   },
   {
+    id: "address",
+    header: "Адрес",
+    cell: () => "Ул. Пушкина, дом Колотушкина",
+  },
+  {
     accessorKey: "orders",
     header: "Кол-во заказов",
-    cell: ({ row }) => row.original.orders,
+    cell: ({ row }) => <div className="mx-auto flex justify-center items-center text-center"><span className="flex justify-center items-center size-10 rounded-full bg-accent">{row.original.orders}</span></div>,
   },
   {
     id: "actions",
@@ -56,9 +60,6 @@ const columns: ColumnDef<Client>[] = [
         <div className="flex justify-end gap-2">
           <Button size="icon" variant="outline" title="Позвонить">
             <IconPhone className="size-4" />
-          </Button>
-          <Button size="icon" variant="outline" title="Посмотреть">
-            <IconEye className="size-4" />
           </Button>
           <Button size="icon" variant="destructive" title="Удалить">
             <IconTrash className="size-4" />

@@ -3,19 +3,15 @@
 import * as React from "react"
 import {
   IconCamera,
-  IconDatabase,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
   IconHelp,
   IconInnerShadowTop,
-  IconReport,
   IconSearch,
   IconSettings,
 } from "@tabler/icons-react"
 import Link from "next/link"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -98,7 +94,7 @@ const data = {
       url: "#",
       icon: IconSearch,
     },
-  ],
+  ],/* 
   documents: [
     {
       name: "Data Library",
@@ -115,7 +111,7 @@ const data = {
       url: "#",
       icon: IconFileWord,
     },
-  ],
+  ], */
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -140,8 +136,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <OrdersSidebarMenu />
-        <NavDocuments items={data.documents} />{/* 
-        <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
+        {/* <NavDocuments items={data.documents} /> */}
+        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

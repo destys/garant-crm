@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { format } from "date-fns"
-import { CalendarIcon, CheckIcon, ChevronsUpDown } from "lucide-react"
+import { CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
 import {
@@ -19,19 +19,14 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
+import { demoOrders, demoMasters } from "@/demo-data"
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-} from "@/components/ui/command"
-
-const masters = [
-    { label: "Иванов Иван", value: "ivanov" },
-    { label: "Петров Пётр", value: "petrov" },
-    { label: "Сидоров Сидор", value: "sidorov" },
-]
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 const formSchema = z.object({
     dateRange: z
@@ -43,10 +38,11 @@ const formSchema = z.object({
             message: "Начальная дата не может быть позже конечной",
             path: ["to"],
         }),
-    master: z.string().optional(),
+    orderId: z.string().optional(),
+    masterId: z.string().optional(),
 })
 
-export const OrdersFilters = () => {
+export const AccountingFilters = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -54,18 +50,23 @@ export const OrdersFilters = () => {
                 from: undefined,
                 to: undefined,
             },
-            master: "",
+            orderId: "",
+            masterId: "all",
         },
     })
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        console.warn(values)
-        // useOrderFilterStore.getState().setFilters(values)
+        const filtered = {
+            ...values,
+            masterId: values.masterId === "all" ? undefined : values.masterId,
+        }
+        console.warn(filtered)
+        // TODO: set filters in store
     }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid lg:grid-cols-3 items-end gap-4 border rounded-md p-4 mb-6 lg:mb-14">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-3 items-end gap-4 border rounded-md p-4 mb-14">
                 <FormField
                     control={form.control}
                     name="dateRange"
@@ -117,50 +118,42 @@ export const OrdersFilters = () => {
 
                 <FormField
                     control={form.control}
-                    name="master"
+                    name="orderId"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                            <FormLabel>Заказ</FormLabel>
+                            <select {...field} className="w-full border rounded px-2 py-1">
+                                <option value="">Все</option>
+                                {demoOrders.map((order) => (
+                                    <option key={order.order_number} value={order.order_number}>
+                                        {order.order_number}
+                                    </option>
+                                ))}
+                            </select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="masterId"
                     render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Мастер</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        className={cn(
-                                            "w-full justify-between",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                    >
-                                        {masters.find((m) => m.value === field.value)?.label || "Выберите мастера"}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Поиск мастера..." />
-                                        <CommandEmpty>Мастер не найден</CommandEmpty>
-                                        <CommandGroup>
-                                            {masters.map((master) => (
-                                                <CommandItem
-                                                    key={master.value}
-                                                    value={master.value}
-                                                    onSelect={(val) => {
-                                                        form.setValue("master", val)
-                                                    }}
-                                                >
-                                                    <CheckIcon
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            field.value === master.value ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    {master.label}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger className="w-full justify-between">
+                                    <SelectValue placeholder="Выберите мастера" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Все</SelectItem>
+                                    {demoMasters.map((master) => (
+                                        <SelectItem key={master.id} value={String(master.id)}>
+                                            {master.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -170,4 +163,4 @@ export const OrdersFilters = () => {
             </form>
         </Form>
     )
-}
+} 

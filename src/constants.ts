@@ -781,3 +781,43 @@ export const SIDEBAR_MENU = [
     adminOnly: true,
   },
 ];
+
+export const ORDER_STATUSES = [
+  "Новая",
+  "Согласовать",
+  "Отремонтировать",
+  "Купить запчасти",
+  "Отправить курьера",
+  "Отправить инженера",
+  "Продать",
+  "Юридический отдел",
+  "Проверить",
+  "Выдан",
+  "Отказ",
+  "Принят",
+  "Готово",
+] as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export const ORDER_SOURCES = [
+  "Самообращение",
+  "Директ",
+  "Авито",
+  "ПрофиРУ",
+] as const;
+
+export type OrderSource = (typeof ORDER_STATUSES)[number];
+
+export const REPAIR_KIND = ["Выездной", "Стационарный"] as const;
+
+export type RepairKind = (typeof REPAIR_KIND)[number];
+
+export const REPAIR_TYPE = [
+  "Платный",
+  "Гарантийный",
+  "Гарантия СЦ",
+  "На продажу",
+] as const;
+
+export type RepairType = (typeof REPAIR_TYPE)[number];

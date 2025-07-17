@@ -1,9 +1,7 @@
-import React from 'react'
+import { AccountingContent } from "@/components/accounting/accounting-content";
 
 const AccountingPage = () => {
-    return (
-        <div>AccountingPage</div>
-    )
+    return <AccountingContent />;
 }
 
-export default AccountingPage
+export default AccountingPage;

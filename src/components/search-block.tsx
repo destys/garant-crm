@@ -42,12 +42,12 @@ export const SearchBlock = () => {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2 w-full sm:w-auto">
                 <FormField
                     control={form.control}
                     name="search"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="max-sm:flex-auto">
                             <FormControl>
                                 <Input placeholder="Поиск" {...field} />
                             </FormControl>

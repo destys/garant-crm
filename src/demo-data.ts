@@ -1,6 +1,7 @@
 "use strict";
 
 import { OrderProps } from "./types/order.types";
+import { AccountingIncome, AccountingExpense } from "./types/accounting.types";
 
 export const demoMasters = [
   {
@@ -358,5 +359,59 @@ export const demoOrders: OrderProps[] = [
       { id: 2, name: "Пётр Петров" },
       { id: 3, name: "Сергей Сергеев" },
     ],
+  },
+];
+
+export const demoAccountingIncomes: AccountingIncome[] = [
+  {
+    id: 1,
+    date: "2025-07-16",
+    amount: 12000,
+    description: "Предоплата от клиента",
+    orderId: "ORD-100",
+    masterId: 1,
+  },
+  {
+    id: 2,
+    date: "2025-07-17",
+    amount: 8000,
+    description: "Оплата после ремонта",
+    orderId: "ORD-101",
+    masterId: 2,
+  },
+  {
+    id: 3,
+    date: "2025-07-18",
+    amount: 5000,
+    description: "Поступление по заказу",
+    orderId: "ORD-102",
+    masterId: 3,
+  },
+];
+
+export const demoAccountingExpenses: AccountingExpense[] = [
+  {
+    id: 1,
+    date: "2025-07-16",
+    amount: 3000,
+    description: "Закупка запчастей",
+    orderId: "ORD-100",
+    masterId: 1,
+  },
+  {
+    id: 2,
+    date: "2025-07-17",
+    amount: 1500,
+    description: "Услуги курьера",
+    orderId: "ORD-101",
+    masterId: 4,
+  },
+  {
+    id: 3,
+    date: "2025-07-18",
+    amount: 2000,
+    description: "Расходные материалы",
+    orderId: "ORD-102",
+    masterId: 2,
   },
 ];

@@ -10,7 +10,7 @@ import { mastersColumns } from "./masters-columns"
 export const MastersContent = () => {
     return (
         <div>
-            <div className="flex justify-between items-center gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
                 <h1 className="flex-auto">Все мастера</h1>
                 <SearchBlock />
             </div>
