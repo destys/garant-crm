@@ -253,7 +253,7 @@ export default function RepairOrderForm() {
                             {renderDateField("visitDate", "Дата выезда")}
                         </div>
                         <FormField name="visitTime" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel className="whitespace-nowrap">Время выезда</FormLabel><FormControl><Input type="time" {...field} /></FormControl></FormItem>
+                            <FormItem><FormLabel className="whitespace-nowrap">Вр. выезда</FormLabel><FormControl><Input type="time" {...field} /></FormControl></FormItem>
                         )} />
                     </div>
                     {/* Даты и время */}
