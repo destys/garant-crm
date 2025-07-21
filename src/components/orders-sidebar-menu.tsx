@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { IconCirclePlusFilled } from "@tabler/icons-react";
 
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
 import { useOrderFilterStore } from "@/stores/order-filters-store"
@@ -7,6 +9,7 @@ import { SIDEBAR_MENU } from "@/constants";
 import { cn } from "@/lib/utils";
 import { demoOrders } from "@/demo-data";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 // Простая функция фильтрации по фильтрам из SIDEBAR_MENU (только order_status $eq/$ne/$in)
 function countOrdersByFilter(filters: Record<string, any>): number {
@@ -72,6 +75,13 @@ export function OrdersSidebarMenu() {
 
     return (
         <SidebarMenu className="mt-10">
+            <Button variant="default" size="sm" className="mb-8" asChild>
+                <Link href={'/orders/new-order'}>
+                    <IconCirclePlusFilled />
+                    <span className="hidden sm:block">Создать заявку</span>
+                </Link>
+            </Button>
+
             {SIDEBAR_MENU.map((item, i) => {
                 if (item.separator) {
                     return <div key={i} className="my-2 border-t border-border" />

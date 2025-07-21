@@ -38,11 +38,19 @@ const statusColorMap: Record<string, string> = {
   "Проверить": "bg-orange-100 hover:bg-orange-200",
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const linkWrapper = (row: any, content: React.ReactNode) => (
+  <Link href={`/orders/asd123123asd1312da`} className="block w-full h-full">
+    {content}
+  </Link>
+)
+
 export const ordersColumns: ColumnDef<OrderProps>[] = [
   {
     accessorKey: "order_number",
     header: "№ Заказа",
-    cell: ({ row }) => row.original.order_number,
+    cell: ({ row }) =>
+      linkWrapper(row, row.original.order_number),
   },
   {
     accessorKey: "order_status",
@@ -51,7 +59,8 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
       const status = row.original.order_status
       const colorClasses = statusColorMap[status] ?? "bg-white"
 
-      return (
+      return linkWrapper(
+        row,
         <Badge variant="outline" className={cn("text-muted-foreground", colorClasses)}>
           {status}
         </Badge>
@@ -61,7 +70,8 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
   {
     accessorKey: "departure_date",
     header: "Дата выезда",
-    cell: ({ row }) => format(new Date(row.original.departure_date), "dd.MM.yyyy"),
+    cell: ({ row }) =>
+      linkWrapper(row, format(new Date(row.original.departure_date), "dd.MM.yyyy")),
   },
   {
     accessorKey: "deadline",
@@ -82,7 +92,8 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
         text = `Остался ${diff} дн.`
       }
 
-      return (
+      return linkWrapper(
+        row,
         <Badge
           variant={color === "destructive" ? "destructive" : "outline"}
           className={color === "warning" ? "bg-yellow-200 text-yellow-900" : ""}
@@ -95,18 +106,14 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
   {
     accessorKey: "device",
     header: "Устройство",
-    cell: ({ row }) => {
-      const d = row.original.device
-      return `${d.type} / ${d.brand} / ${d.model}`
-    },
+    cell: ({ row }) =>
+      linkWrapper(row, `${row.original.device.type} / ${row.original.device.brand} / ${row.original.device.model}`),
   },
   {
     accessorKey: "payment",
     header: "Оплата",
-    cell: ({ row }) => {
-      const { prepay, total } = row.original.payment
-      return `₽${prepay} / ₽${total}`
-    },
+    cell: ({ row }) =>
+      linkWrapper(row, `₽${row.original.payment.prepay} / ₽${row.original.payment.total}`),
   },
   {
     id: "masters",
@@ -136,7 +143,7 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
             <EyeIcon className="size-4" />
           </Link>
         </Button>
-        <Button size="icon" variant="outline" title="Посмотреть">
+        <Button size="icon" variant="outline" title="Позвонить">
           <PhoneIcon className="size-4" />
         </Button>
         <Button size="icon" variant="destructive" title="Удалить">

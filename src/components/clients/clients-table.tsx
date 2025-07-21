@@ -7,10 +7,8 @@ import {
   useReactTable,
   flexRender,
 } from "@tanstack/react-table"
-import {
-  IconPhone,
-  IconTrash,
-} from "@tabler/icons-react"
+import { LinkIcon, PhoneIcon, TrashIcon } from "lucide-react"
+import Link from "next/link"
 
 import {
   Table,
@@ -50,7 +48,7 @@ const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "orders",
     header: "Кол-во заказов",
-    cell: ({ row }) => <div className="mx-auto flex justify-center items-center text-center"><span className="flex justify-center items-center size-10 rounded-full bg-accent">{row.original.orders}</span></div>,
+    cell: ({ row }) => <div className="mx-auto flex justify-start items-center text-center"><span className="flex justify-center items-center size-10 rounded-full bg-accent">{row.original.orders}</span></div>,
   },
   {
     id: "actions",
@@ -58,11 +56,16 @@ const columns: ColumnDef<Client>[] = [
     cell: () => {
       return (
         <div className="flex justify-end gap-2">
-          <Button size="icon" variant="outline" title="Позвонить">
-            <IconPhone className="size-4" />
+          <Button size="icon" variant="outline" title="Позвонить" asChild>
+            <Link href={'/clients/sh28sjadaj21'}>
+              <LinkIcon className="size-4" />
+            </Link>
+          </Button>
+          <Button size="icon" title="Позвонить">
+            <PhoneIcon className="size-4" />
           </Button>
           <Button size="icon" variant="destructive" title="Удалить">
-            <IconTrash className="size-4" />
+            <TrashIcon className="size-4" />
           </Button>
         </div>
       )

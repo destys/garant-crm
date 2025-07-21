@@ -5,6 +5,7 @@ import {
   ClipboardList,
   Clock2Icon,
   DollarSign,
+  DollarSignIcon,
   FilePieChart,
   FileText,
   ListChecks,
@@ -776,7 +777,13 @@ export const SIDEBAR_MENU = [
   { to: "/masters", title: "Мастера", icon: Users, adminOnly: true },
   {
     to: "/accounting",
-    title: "Бухгалтерия и Отчёты",
+    title: "Бухгалтерия",
+    icon: DollarSignIcon,
+    adminOnly: true,
+  },
+  {
+    to: "/reports",
+    title: "Отчёты",
     icon: FilePieChart,
     adminOnly: true,
   },
