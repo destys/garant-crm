@@ -642,8 +642,8 @@ export const SIDEBAR_MENU = [
     icon: FileText,
     filters: {
       $and: [
-        { order_status: { $ne: "Отказ" } },
-        { order_status: { $ne: "Выдан" } },
+        { orderStatus: { $ne: "Отказ" } },
+        { orderStatus: { $ne: "Выдан" } },
       ],
     },
   },
@@ -651,57 +651,57 @@ export const SIDEBAR_MENU = [
     to: "/orders",
     title: "Новые заявки",
     icon: ClipboardList,
-    filters: { order_status: { $eq: "Новая" } },
+    filters: { orderStatus: { $eq: "Новая" } },
   },
   {
     to: "/orders",
     title: "Согласовать",
     icon: ListChecks,
-    filters: { order_status: { $eq: "Согласовать" } },
+    filters: { orderStatus: { $eq: "Согласовать" } },
   },
   {
     to: "/orders",
     title: "Отремонтировать",
     icon: Wrench,
-    filters: { order_status: { $eq: "Отремонтировать" } },
+    filters: { orderStatus: { $eq: "Отремонтировать" } },
   },
   {
     to: "/orders",
     title: "Купить запчасти",
     icon: ShoppingCart,
-    filters: { order_status: { $eq: "Купить запчасти" } },
+    filters: { orderStatus: { $eq: "Купить запчасти" } },
   },
   {
     to: "/orders",
     title: "Готово",
     icon: Check,
-    filters: { order_status: { $eq: "Готово" } },
+    filters: { orderStatus: { $eq: "Готово" } },
   },
   {
     to: "/orders",
     title: "Отправить курьера",
     icon: Truck,
     adminOnly: true,
-    filters: { order_status: { $eq: "Отправить курьера" } },
+    filters: { orderStatus: { $eq: "Отправить курьера" } },
   },
   {
     to: "/orders",
     title: "Отправить инженера",
     icon: Send,
     adminOnly: true,
-    filters: { order_status: { $eq: "Отправить инженера" } },
+    filters: { orderStatus: { $eq: "Отправить инженера" } },
   },
   {
     to: "/orders",
     title: "Продать",
     icon: DollarSign,
-    filters: { order_status: { $eq: "Продать" } },
+    filters: { orderStatus: { $eq: "Продать" } },
   },
   {
     to: "/orders",
     title: "Юридический отдел",
     icon: Scale,
-    filters: { order_status: { $eq: "Юридический отдел" } },
+    filters: { orderStatus: { $eq: "Юридический отдел" } },
   },
   { separator: true },
   {
@@ -710,7 +710,7 @@ export const SIDEBAR_MENU = [
     icon: Clock2Icon,
     adminOnly: true,
     filters: {
-      order_status: {
+      orderStatus: {
         $in: [
           "Новая",
           "Согласовать",
@@ -743,8 +743,8 @@ export const SIDEBAR_MENU = [
       $and: [
         {
           $or: [
-            { order_status: { $eq: "Отказ" } },
-            { order_status: { $eq: "Выдан" } },
+            { orderStatus: { $eq: "Отказ" } },
+            { orderStatus: { $eq: "Выдан" } },
           ],
         },
         {
@@ -765,8 +765,8 @@ export const SIDEBAR_MENU = [
       $and: [
         {
           $or: [
-            { order_status: { $eq: "Отказ" } },
-            { order_status: { $eq: "Выдан" } },
+            { orderStatus: { $eq: "Отказ" } },
+            { orderStatus: { $eq: "Выдан" } },
           ],
         },
         { is_approve: { $eq: true } },

@@ -12,7 +12,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { LayoutGrid, Table as TableIcon } from "lucide-react"
+import { LayoutGrid, Loader2Icon, Table as TableIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -29,12 +29,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   cardComponent?: React.ComponentType<{ data: TData }>
+  isLoading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   cardComponent: CardComponent,
+  isLoading = false
 }: DataTableProps<TData, TValue>) {
   const viewKey = CardComponent?.name ?? "default"
   const { views, setView } = useTableViewStore()
@@ -62,6 +64,8 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
+
+
 
   // Переключение на cardView при <1280px
   React.useEffect(() => {
@@ -138,7 +142,8 @@ export function DataTable<TData, TValue>({
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    Нет данных.
+                    {isLoading ? <div className="flex justify-center"><Loader2Icon className="animate-spin" /></div> : "Нет данных."}
+
                   </TableCell>
                 </TableRow>
               )}

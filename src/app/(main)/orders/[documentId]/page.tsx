@@ -1,4 +1,7 @@
-import { MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react"
+'use client';
+
+import { Loader2Icon, MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react"
+import React, { Usable } from "react"
 
 import {
     Select,
@@ -9,32 +12,68 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { demoMasters } from "@/demo-data"
 import RepairOrderForm from "@/components/orders/order-form"
 import { OrderMedia } from "@/components/orders/order-photos"
 import { OrderClient } from "@/components/orders/order-client"
 import { OrderAccounting } from "@/components/orders/order-accounting"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useOrders } from "@/hooks/use-orders"
+import { useUsers } from "@/hooks/use-users";
 
-const OrderPage = () => {
+interface Props {
+    documentId: string;
+}
+
+const OrderPage = ({ params }: { params: Usable<Props> }) => {
+    const { documentId } = React.use<Props>(params);
+    const { users } = useUsers(1, 100);
+
+    const query = {
+        filters: {
+            documentId: documentId
+        }
+    }
+
+    const { data, isLoading, updateOrder } = useOrders(1, 1, query)
+    const order = data[0];
+
+    if (!order) return null;
+    if (isLoading) return <Loader2Icon className="animate-spin" />
+
+    // 1️⃣ Считаем доход = сумма incomes - сумма outcomes
+    const totalIncome = (order.incomes || []).reduce((acc, item) => acc + (item.count || 0), 0)
+    const totalOutcome = (order.outcomes || []).reduce((acc, item) => acc + (item.count || 0), 0)
+    const profit = totalIncome - totalOutcome
+
+    const handleSelectMaster = (value: string) => {
+        updateOrder({
+            documentId: order.documentId,
+            updatedData: {
+                master: {
+                    id: +value
+                }
+            }
+        })
+    }
+
     return (
         <div>
             <div className="flex md:justify-between flex-col md:flex-row md:items-center gap-4 mb-8">
-                <h1 className="flex-auto">Заказ №ORD-1001</h1>
+                <h1 className="flex-auto">Заказ №<span className="uppercase">{order.title}</span></h1>
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex items-center gap-2">
                         <p>Доход с заказа:</p>
-                        <p className="text-xl font-semibold text-green-500">{`50 000 ₽`}</p>
+                        <p className="text-xl font-semibold text-green-500">{profit} ₽</p>
                     </div>
                     <div className="flex items-center gap-4">
                         <span>Мастер:</span>
-                        <Select>
+                        <Select onValueChange={handleSelectMaster} defaultValue={order.master?.id?.toString() || ""}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Выбрать" />
                             </SelectTrigger>
                             <SelectContent>
-                                {demoMasters.map((master) => (
-                                    <SelectItem key={master.id} value={master.name}>
+                                {users.map((master) => (
+                                    <SelectItem key={master.id} value={master.id.toString()}>
                                         {master.name}
                                     </SelectItem>
                                 ))}
@@ -77,18 +116,18 @@ const OrderPage = () => {
                     </div>
                 </div>
                 <TabsContent value="edit">
-                    <RepairOrderForm />
+                    <RepairOrderForm data={order} />
                 </TabsContent>
                 <TabsContent value="photo">
-                    <OrderMedia />
+                    <OrderMedia data={order} />
                 </TabsContent>
                 <TabsContent value="call">Информация появится в будущем</TabsContent>
                 <TabsContent value="sms">Информация появится в будущем</TabsContent>
                 <TabsContent value="client">
-                    <OrderClient />
+                    <OrderClient data={order} />
                 </TabsContent>
                 <TabsContent value="calculations">
-                    <OrderAccounting />
+                    <OrderAccounting data={order} />
                 </TabsContent>
             </Tabs>
         </div>

@@ -6,10 +6,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "downloader.disk.yandex.ru",
+        hostname: "admin.spbgarant.ru",
         pathname: "/**", // если нужно загрузить любые изображения с этого хоста
       },
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "100mb",
+    },
   },
 };
 

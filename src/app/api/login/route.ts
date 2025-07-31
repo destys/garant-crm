@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     });
 
     res.cookies.set("garant_token", jwt, {
-      httpOnly: true,
+      httpOnly: false,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,

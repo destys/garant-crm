@@ -40,7 +40,7 @@ const statusColorMap: Record<string, string> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const linkWrapper = (row: any, content: React.ReactNode) => (
-  <Link href={`/orders/asd123123asd1312da`} className="block w-full h-full">
+  <Link href={`/orders/${row.original.documentId}`} className="block w-full h-full">
     {content}
   </Link>
 )
@@ -50,13 +50,13 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
     accessorKey: "order_number",
     header: "№ Заказа",
     cell: ({ row }) =>
-      linkWrapper(row, row.original.order_number),
+      linkWrapper(row, row.original.title),
   },
   {
-    accessorKey: "order_status",
+    accessorKey: "orderStatus",
     header: "Статус",
     cell: ({ row }) => {
-      const status = row.original.order_status
+      const status = row.original.orderStatus
       const colorClasses = statusColorMap[status] ?? "bg-white"
 
       return linkWrapper(
@@ -70,13 +70,13 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
   {
     accessorKey: "departure_date",
     header: "Дата выезда",
-    cell: ({ row }) =>
-      linkWrapper(row, format(new Date(row.original.departure_date), "dd.MM.yyyy")),
+    cell: ({ row }) => row.original.departure_date ? linkWrapper(row, format(new Date(row.original.departure_date), "dd.MM.yyyy")) : "-"
   },
   {
     accessorKey: "deadline",
     header: "Дедлайн",
     cell: ({ row }) => {
+      if (!row.original.deadline) return "Не назначен"
       const deadline = new Date(row.original.deadline)
       const today = new Date()
       const diff = differenceInDays(deadline, today)
@@ -107,13 +107,13 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
     accessorKey: "device",
     header: "Устройство",
     cell: ({ row }) =>
-      linkWrapper(row, `${row.original.device.type} / ${row.original.device.brand} / ${row.original.device.model}`),
+      linkWrapper(row, `${row.original.device_type || "-"} / ${row.original.brand || "-"} / ${row.original.model || "-"}`),
   },
   {
-    accessorKey: "payment",
-    header: "Оплата",
+    accessorKey: "client.phone",
+    header: "Телефон",
     cell: ({ row }) =>
-      linkWrapper(row, `₽${row.original.payment.prepay} / ₽${row.original.payment.total}`),
+      linkWrapper(row, `+7 (***) ***-${row.original.client.phone.slice(7)}`),
   },
   {
     id: "masters",
@@ -134,12 +134,12 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
     ),
   },
   {
-    id: "actions",
-    header: "",
-    cell: () => (
+    accessorKey: "actions",
+    header: "123",
+    cell: ({ row }) => (
       <div className="flex gap-2 justify-end">
         <Button size="icon" variant="outline" title="Посмотреть" asChild>
-          <Link href={'/orders/asd123123asd1312da'}>
+          <Link href={`/orders/${row.original.documentId}`}>
             <EyeIcon className="size-4" />
           </Link>
         </Button>

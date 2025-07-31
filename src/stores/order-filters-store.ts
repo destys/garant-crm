@@ -1,17 +1,34 @@
 import { create } from "zustand";
 
-type Filter = Record<string, unknown>;
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
+interface Filters {
+  search?: string;
+  dateRange?: DateRange;
+  master?: string;
+}
 
 interface OrderFilterState {
-  filters: Filter | null;
-  setFilters: (filters: Filter | null) => void;
+  filters: Filters;
   activeTitle: string | null;
+  setFilters: (filters: Partial<Filters>) => void;
+  resetFilters: () => void;
   setActiveTitle: (title: string | null) => void;
 }
 
 export const useOrderFilterStore = create<OrderFilterState>((set) => ({
-  filters: null,
+  filters: {},
   activeTitle: null,
-  setFilters: (filters) => set({ filters }),
+  setFilters: (filters) =>
+    set((state) => ({
+      filters: { ...state.filters, ...filters },
+    })),
+  resetFilters: () =>
+    set({
+      filters: {},
+    }),
   setActiveTitle: (title) => set({ activeTitle: title }),
 }));

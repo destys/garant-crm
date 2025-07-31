@@ -32,7 +32,7 @@ const statusColorMap: Record<string, string> = {
 }
 
 export const OrdersCard = ({ data }: { data: OrderProps }) => {
-    const statusClass = statusColorMap[data.order_status] ?? "bg-gray-100"
+    const statusClass = statusColorMap[data.orderStatus] ?? "bg-gray-100"
     const deadline = data.deadline ? new Date(data.deadline) : null
     const today = new Date()
 
@@ -71,7 +71,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
                     </Button>
                 </CardAction>
                 <CardDescription className="mt-2">
-                    <Badge className={cn("text-xs text-muted-foreground", statusClass)}>{data.order_status}</Badge>
+                    <Badge className={cn("text-xs text-muted-foreground", statusClass)}>{data.orderStatus}</Badge>
                 </CardDescription>
             </CardHeader>
             <CardContent className="text-sm space-y-2">

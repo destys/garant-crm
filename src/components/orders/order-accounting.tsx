@@ -15,21 +15,16 @@ import {
     TableBody,
     TableHead,
 } from "@/components/ui/table"
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
+import { OrderProps } from '@/types/order.types'
+import { IncomeOutcomeProps } from '@/types/income-outcome.types'
+interface Props {
+    data: OrderProps;
+}
 
-const mockIncomes = [
-    { id: 1, amount: 12000, description: "Предоплата от клиента", date: "16.07.2025", master: "Иванов И.И." },
-    { id: 2, amount: 8000, description: "Оплата после ремонта", date: "17.07.2025", master: "Петров С.С." }
-]
-
-const mockExpenses = [
-    { id: 1, amount: 3000, description: "Закупка запчастей", date: "16.07.2025", master: "Иванов И.И." },
-    { id: 2, amount: 1500, description: "Услуги курьера", date: "17.07.2025", master: "Смирнов А.А." }
-]
-
-export const OrderAccounting = () => {
+export const OrderAccounting = ({ data }: Props) => {
     const renderTable = (
-        data: typeof mockIncomes,
+        data: IncomeOutcomeProps[],
         type: "incomes" | "expenses"
     ) => (
         <div className="w-full overflow-x-auto">
@@ -43,17 +38,18 @@ export const OrderAccounting = () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
+
                     {data.map((item) => (
                         <TableRow key={item.id}>
-                            <TableCell>{item.date}</TableCell>
-                            <TableCell>{item.description}</TableCell>
-                            <TableCell>{item.master}</TableCell>
+                            <TableCell>{formatDate(item.createdAt, 'PPP')}</TableCell>
+                            <TableCell>{item.note}</TableCell>
+                            <TableCell>{item.user.name}</TableCell>
                             <TableCell className="text-right">
                                 <Badge
                                     variant={type === "incomes" ? "default" : "destructive"}
                                     className={cn(type === "incomes" && "bg-green-500")}
                                 >
-                                    {item.amount.toLocaleString()} ₽
+                                    {item.count.toLocaleString()} ₽
                                 </Badge>
                             </TableCell>
                         </TableRow>
@@ -75,7 +71,7 @@ export const OrderAccounting = () => {
                     </Button>
                 </CardHeader>
                 <Separator />
-                <CardContent className="pt-4">{renderTable(mockIncomes, "incomes")}</CardContent>
+                <CardContent className="pt-4">{renderTable(data.incomes, "incomes")}</CardContent>
             </Card>
 
             {/* Расходы */}
@@ -88,7 +84,7 @@ export const OrderAccounting = () => {
                     </Button>
                 </CardHeader>
                 <Separator />
-                <CardContent className="pt-4">{renderTable(mockExpenses, "expenses")}</CardContent>
+                <CardContent className="pt-4">{renderTable(data.outcomes, "expenses")}</CardContent>
             </Card>
         </div>
     )

@@ -1,48 +1,52 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
-import { SearchIcon } from "lucide-react"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { SearchIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Form,
     FormControl,
     FormField,
     FormItem,
     FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
+import { useOrderFilterStore } from "@/stores/order-filters-store";
 
 const FormSchema = z.object({
     search: z.string().min(2, {
         message: "Поисковой запрос должен быть более 3-х символов.",
     }),
-})
+});
 
 export const SearchBlock = () => {
+    const setFilters = useOrderFilterStore((state) => state.setFilters);
+
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
             search: "",
         },
-    })
+    });
 
     function onSubmit(data: z.infer<typeof FormSchema>) {
-        toast("You submitted the following values", {
-            description: (
-                <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-                    <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-                </pre>
-            ),
-        })
+        setFilters({ search: data.search });
+
+        toast("Фильтры обновлены", {
+            description: `Поиск: ${data.search}`,
+        });
     }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2 w-full sm:w-auto">
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex gap-2 w-full sm:w-auto"
+            >
                 <FormField
                     control={form.control}
                     name="search"
@@ -60,5 +64,5 @@ export const SearchBlock = () => {
                 </Button>
             </form>
         </Form>
-    )
-}
+    );
+};

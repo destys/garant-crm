@@ -1,62 +1,132 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { FilePond } from "react-filepond"
+import type { FilePond as ReactFilePondType } from "react-filepond"
 import { Trash2Icon, FileTextIcon } from "lucide-react"
 import Image from "next/image"
 import Lightbox from "yet-another-react-lightbox"
-import type { FilePondFile } from "filepond"
 
 import { Button } from "@/components/ui/button"
+import { API_URL } from "@/constants"
+import { useAuth } from "@/providers/auth-provider"
+import { useOrders } from "@/hooks/use-orders"
+import { OrderProps } from "@/types/order.types"
+import { MediaProps } from "@/types/media.props"
 
 import "filepond/dist/filepond.min.css"
 import "yet-another-react-lightbox/styles.css"
 
-type FilePreview = {
-    file: File
+interface MediaFile {
+    id: number
+    name: string
     url: string
-    isImage: boolean
+    mime: string
 }
 
-export const OrderMedia = () => {
-    const [docPreviews, setDocPreviews] = useState<FilePreview[]>([])
-    const [photoPreviews, setPhotoPreviews] = useState<FilePreview[]>([])
+interface Props {
+    data: OrderProps
+}
+
+export const OrderMedia = ({ data }: Props) => {
+    const { updateOrder } = useOrders(1, 1)
+    const { jwt } = useAuth()
+
+    const [docs, setDocs] = useState<MediaFile[]>(
+        (data.order_docs || []).map((file: MediaProps) => ({
+            id: file.id,
+            name: file.name,
+            url: `${API_URL}${file.url}`,
+            mime: file.mime
+        }))
+    )
+
+    const [photos, setPhotos] = useState<MediaFile[]>(
+        (data.device_photos || []).map((file: MediaProps) => ({
+            id: file.id,
+            name: file.name,
+            url: `${API_URL}${file.url}`,
+            mime: file.mime
+        }))
+    )
+
+    const pondDocsRef = useRef<ReactFilePondType | null>(null)
+    const pondPhotosRef = useRef<ReactFilePondType | null>(null)
+
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
     const [lightboxImages, setLightboxImages] = useState<{ src: string }[]>([])
 
-    const handleSetPreviews = (
-        items: FilePondFile[],
-        setter: (val: FilePreview[]) => void
+    /** Удаление файла */
+    const handleDeleteFile = async (
+        fileId: number,
+        fieldName: "order_docs" | "device_photos",
+        existing: MediaFile[],
+        setExisting: React.Dispatch<React.SetStateAction<MediaFile[]>>
     ) => {
-        const files = items.map((item) => item.file as File)
-        const mapped = files.map((file) => ({
-            file,
-            url: URL.createObjectURL(file),
-            isImage: file.type.startsWith("image/")
-        }))
-        setter(mapped)
+        if (!jwt) return alert("Нет токена")
+
+        try {
+            const updatedIds = existing.filter((f) => f.id !== fileId).map((f) => f.id)
+            await updateOrder({
+                documentId: data.documentId,
+                updatedData: { [fieldName]: updatedIds }
+            })
+
+            await fetch(`${API_URL}/api/upload/files/${fileId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${jwt}` }
+            })
+
+            setExisting((prev) => prev.filter((f) => f.id !== fileId))
+        } catch (err) {
+            console.error(err)
+            alert("Ошибка удаления файла")
+        }
     }
 
-    const handleRemove = (
-        index: number,
-        setter: (val: FilePreview[]) => void,
-        previews: FilePreview[]
+    /** Привязка после загрузки */
+    const handleAttach = async (
+        uploaded: MediaFile[],
+        fieldName: "order_docs" | "device_photos",
+        existing: MediaFile[],
+        setExisting: React.Dispatch<React.SetStateAction<MediaFile[]>>
     ) => {
-        const updated = [...previews]
-        updated.splice(index, 1)
-        setter(updated)
+        try {
+            const ids = uploaded.map((f: MediaProps) => f.id)
+            const updatedIds = [...existing.map((f) => f.id), ...ids]
+
+            await updateOrder({
+                documentId: data.documentId,
+                updatedData: { [fieldName]: updatedIds }
+            })
+
+            setExisting((prev) => [
+                ...prev,
+                ...uploaded.map((f: MediaProps) => ({
+                    id: f.id,
+                    name: f.name,
+                    url: `${API_URL}${f.url}`,
+                    mime: f.mime
+                }))
+            ])
+        } catch (err) {
+            console.error(err)
+            alert("Ошибка привязки файлов")
+        }
     }
 
     const renderGallery = (
         title: string,
-        previews: FilePreview[],
-        setter: (val: FilePreview[]) => void
+        fieldName: "order_docs" | "device_photos",
+        existing: MediaFile[],
+        setExisting: React.Dispatch<React.SetStateAction<MediaFile[]>>,
+        pondRef: React.MutableRefObject<ReactFilePondType | null>
     ) => {
-        const isPhotoGallery = title.includes("Фото")
+        const isPhotoGallery = fieldName === "device_photos"
 
         const openLightboxAt = (clickedUrl: string) => {
-            const images = previews.filter(p => p.isImage).map(p => ({ src: p.url }))
-            const index = images.findIndex(p => p.src === clickedUrl)
+            const images = existing.filter((p) => p.mime.startsWith("image/")).map((p) => ({ src: p.url }))
+            const index = images.findIndex((p) => p.src === clickedUrl)
             setLightboxImages(images)
             setLightboxIndex(index)
         }
@@ -64,31 +134,62 @@ export const OrderMedia = () => {
         return (
             <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-2">{title}</h3>
+
                 <FilePond
+                    ref={pondRef}
                     allowMultiple
                     acceptedFileTypes={isPhotoGallery ? ["image/*"] : ["image/*", "application/pdf"]}
-                    onupdatefiles={(items) => handleSetPreviews(items, setter)}
                     labelIdle='Перетащите файлы или <span class="filepond--label-action">выберите</span>'
+                    server={{
+                        process: (fieldNameParam, file, metadata, load, error, progress, abort) => {
+                            if (!jwt) {
+                                error("Нет токена")
+                                return
+                            }
+
+                            const formData = new FormData()
+                            formData.append("files", file)
+
+                            const xhr = new XMLHttpRequest()
+                            xhr.open("POST", `${API_URL}/api/upload`)
+                            xhr.setRequestHeader("Authorization", `Bearer ${jwt}`)
+
+                            xhr.upload.onprogress = (e) => {
+                                progress(e.lengthComputable, e.loaded, e.total)
+                            }
+
+                            xhr.onload = async () => {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    const uploaded = JSON.parse(xhr.responseText)
+                                    await handleAttach(uploaded, fieldName, existing, setExisting)
+                                    load("done")
+                                } else {
+                                    error("Ошибка загрузки")
+                                }
+                            }
+
+                            xhr.onerror = () => error("Ошибка сети")
+                            xhr.send(formData)
+
+                            return {
+                                abort: () => {
+                                    xhr.abort()
+                                    abort()
+                                }
+                            }
+                        }
+                    }}
                 />
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-                    {previews.map(({ file, url, isImage }, index) => (
-                        <div
-                            key={index}
-                            className="relative group border rounded overflow-hidden hover:shadow"
-                        >
+                    {existing.map((file) => (
+                        <div key={file.id} className="relative group border rounded overflow-hidden hover:shadow">
                             <div
                                 className="block w-full h-64 cursor-pointer"
-                                onClick={() => isImage && openLightboxAt(url)}
+                                onClick={() => file.mime.startsWith("image/") && openLightboxAt(file.url)}
                             >
-                                {isImage ? (
-                                    <Image
-                                        src={url}
-                                        alt={file.name}
-                                        width={200}
-                                        height={200}
-                                        className="size-full h-64 object-contain object-center"
-                                    />
+                                {file.mime.startsWith("image/") ? (
+                                    <Image src={file.url} alt={file.name} width={200} height={200} className="size-full h-64 object-contain" />
                                 ) : (
                                     <div className="flex justify-center items-center w-full h-64 bg-muted">
                                         <FileTextIcon className="w-8 h-8 text-muted-foreground" />
@@ -96,16 +197,14 @@ export const OrderMedia = () => {
                                 )}
                             </div>
 
-                            <div className="p-2 text-sm truncate border-t bg-background">
-                                {file.name}
-                            </div>
+                            <div className="p-2 text-sm truncate border-t bg-background">{file.name}</div>
 
                             <Button
                                 type="button"
                                 size="icon"
                                 variant="destructive"
                                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleRemove(index, setter, previews)}
+                                onClick={() => handleDeleteFile(file.id, fieldName, existing, setExisting)}
                             >
                                 <Trash2Icon className="w-4 h-4" />
                             </Button>
@@ -114,12 +213,7 @@ export const OrderMedia = () => {
                 </div>
 
                 {lightboxIndex !== null && (
-                    <Lightbox
-                        open
-                        index={lightboxIndex}
-                        close={() => setLightboxIndex(null)}
-                        slides={lightboxImages}
-                    />
+                    <Lightbox open index={lightboxIndex} close={() => setLightboxIndex(null)} slides={lightboxImages} />
                 )}
             </div>
         )
@@ -127,8 +221,8 @@ export const OrderMedia = () => {
 
     return (
         <div className="space-y-8">
-            {renderGallery("Документы и чеки", docPreviews, setDocPreviews)}
-            {renderGallery("Фотографии", photoPreviews, setPhotoPreviews)}
+            {renderGallery("Документы и чеки", "order_docs", docs, setDocs, pondDocsRef)}
+            {renderGallery("Фотографии", "device_photos", photos, setPhotos, pondPhotosRef)}
         </div>
     )
 }

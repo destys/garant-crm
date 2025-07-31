@@ -26,6 +26,7 @@ import {
     CommandInput,
     CommandItem,
 } from "@/components/ui/command"
+import { useOrderFilterStore } from "@/stores/order-filters-store"
 
 const masters = [
     { label: "Иванов Иван", value: "ivanov" },
@@ -47,6 +48,8 @@ const formSchema = z.object({
 })
 
 export const OrdersFilters = () => {
+    const setFilters = useOrderFilterStore((state) => state.setFilters);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -56,12 +59,11 @@ export const OrdersFilters = () => {
             },
             master: "",
         },
-    })
+    });
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        console.warn(values)
-        // useOrderFilterStore.getState().setFilters(values)
-    }
+        setFilters(values);
+    };
 
     return (
         <Form {...form}>

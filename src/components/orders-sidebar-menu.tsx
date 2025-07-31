@@ -7,54 +7,8 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/c
 import { useOrderFilterStore } from "@/stores/order-filters-store"
 import { SIDEBAR_MENU } from "@/constants";
 import { cn } from "@/lib/utils";
-import { demoOrders } from "@/demo-data";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-
-// Простая функция фильтрации по фильтрам из SIDEBAR_MENU (только order_status $eq/$ne/$in)
-function countOrdersByFilter(filters: Record<string, any>): number {
-    if (!filters) return demoOrders.length;
-    // $and
-    if (filters.$and) {
-        return demoOrders.filter(order =>
-            (filters.$and as Record<string, any>[]).every((cond) => {
-                if (cond.order_status?.$ne) {
-                    return order.order_status !== cond.order_status.$ne;
-                }
-                if (cond.order_status?.$eq) {
-                    return order.order_status === cond.order_status.$eq;
-                }
-                return true;
-            })
-        ).length;
-    }
-    // $or
-    if (filters.$or) {
-        return demoOrders.filter(order =>
-            (filters.$or as Record<string, any>[]).some((cond) => {
-                if (cond.order_status?.$eq) {
-                    return order.order_status === cond.order_status.$eq;
-                }
-                return true;
-            })
-        ).length;
-    }
-    // $in
-    if (filters.order_status?.$in) {
-        return demoOrders.filter(order =>
-            filters.order_status.$in.includes(order.order_status)
-        ).length;
-    }
-    // order_status $eq
-    if (filters.order_status?.$eq) {
-        return demoOrders.filter(order => order.order_status === filters.order_status.$eq).length;
-    }
-    // order_status $ne
-    if (filters.order_status?.$ne) {
-        return demoOrders.filter(order => order.order_status !== filters.order_status.$ne).length;
-    }
-    return demoOrders.length;
-}
 
 export function OrdersSidebarMenu() {
     const { activeTitle } = useOrderFilterStore();
@@ -86,7 +40,7 @@ export function OrdersSidebarMenu() {
                 if (item.separator) {
                     return <div key={i} className="my-2 border-t border-border" />
                 }
-                const count = item.to === "/orders" && item.filters ? countOrdersByFilter(item.filters) : undefined;
+                const count = 5;
                 return (
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
