@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use strict";
 
+import QueryString from "qs";
+
 import { API_URL } from "@/constants";
-import { UserProps } from "@/types/user.types";
+import { UpdateUserDto, UserProps } from "@/types/user.types";
 
 const apiUrl = `${API_URL}/api/users`;
 
@@ -14,8 +17,16 @@ const fetchApi = async <T>(
 ): Promise<T> => {
   const res = await fetch(url, options);
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || `Ошибка запроса: ${res.status}`);
+    // Пытаемся достать читаемую ошибку
+    const text = await res.text();
+    let errorMessage = `Ошибка запроса: ${res.status}`;
+    try {
+      const json = JSON.parse(text);
+      errorMessage = json?.error?.message || json?.message || errorMessage;
+    } catch {
+      errorMessage = text || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
   return res.json();
 };
@@ -29,7 +40,28 @@ export const getUserById = async (
 ): Promise<UserProps> => {
   if (!token) throw new Error("Authentication token is missing");
 
-  return fetchApi<UserProps>(`${apiUrl}/${userId}?populate=*`, {
+  const query = QueryString.stringify(
+    {
+      sort: ["createdAt:desc"],
+      populate: {
+        role: {
+          populate: "*",
+        },
+        orders: {
+          populate: "*",
+        },
+        incomes: {
+          populate: "*",
+        },
+        outcomes: {
+          populate: "*",
+        },
+      },
+    },
+    { encodeValuesOnly: true }
+  );
+
+  return fetchApi<UserProps>(`${apiUrl}/${userId}?${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
@@ -67,7 +99,8 @@ export const fetchUsers = async (
   });
 
   if (!res.ok) {
-    throw new Error(`Ошибка запроса: ${res.status}`);
+    const text = await res.text();
+    throw new Error(text || `Ошибка запроса: ${res.status}`);
   }
 
   const users = await res.json();
@@ -77,22 +110,60 @@ export const fetchUsers = async (
 };
 
 /**
- * Создание пользователя (только для админов!)
+ * Создание пользователя (2 шага)
  */
 export const createUser = async (
   token: string,
-  userData: Partial<UserProps>
+  data: {
+    email: string;
+    name: string;
+    password: string;
+    phone?: string;
+    role: { id: number }; // id роли
+  }
 ): Promise<UserProps> => {
   if (!token) throw new Error("Authentication token is missing");
 
-  return fetchApi<UserProps>(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(userData),
-  });
+  try {
+    // 1️⃣ Создаем пользователя
+    const registerResponse = await fetchApi<{ jwt: string; user: UserProps }>(
+      `${API_URL}/api/auth/local/register`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: data.email.split("@")[0],
+          email: data.email,
+          password: data.password,
+        }),
+      }
+    );
+
+    // 2️⃣ Обновляем дополнительные поля и роль
+    const updatedUser = await fetchApi<UserProps>(
+      `${API_URL}/api/users/${registerResponse.user.id}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          phone: data.phone,
+          role: data.role.id,
+        }),
+      }
+    );
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error("Ошибка при создании пользователя:", error);
+    throw error; // пробрасываем в React Query
+  }
 };
 
 /**
@@ -101,7 +172,7 @@ export const createUser = async (
 export const updateUser = async (
   token: string,
   userId: number,
-  updatedData: Partial<UserProps>
+  updatedData: Partial<UpdateUserDto>
 ): Promise<UserProps> => {
   if (!token) throw new Error("Authentication token is missing");
 
@@ -111,7 +182,7 @@ export const updateUser = async (
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(updatedData),
+    body: JSON.stringify({ ...updatedData }),
   });
 };
 

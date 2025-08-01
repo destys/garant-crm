@@ -1,6 +1,6 @@
 import { ClientProps } from "./client.types";
 import { IncomeOutcomeProps } from "./income-outcome.types";
-import { MediaProps } from "./media.props";
+import { MediaProps } from "./media.types";
 import { UserProps } from "./user.types";
 
 export interface OrderProps {

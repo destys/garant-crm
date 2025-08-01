@@ -5,7 +5,7 @@ interface DateRange {
   to?: Date;
 }
 
-interface Filters {
+export interface Filters {
   search?: string;
   dateRange?: DateRange;
   master?: string;

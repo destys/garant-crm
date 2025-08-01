@@ -123,4 +123,8 @@
   h1 {
     @apply text-2xl lg:text-3xl font-semibold;
   }
+
+  h2 {
+    @apply text-xl lg:text-2xl font-bold;
+  }
 }

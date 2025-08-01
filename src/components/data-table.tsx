@@ -65,8 +65,6 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
   })
 
-
-
   // Переключение на cardView при <1280px
   React.useEffect(() => {
     const handleResize = () => {

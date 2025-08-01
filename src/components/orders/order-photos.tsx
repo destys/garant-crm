@@ -12,7 +12,7 @@ import { API_URL } from "@/constants"
 import { useAuth } from "@/providers/auth-provider"
 import { useOrders } from "@/hooks/use-orders"
 import { OrderProps } from "@/types/order.types"
-import { MediaProps } from "@/types/media.props"
+import { MediaProps } from "@/types/media.types"
 
 import "filepond/dist/filepond.min.css"
 import "yet-another-react-lightbox/styles.css"

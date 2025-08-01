@@ -6,7 +6,13 @@ export interface IncomeOutcomeProps {
   documentId: string;
   createdAt: string;
   note: string;
+  type: string;
   count: number;
-  user: UserProps;
-  order: OrderProps;
+  user: Partial<UserProps>;
+  order: Partial<OrderProps>;
 }
+
+export type UpdateIncomeOutcomeDto = Omit<IncomeOutcomeProps, "user, order"> & {
+  user?: number;
+  order?: string;
+};

@@ -1,24 +1,37 @@
+'use client';
+
 import { BanknoteArrowDownIcon, BanknoteArrowUpIcon } from "lucide-react"
+import React, { Usable } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { MasterEdit } from "@/components/masters/master-edit"
 import { MasterLeads } from "@/components/masters/master-leads"
 import { MasterAccounting } from "@/components/masters/master-accounting"
+import { useUser } from "@/hooks/use-user"
 
-const MasterPage = () => {
+interface Props {
+    id: number;
+}
+
+const MasterPage = ({ params }: { params: Usable<Props> }) => {
+    const { id } = React.use(params);
+    const { data } = useUser(id);
+
+    if (!data) return null;
+
     return (
         <div>
             <div className="flex md:justify-between flex-col md:flex-row md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="flex-auto">Мастер: Иванов Иван Иванович</h1>
+                    <h1 className="flex-auto">Мастер: {data.name}</h1>
 
                 </div>
 
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <p>Баланс:</p>
-                        <p className="text-xl font-semibold text-green-500">{`50 000 ₽`}</p>
+                        <p className="text-xl font-semibold text-green-500">{data.balance || 0} ₽</p>
                     </div>
                 </div>
             </div>
@@ -39,13 +52,13 @@ const MasterPage = () => {
                     </div>
                 </div>
                 <TabsContent value="edit">
-                    <MasterEdit />
+                    <MasterEdit data={data} />
                 </TabsContent>
                 <TabsContent value="leads">
-                    <MasterLeads />
+                    <MasterLeads data={data} />
                 </TabsContent>
                 <TabsContent value="accounting">
-                    <MasterAccounting />
+                    <MasterAccounting data={data} />
                 </TabsContent>
             </Tabs>
         </div>

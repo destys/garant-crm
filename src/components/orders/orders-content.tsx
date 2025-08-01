@@ -5,46 +5,19 @@ import { jsPDF } from "jspdf";
 import { useOrderFilterStore } from "@/stores/order-filters-store";
 import { SearchBlock } from "@/components/search-block";
 import { useOrders } from "@/hooks/use-orders";
-
-import { DataTable } from "../data-table";
-import { Button } from "../ui/button";
-
-import { OrdersFilters } from "./orders-filters";
-import { ordersColumns } from "./orders-columns";
-import { OrdersCard } from "./orders-card";
+import { useUsers } from "@/hooks/use-users";
+import { OrdersFilters } from "@/components/orders/orders-filters";
+import { ordersColumns } from "@/components/orders/orders-columns";
+import { OrdersCard } from "@/components/orders/orders-card";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/data-table";
 
 export const OrdersContent = () => {
     const activeTitle = useOrderFilterStore((state) => state.activeTitle);
     const filters = useOrderFilterStore((state) => state.filters);
 
-    // Формируем query для useOrders
-    const query = {
-        filters: {
-            ...(filters.search
-                ? {
-                    $or: [
-                        { title: { $containsi: filters.search } },
-                        { client: { phone: { $containsi: filters.search } } },
-                    ],
-                }
-                : {}),
-            ...(filters.master ? { master: { id: filters.master } } : {}),
-            ...(filters.dateRange?.from || filters.dateRange?.to
-                ? {
-                    createdAt: {
-                        ...(filters.dateRange.from
-                            ? { $gte: filters.dateRange.from.toISOString() }
-                            : {}),
-                        ...(filters.dateRange.to
-                            ? { $lte: filters.dateRange.to.toISOString() }
-                            : {}),
-                    },
-                }
-                : {}),
-        },
-    };
-
-    const { data } = useOrders(1, 50, query);
+    const { data, updateOrder, deleteOrder } = useOrders(1, 50, filters);
+    const { users } = useUsers(1, 50);
 
     const handleDownloadPdf = () => {
         const doc = new jsPDF();
@@ -63,7 +36,7 @@ export const OrdersContent = () => {
             <OrdersFilters />
             <DataTable
                 data={data}
-                columns={ordersColumns}
+                columns={ordersColumns(users, updateOrder, deleteOrder)}
                 cardComponent={({ data }) => <OrdersCard data={data} />}
             />
         </div>

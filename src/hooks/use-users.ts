@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { UserProps } from "@/types/user.types";
+import { UpdateUserDto, UserProps } from "@/types/user.types";
 import {
   fetchUsers,
   createUser,
@@ -23,7 +23,13 @@ export const useUsers = (page: number, pageSize: number, query?: string) => {
   });
 
   const createUserMutation = useMutation({
-    mutationFn: (user: Partial<UserProps>) => createUser(authToken, user),
+    mutationFn: (user: {
+      email: string;
+      name: string;
+      password: string;
+      phone?: string;
+      role: { id: number };
+    }) => createUser(authToken, user),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
 
@@ -33,7 +39,7 @@ export const useUsers = (page: number, pageSize: number, query?: string) => {
       updatedData,
     }: {
       userId: number;
-      updatedData: Partial<UserProps>;
+      updatedData: Partial<UpdateUserDto>;
     }) => updateUser(authToken, userId, updatedData),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
@@ -62,6 +68,7 @@ export const useUsers = (page: number, pageSize: number, query?: string) => {
     isError: usersQuery.isError,
     error: usersQuery.error,
     createUser: createUserMutation.mutate,
+    createUserAsync: createUserMutation.mutateAsync, // можно использовать await и try/catch
     updateUser: updateUserMutation.mutate,
     deleteUser: deleteUserMutation.mutate,
   };

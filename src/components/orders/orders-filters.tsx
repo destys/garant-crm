@@ -48,8 +48,6 @@ const formSchema = z.object({
 })
 
 export const OrdersFilters = () => {
-    const setFilters = useOrderFilterStore((state) => state.setFilters);
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -62,7 +60,11 @@ export const OrdersFilters = () => {
     });
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        setFilters(values);
+        const { filters: currentFilters, setFilters } = useOrderFilterStore.getState();
+        setFilters({
+            ...currentFilters,
+            ...values,
+        });
     };
 
     return (

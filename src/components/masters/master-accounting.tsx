@@ -1,32 +1,15 @@
 'use client'
 
+import Link from "next/link"
+import { Link2Icon } from "lucide-react"
+import { ColumnDef } from "@tanstack/react-table"
+
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from "@/components/ui/table"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
+import { UserProps } from "@/types/user.types"
+import { IncomeOutcomeProps } from "@/types/income-outcome.types"
+import { DataTable } from "@/components/data-table"
+import { Button } from "@/components/ui/button"
 
-type Transaction = {
-    id: number
-    type: "Начисление" | "Списание"
-    amount: number
-    date: string // format: "DD.MM.YYYY"
-    reason: string
-}
-
-const mockData: Transaction[] = [
-    { id: 1, type: "Начисление", amount: 8000, date: "16.07.2025", reason: "Заказ #123" },
-    { id: 2, type: "Списание", amount: 1000, date: "17.07.2025", reason: "Штраф за опоздание" },
-    { id: 3, type: "Начисление", amount: 6000, date: "18.07.2025", reason: "Заказ #124" },
-    { id: 4, type: "Списание", amount: 500, date: "18.07.2025", reason: "Потерянный инструмент" },
-]
 
 // Преобразуем дату в формат сравнимый через sort
 const parseDate = (date: string) => {
@@ -34,52 +17,64 @@ const parseDate = (date: string) => {
     return new Date(y, m - 1, d).getTime()
 }
 
-export const MasterAccounting = () => {
-    const sortedData = [...mockData].sort((a, b) => parseDate(b.date) - parseDate(a.date))
+
+
+export const MasterAccounting = ({ data }: { data: UserProps }) => {
+    const incomes = data.incomes;
+    const outcomes = data.outcomes;
+
+    const allRows: IncomeOutcomeProps[] = [
+        ...incomes.map((item) => ({ ...item, type: "income" as const })),
+        ...outcomes.map((item) => ({ ...item, type: "expense" as const })),
+    ].sort((a, b) => parseDate(b.createdAt) - parseDate(a.createdAt));
+
+    const columns: ColumnDef<IncomeOutcomeProps>[] = [
+        {
+            accessorKey: "date",
+            header: "Дата",
+            cell: ({ row }) => row.original.createdAt,
+        },
+        {
+            accessorKey: "type",
+            header: "Тип",
+            cell: ({ row }) => (
+                <Badge variant={row.original.type === "income" ? "default" : "destructive"} className={row.original.type === "income" ? "bg-green-500" : "bg-red-500"}>
+                    {row.original.type === "income" ? "Приход" : "Расход"}
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: "description",
+            header: "Описание",
+            cell: ({ row }) => row.original.note,
+        },
+        {
+            accessorKey: "amount",
+            header: "Сумма",
+            cell: ({ row }) => (
+                <Badge variant={row.original.type === "income" ? "default" : "destructive"} className={row.original.type === "income" ? "bg-green-500" : "bg-red-500"}>
+                    {row.original.type === "expense" ? "-" : ""}{row.original.count.toLocaleString()} ₽
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: "orderId",
+            header: "",
+            cell: ({ row }) =>
+                <Button variant={'secondary'} asChild>
+                    <Link href={`/orders/${row.original.order.documentId}`}>
+                        <Link2Icon />
+                    </Link>
+                </Button>
+        },
+    ];
 
     return (
-        <Card className="mt-6">
-            <CardHeader>
-                <CardTitle>Движения по балансу мастера</CardTitle>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Дата</TableHead>
-                            <TableHead>Тип</TableHead>
-                            <TableHead>Причина</TableHead>
-                            <TableHead className="text-right">Сумма</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {sortedData.map((item) => (
-                            <TableRow key={item.id}>
-                                <TableCell>{item.date}</TableCell>
-                                <TableCell>
-                                    <Badge variant={item.type === "Начисление" ? "success" : "destructive"}>
-                                        {item.type}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{item.reason}</TableCell>
-                                <TableCell className="text-right">
-                                    <Badge
-                                        className={cn(
-                                            "font-medium",
-                                            item.type === "Начисление" && "bg-green-500",
-                                            item.type === "Списание" && "bg-red-500"
-                                        )}
-                                    >
-                                        {item.type === "Списание" && "-"}
-                                        {item.amount.toLocaleString()} ₽
-                                    </Badge>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+        <div>
+            <div className="flex justify-between items-center gap-4 mb-3">
+                <h2 className="flex-auto">Движения по балансу мастера</h2>
+            </div>
+            <DataTable data={allRows} columns={columns} />
+        </div>
     )
 }

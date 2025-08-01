@@ -6,7 +6,7 @@ import { OrderProps } from "@/types/order.types";
 const apiUrl = `${API_URL}/api/orders`;
 
 /**
- * Обработка ошибок
+ * Универсальная обработка ответа
  */
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
@@ -35,33 +35,19 @@ export const fetchOrders = async (
       },
       sort: ["createdAt:desc"],
       populate: {
-        incomes: {
-          populate: "*",
-        },
-        outcomes: {
-          populate: "*",
-        },
-        master: {
-          populate: "*",
-        },
-        order_docs: {
-          populate: "*",
-        },
-        device_photos: {
-          populate: "*",
-        },
-        client: {
-          populate: "*",
-        },
+        incomes: { populate: "*" },
+        outcomes: { populate: "*" },
+        master: { populate: "*" },
+        order_docs: { populate: "*" },
+        device_photos: { populate: "*" },
+        client: { populate: "*" },
       },
-      ...(filterQuery && QueryString.parse(filterQuery)), // добавляем фильтры, если есть
+      ...(filterQuery && QueryString.parse(filterQuery)),
     },
     { encodeValuesOnly: true }
   );
 
-  const url = `${apiUrl}?${query}`;
-
-  const response = await fetch(url, {
+  const response = await fetch(`${apiUrl}?${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -71,6 +57,37 @@ export const fetchOrders = async (
     orders: data.data,
     total: data.meta?.pagination?.total ?? 0,
   };
+};
+
+/**
+ * Получение одного заказа по documentId
+ */
+export const fetchOrderById = async (
+  token: string,
+  documentId: string
+): Promise<OrderProps> => {
+  if (!token) throw new Error("Authentication token is missing");
+
+  const query = QueryString.stringify(
+    {
+      populate: {
+        incomes: { populate: "*" },
+        outcomes: { populate: "*" },
+        master: { populate: "*" },
+        order_docs: { populate: "*" },
+        device_photos: { populate: "*" },
+        client: { populate: "*" },
+      },
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const response = await fetch(`${apiUrl}/${documentId}?${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const data = await handleResponse(response);
+  return data.data;
 };
 
 /**

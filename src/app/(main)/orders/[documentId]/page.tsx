@@ -19,6 +19,7 @@ import { OrderAccounting } from "@/components/orders/order-accounting"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useOrders } from "@/hooks/use-orders"
 import { useUsers } from "@/hooks/use-users";
+import { useOrder } from "@/hooks/use-order";
 
 interface Props {
     documentId: string;
@@ -29,13 +30,11 @@ const OrderPage = ({ params }: { params: Usable<Props> }) => {
     const { users } = useUsers(1, 100);
 
     const query = {
-        filters: {
-            documentId: documentId
-        }
+        documentId: documentId
     }
 
-    const { data, isLoading, updateOrder } = useOrders(1, 1, query)
-    const order = data[0];
+    const { updateOrder } = useOrders(1, 1, query)
+    const { order, isLoading } = useOrder(documentId);
 
     if (!order) return null;
     if (isLoading) return <Loader2Icon className="animate-spin" />

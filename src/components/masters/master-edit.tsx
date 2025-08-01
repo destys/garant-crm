@@ -3,22 +3,17 @@
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { jsPDF } from "jspdf";
-import { useState } from "react"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { DateRange } from "react-day-picker"
+import { toast } from "sonner"
 
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { UserProps } from "@/types/user.types";
+import { useUsers } from "@/hooks/use-users"
 
 const formSchema = z.object({
-    fullName: z.string().min(3, "Введите ФИО"),
+    name: z.string().min(3, "Введите ФИО"),
     phone: z.string().min(10, "Введите корректный телефон"),
     email: z.string().email("Введите корректный email"),
     role: z.string(),
@@ -26,80 +21,45 @@ const formSchema = z.object({
 
 type MasterFormValues = z.infer<typeof formSchema>
 
-export const MasterEdit = () => {
+export const MasterEdit = ({ data }: { data: UserProps }) => {
+    const { updateUser } = useUsers(1, 1);
     const form = useForm<MasterFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: "",
-            phone: "",
-            email: "",
-            role: "Мастер",
+            name: data.name || "",
+            phone: data.phone || "",
+            email: data.email || "",
+            role: data.role.id.toString(),
         },
     })
 
-    // Диапазон дат для отчета
-    const [dateRange, setDateRange] = useState<DateRange | undefined>()
-
-    const handleDownloadPdf = () => {
-        // dateRange.from и dateRange.to доступны здесь
-        const doc = new jsPDF();
-        doc.save("master-report.pdf");
-    };
-
-    const onSubmit = (data: MasterFormValues) => {
+    const onSubmit = async (values: MasterFormValues) => {
         console.warn("📦 Данные мастера:", data)
-        // TODO: отправка на сервер
+        const payload = {
+            name: values.name,
+            phone: values.phone,
+            email: values.email,
+            role: +values.role,
+        }
+
+        try {
+            await updateUser({ userId: data.id, updatedData: payload });
+            toast.success('Данные пользователя обновлены')
+        } catch (e) {
+            console.error(e)
+            toast.error('Ошибка обновления данных')
+        }
+
     }
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="mb-4 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className={cn(
-                                "w-[260px] justify-start text-left font-normal",
-                                !dateRange?.from && !dateRange?.to && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (
-                                dateRange.to ? (
-                                    `${format(dateRange.from, "dd.MM.yyyy")} – ${format(dateRange.to, "dd.MM.yyyy")}`
-                                ) : (
-                                    format(dateRange.from, "dd.MM.yyyy")
-                                )
-                            ) : (
-                                <span>Выберите даты</span>
-                            )}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="range"
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            defaultMonth={
-                                dateRange?.from
-                                    ? dateRange.from
-                                    : new Date(new Date().getFullYear(), new Date().getMonth() - 1)
-                            }
-                            numberOfMonths={2}
-                            className="rounded-lg border shadow-sm"
-                        />
-                    </PopoverContent>
-                </Popover>
-                <Button onClick={handleDownloadPdf}>
-                    Сформировать отчет
-                </Button>
-            </div>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 flex-auto">
                     {/* ФИО */}
                     <FormField
                         control={form.control}
-                        name="fullName"
+                        name="name"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>ФИО</FormLabel>
@@ -148,16 +108,16 @@ export const MasterEdit = () => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Роль</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Выберите роль" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="Мастер">Мастер</SelectItem>
-                                        <SelectItem value="Менеджер">Менеджер</SelectItem>
-                                        <SelectItem value="Администратор">Администратор</SelectItem>
+                                        <SelectItem value="1">Мастер</SelectItem>
+                                        <SelectItem value="4">Менеджер</SelectItem>
+                                        <SelectItem value="3">Администратор</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

@@ -18,11 +18,15 @@ import {
 import { cn, formatDate } from '@/lib/utils'
 import { OrderProps } from '@/types/order.types'
 import { IncomeOutcomeProps } from '@/types/income-outcome.types'
+import { useModal } from '@/providers/modal-provider'
+
 interface Props {
     data: OrderProps;
 }
 
 export const OrderAccounting = ({ data }: Props) => {
+    const { openModal } = useModal();
+
     const renderTable = (
         data: IncomeOutcomeProps[],
         type: "incomes" | "expenses"
@@ -43,7 +47,7 @@ export const OrderAccounting = ({ data }: Props) => {
                         <TableRow key={item.id}>
                             <TableCell>{formatDate(item.createdAt, 'PPP')}</TableCell>
                             <TableCell>{item.note}</TableCell>
-                            <TableCell>{item.user.name}</TableCell>
+                            <TableCell>{item.user?.name || ""}</TableCell>
                             <TableCell className="text-right">
                                 <Badge
                                     variant={type === "incomes" ? "default" : "destructive"}
@@ -65,7 +69,11 @@ export const OrderAccounting = ({ data }: Props) => {
             <Card>
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <CardTitle className="text-lg">Приходы</CardTitle>
-                    <Button size="sm" variant="default" className="w-full sm:w-auto">
+                    <Button size="sm" variant="default" className="w-full sm:w-auto"
+                        onClick={() =>
+                            openModal("incomeOutcome", { title: "Добавить приход", props: { type: "income", orderId: data.documentId, masterId: data.master?.id } })
+                        }
+                    >
                         <PlusIcon className="w-4 h-4 mr-1" />
                         <span>Добавить приход</span>
                     </Button>
@@ -78,7 +86,11 @@ export const OrderAccounting = ({ data }: Props) => {
             <Card>
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <CardTitle className="text-lg">Расходы</CardTitle>
-                    <Button size="sm" variant="outline" className="w-full sm:w-auto">
+                    <Button size="sm" variant="outline" className="w-full sm:w-auto"
+                        onClick={() =>
+                            openModal("incomeOutcome", { title: "Добавить расход", props: { type: "outcome", orderId: data.documentId, masterId: data.master?.id } })
+                        }
+                    >
                         <PlusIcon className="w-4 h-4 mr-1" />
                         <span>Добавить расход</span>
                     </Button>

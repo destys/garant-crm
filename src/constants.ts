@@ -637,7 +637,7 @@ export const DEMO_DATA = [
 
 export const SIDEBAR_MENU = [
   {
-    to: "/orders",
+    to: "/orders?filter=all",
     title: "Все заявки",
     icon: FileText,
     filters: {

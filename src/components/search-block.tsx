@@ -24,7 +24,6 @@ const FormSchema = z.object({
 });
 
 export const SearchBlock = () => {
-    const setFilters = useOrderFilterStore((state) => state.setFilters);
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -34,7 +33,11 @@ export const SearchBlock = () => {
     });
 
     function onSubmit(data: z.infer<typeof FormSchema>) {
-        setFilters({ search: data.search });
+        const { filters: currentFilters, setFilters } = useOrderFilterStore.getState();
+        setFilters({
+            ...currentFilters,
+            search: data.search,
+        });
 
         toast("Фильтры обновлены", {
             description: `Поиск: ${data.search}`,

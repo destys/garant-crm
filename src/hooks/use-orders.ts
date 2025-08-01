@@ -9,17 +9,19 @@ import {
   deleteOrder,
 } from "@/services/orders-service";
 import { useAuth } from "@/providers/auth-provider";
-type Filter = Record<string, unknown>;
 
 /**
  * Хук для работы с заказами (получение, создание, обновление, удаление)
  */
-export const useOrders = (page: number, pageSize: number, query?: Filter) => {
+export const useOrders = (page: number, pageSize: number, query?: unknown) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? ""; // Если `token === null`, передаем пустую строку
 
-  const queryString = qs.stringify(query, { encodeValuesOnly: true });
+  const queryString = qs.stringify(
+    { filters: query },
+    { encodeValuesOnly: true }
+  );
 
   // ✅ Получение заказов (чистый массив + `total`)
   const ordersQuery = useQuery<{ orders: OrderProps[]; total: number }, Error>({
@@ -50,19 +52,19 @@ export const useOrders = (page: number, pageSize: number, query?: Filter) => {
   const deleteOrderMutation = useMutation({
     mutationFn: (documentId: string) => deleteOrder(authToken, documentId),
     onSuccess: (_, documentId) => {
-      queryClient.setQueryData<{ orders: OrderProps[]; total: number }>(
-        ["orders"],
+      queryClient.setQueriesData<{ orders: OrderProps[]; total: number }>(
+        { queryKey: ["orders"] }, // обновляем все кэши с этим ключом
         (oldData) => {
           if (!oldData) return { orders: [], total: 0 };
           return {
             orders: oldData.orders.filter(
               (order) => order.documentId !== documentId
             ),
-            total: oldData.total - 1, // ✅ Уменьшаем `total` на 1
+            total: oldData.total - 1,
           };
         }
       );
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] }); // сбросим кэш и перезапросим
     },
   });
 

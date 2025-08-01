@@ -17,11 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { demoMasters } from "@/demo-data"
 import { cn } from "@/lib/utils"
 import { OrderProps } from "@/types/order.types"
-
-
+import { UserProps } from "@/types/user.types"
 
 const statusColorMap: Record<string, string> = {
   "Новая": "bg-blue-300 hover:bg-blue-400",
@@ -45,12 +43,13 @@ const linkWrapper = (row: any, content: React.ReactNode) => (
   </Link>
 )
 
-export const ordersColumns: ColumnDef<OrderProps>[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ordersColumns = (users: UserProps[], updateOrder: (data: { documentId: string; updatedData: any }) => void, deleteOrder: (documentId: string) => void, refetch?: () => void): ColumnDef<OrderProps>[] => [
   {
     accessorKey: "order_number",
     header: "№ Заказа",
     cell: ({ row }) =>
-      linkWrapper(row, row.original.title),
+      <div className="uppercase">{linkWrapper(row, row.original.title)}</div>,
   },
   {
     accessorKey: "orderStatus",
@@ -118,24 +117,36 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
   {
     id: "masters",
     header: "Мастер",
-    cell: () => (
-      <Select>
+    cell: ({ row }) => (
+      <Select
+        defaultValue={row.original.master?.id?.toString()}
+        onValueChange={(value) => {
+          updateOrder({
+            documentId: row.original.documentId,
+            updatedData: { master: { id: +value } },
+          });
+
+          if (refetch) {
+            refetch();
+          }
+        }}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Выбрать" />
         </SelectTrigger>
         <SelectContent>
-          {demoMasters.map((master) => (
-            <SelectItem key={master.id} value={master.name}>
-              {master.name}
+          {users.map((user) => (
+            <SelectItem key={user.id} value={user.id.toString()}>
+              {user.name}
             </SelectItem>
           ))}
         </SelectContent>
-      </Select>
+      </Select >
     ),
   },
   {
     accessorKey: "actions",
-    header: "123",
+    header: "",
     cell: ({ row }) => (
       <div className="flex gap-2 justify-end">
         <Button size="icon" variant="outline" title="Посмотреть" asChild>
@@ -143,10 +154,14 @@ export const ordersColumns: ColumnDef<OrderProps>[] = [
             <EyeIcon className="size-4" />
           </Link>
         </Button>
-        <Button size="icon" variant="outline" title="Позвонить">
-          <PhoneIcon className="size-4" />
+        <Button size="icon" variant="outline" title="Позвонить" asChild>
+          <Link href={`tel:${row.original.client.phone}`}>
+            <PhoneIcon className="size-4" />
+          </Link>
         </Button>
-        <Button size="icon" variant="destructive" title="Удалить">
+        <Button size="icon" variant="destructive" title="Удалить" onClick={
+          () => deleteOrder(row.original.documentId)
+        }>
           <TrashIcon className="size-4" />
         </Button>
       </div>

@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ReactNode, useState } from 'react'
-
+import { Toaster } from 'sonner'
 
 import {
     SidebarInset,
@@ -11,8 +11,11 @@ import {
 } from "@/components/ui/sidebar"
 import { SiteHeader } from '@/components/site-header'
 import { AppSidebar } from '@/components/app-sidebar'
+import { AddUserModal } from '@/components/modals/add-user-modal'
+import { AddIncomeOutcomeModal } from '@/components/modals/add-income-outcome-modal'
 
 import { AuthProvider } from './auth-provider'
+import { ModalProvider } from './modal-provider'
 
 export const Providers = ({ children }: { children: ReactNode }) => {
     const [client] = useState(() => new QueryClient())
@@ -28,11 +31,19 @@ export const Providers = ({ children }: { children: ReactNode }) => {
                         } as React.CSSProperties
                     }
                 >
-                    <AppSidebar variant="inset" />
-                    <SidebarInset>
-                        <SiteHeader />
-                        {children}
-                    </SidebarInset>
+                    <ModalProvider
+                        modals={{
+                            addUser: AddUserModal,
+                            incomeOutcome: AddIncomeOutcomeModal,
+                        }}
+                    >
+                        <AppSidebar variant="inset" />
+                        <SidebarInset>
+                            <SiteHeader />
+                            {children}
+                            <Toaster />
+                        </SidebarInset>
+                    </ModalProvider>
                 </SidebarProvider>
             </AuthProvider>
             <ReactQueryDevtools initialIsOpen={false} />
