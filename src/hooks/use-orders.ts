@@ -1,7 +1,7 @@
 import qs from "qs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { OrderProps } from "@/types/order.types";
+import { CreateOrderDto, OrderProps } from "@/types/order.types";
 import {
   fetchOrders,
   createOrder,
@@ -32,7 +32,7 @@ export const useOrders = (page: number, pageSize: number, query?: unknown) => {
 
   // ✅ Создание заказа
   const createOrderMutation = useMutation({
-    mutationFn: async (order: Partial<OrderProps>) => {
+    mutationFn: async (order: Partial<CreateOrderDto>) => {
       const created = await createOrder(authToken, order); // должен вернуть заказ с id
       const orderId = created.id;
 
@@ -87,7 +87,7 @@ export const useOrders = (page: number, pageSize: number, query?: unknown) => {
     isError: ordersQuery.isError,
     error: ordersQuery.error,
     refetch: ordersQuery.refetch, // <-- пробрасываем refetch
-    createOrder: createOrderMutation.mutate,
+    createOrder: createOrderMutation.mutateAsync,
     updateOrder: updateOrderMutation.mutate,
     deleteOrder: deleteOrderMutation.mutate,
   };

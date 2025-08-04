@@ -10,6 +10,7 @@ export interface IncomeOutcomeProps {
   count: number;
   user: Partial<UserProps>;
   order: Partial<OrderProps>;
+  outcome_category: string;
 }
 
 export type UpdateIncomeOutcomeDto = Omit<IncomeOutcomeProps, "user, order"> & {

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import RepairOrderForm from "@/components/orders/order-form"
+import { RepairOrderForm } from "@/components/orders/order-form"
 import { OrderMedia } from "@/components/orders/order-photos"
 import { OrderClient } from "@/components/orders/order-client"
 import { OrderAccounting } from "@/components/orders/order-accounting"

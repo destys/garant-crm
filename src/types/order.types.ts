@@ -36,3 +36,8 @@ export interface OrderProps {
   outcomes: IncomeOutcomeProps[];
   master: Partial<UserProps>;
 }
+
+export type CreateOrderDto = Omit<OrderProps, "user, order"> & {
+  master?: number;
+  client?: string;
+};

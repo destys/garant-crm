@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { CalendarIcon, CheckIcon, ChevronDown } from "lucide-react"
@@ -6,6 +7,8 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -44,14 +47,7 @@ import {
 } from "@/components/ui/select"
 import { OrderProps } from "@/types/order.types"
 import { useOrders } from "@/hooks/use-orders"
-
-const deviceTypes = [
-    "Холодильник",
-    "Стиральная машина",
-    "Винный холодильник",
-    "Посудомойка",
-    "Духовка",
-]
+import { useSettings } from "@/hooks/use-settings"
 
 // Схема валидации
 const schema = z.object({
@@ -95,8 +91,10 @@ interface Props {
     masterId?: string
 }
 
-export default function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
+export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
+    const router = useRouter();
     const isNew = !data;
+    const { settings } = useSettings();
     const { updateOrder, createOrder } = useOrders(1, 1)
 
     const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined
@@ -110,8 +108,8 @@ export default function RepairOrderForm({ data, clientDocumentId, masterId }: Pr
             orderStatus: data?.orderStatus || "Новая",
             source: data?.source || "",
             warranty: data?.warranty || "",
-            type_of_repair: data?.type_of_repair || "",
-            kind_of_repair: data?.kind_of_repair || "",
+            type_of_repair: data?.type_of_repair || "Платный",
+            kind_of_repair: data?.kind_of_repair || "Стационарный",
             visit_date: visitDate,
             visit_time: visitTime,
             diagnostic_date: data?.diagnostic_date ? parseISO(data.diagnostic_date) : undefined,
@@ -135,7 +133,7 @@ export default function RepairOrderForm({ data, clientDocumentId, masterId }: Pr
     const status = form.watch("orderStatus")
     const [open, setOpen] = useState(false)
 
-    const onSubmit = (value: FormData) => {
+    const onSubmit = async (value: FormData) => {
         let visitDateTime: string | undefined = undefined;
         if (value.visit_date) {
             const date = new Date(value.visit_date);
@@ -152,17 +150,39 @@ export default function RepairOrderForm({ data, clientDocumentId, masterId }: Pr
             diagnostic_date: value.diagnostic_date?.toISOString(),
             date_of_issue: value.date_of_issue?.toISOString(),
             deadline: value.deadline?.toISOString(),
-            client: { documentId: clientDocumentId ? clientDocumentId : undefined },
-            master: { id: masterId ? +masterId : undefined },
+
         }
 
+        delete payload.visit_time;
+
         if (isNew) {
-            createOrder(payload)
+            const isNewPayload = {
+                ...payload,
+                client: clientDocumentId ? clientDocumentId : undefined,
+                master: masterId ? +masterId : undefined,
+            }
+            try {
+                const created = await createOrder(isNewPayload);
+
+                toast("Заказ создан", {
+                    action: {
+                        label: "Перейти",
+                        onClick: () => router.push(`/orders/${created.documentId}`),
+                    },
+                })
+            } catch (error) {
+                console.error(error);
+                toast.error("Ошибка при создании заказа");
+            }
         } else {
+            delete (payload as any).master;
+            delete (payload as any).client;
+
             updateOrder({
                 documentId: data!.documentId,
                 updatedData: payload,
             })
+            toast.success("Заказ обновлен")
         }
     }
 
@@ -253,9 +273,20 @@ export default function RepairOrderForm({ data, clientDocumentId, masterId }: Pr
                     />
                     {status === "Отказ" && (
                         <FormField name="reason_for_refusal" control={form.control} render={({ field }) => (
-                            <FormItem className="xl:col-span-3">
+                            <FormItem>
                                 <FormLabel>Причина отказа</FormLabel>
-                                <FormControl><Textarea {...field} /></FormControl>
+                                <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Выберите причину отказа" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {settings?.reasons_for_refusal.map((item) => (
+                                            <SelectItem key={item.id} value={item.title}>
+                                                {item.title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -341,10 +372,10 @@ export default function RepairOrderForm({ data, clientDocumentId, masterId }: Pr
                                         <CommandInput placeholder="Поиск..." />
                                         <CommandEmpty>Ничего не найдено</CommandEmpty>
                                         <CommandGroup>
-                                            {deviceTypes.map((device) => (
-                                                <CommandItem key={device} value={device} onSelect={() => { form.setValue("device_type", device); setOpen(false) }}>
-                                                    <CheckIcon className={cn("mr-2 h-4 w-4", device === field.value ? "opacity-100" : "opacity-0")} />
-                                                    {device}
+                                            {settings?.types_of_equipment.map((device) => (
+                                                <CommandItem key={device.id} value={device.title} onSelect={() => { form.setValue("device_type", device.title); setOpen(false) }}>
+                                                    <CheckIcon className={cn("mr-2 h-4 w-4", device.title === field.value ? "opacity-100" : "opacity-0")} />
+                                                    {device.title}
                                                 </CommandItem>
                                             ))}
                                         </CommandGroup>

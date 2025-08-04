@@ -4,6 +4,7 @@ import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { EyeIcon, PhoneIcon, TrashIcon, UserCheck2Icon, UserX2Icon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,15 @@ export const mastersColumns = (
         <div className="bg-accent rounded-full flex justify-center items-center aspect-square size-8">
           {row.original.orders.length}
         </div>
+      ),
+    },
+    {
+      accessorKey: "balance",
+      header: "Баланс",
+      cell: ({ row }) => (
+        <Badge>
+          {row.original.balance || 0} ₽
+        </Badge>
       ),
     },
     {
@@ -81,11 +91,14 @@ export const mastersColumns = (
             size="icon"
             variant={!row.original.blocked ? "destructive" : "positive"}
             title="Заблокировать"
-            onClick={() =>
+            onClick={() => {
               updateUser({
                 userId: row.original.id,
                 updatedData: { blocked: !row.original.blocked },
               })
+              toast.success(!row.original.blocked ? "Аккаунт заблокирован" : "Аккаунт разблокирован")
+            }
+
             }
           >
             {row.original.blocked ? (
@@ -99,11 +112,14 @@ export const mastersColumns = (
             size="icon"
             variant="destructive"
             title="Удалить"
-            onClick={() => deleteUser(row.original.id)}
+            onClick={() => {
+              deleteUser(row.original.id)
+              toast.success("Аккаунт удален")
+            }}
           >
             <TrashIcon className="size-4" />
           </Button>
-        </div>
+        </div >
       ),
     },
   ];

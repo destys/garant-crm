@@ -1,22 +1,43 @@
 'use client';
 
+import { useState } from "react"
 
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import RepairOrderForm from "@/components/orders/order-form"
-import { useUsers } from "@/hooks/use-users";
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useUsers } from "@/hooks/use-users"
+import { useClients } from "@/hooks/use-clients"
+import { RepairOrderForm } from "@/components/orders/order-form"
 
 const NewOrderPage = () => {
-    const { users } = useUsers(1, 100);
+    const { users } = useUsers(1, 100)
+    const { clients, createClient } = useClients(1, 100)
 
-    const handleSelectMaster = (value: string) => {
-        console.warn('value: ', value);
+    const [phone, setPhone] = useState("")
+    const [clientId, setClientId] = useState<string | null>(null)
+    const [masterId, setMasterId] = useState<string>("")
+    const [loadingClient, setLoadingClient] = useState(false)
 
+    const handleFindOrCreateClient = () => {
+        if (!phone.trim()) return
+
+        setLoadingClient(true)
+        const existing = clients.find(c => c.phone?.replace(/\D/g, "") === phone.replace(/\D/g, ""))
+
+        if (existing) {
+            setClientId(existing.documentId)
+            setLoadingClient(false)
+        } else {
+            createClient({ phone }, {
+                onSuccess: (created) => {
+                    setClientId(created.documentId)
+                    setLoadingClient(false)
+                },
+                onError: () => {
+                    setLoadingClient(false)
+                }
+            })
+        }
     }
 
     return (
@@ -24,12 +45,9 @@ const NewOrderPage = () => {
             <div className="flex md:justify-between flex-col md:flex-row md:items-center gap-4 mb-8">
                 <h1 className="flex-auto">Новая заявка</h1>
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex items-center gap-2">
-
-                    </div>
                     <div className="flex items-center gap-4">
                         <span>Мастер:</span>
-                        <Select onValueChange={handleSelectMaster}>
+                        <Select onValueChange={(value) => setMasterId(value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Выбрать" />
                             </SelectTrigger>
@@ -44,7 +62,24 @@ const NewOrderPage = () => {
                     </div>
                 </div>
             </div>
-            <RepairOrderForm />
+
+            <div className="mb-6 flex gap-4 items-end">
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm">Номер телефона клиента</label>
+                    <Input
+                        mask="+0 000 000 00-00"
+                        placeholder="Введите номер"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        disabled={loadingClient}
+                    />
+                </div>
+                <Button onClick={handleFindOrCreateClient} disabled={loadingClient || !phone}>Привязать</Button>
+            </div>
+
+            {clientId && (
+                <RepairOrderForm clientDocumentId={clientId} masterId={masterId} />
+            )}
         </div>
     )
 }

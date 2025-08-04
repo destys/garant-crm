@@ -12,4 +12,5 @@ export interface ClientProps {
 export type UpdateClientDto = Omit<ClientProps, "user, order"> & {
   user?: number;
   order?: string;
+  client?: string;
 };
