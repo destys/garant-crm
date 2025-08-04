@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// components/providers/modal-provider.tsx
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
@@ -7,22 +6,21 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-type ModalKey = string;
+// Базовый тип модалки
+export type ModalComponent<P = any> = React.ComponentType<{
+    close: () => void;
+    props?: P;
+}>;
 
+// Тип состояния
 interface ModalState {
-    key: ModalKey;
+    key: string;
     title?: string;
-    props?: Record<string, any>;
+    props?: any;
 }
 
 interface ModalContextType {
-    openModal: (
-        key: ModalKey,
-        options?: {
-            title?: string;
-            props?: Record<string, any>;
-        }
-    ) => void;
+    openModal: (key: string, options?: { title?: string; props?: any }) => void;
     closeModal: () => void;
 }
 
@@ -34,24 +32,22 @@ export const useModal = () => {
     return ctx;
 };
 
-interface ModalProviderProps {
-    modals: Record<
-        ModalKey,
-        React.ComponentType<{ close: () => void; props?: Record<string, any> }>
-    >;
+interface ModalProviderProps<T extends Record<string, ModalComponent>> {
+    modals: T;
     children: ReactNode;
 }
 
-export const ModalProvider = ({ modals, children }: ModalProviderProps) => {
+export const ModalProvider = <T extends Record<string, ModalComponent>>({
+    modals,
+    children,
+}: ModalProviderProps<T>) => {
     const [state, setState] = useState<ModalState | null>(null);
 
-    const openModal = (key: ModalKey, options?: { title?: string; props?: Record<string, any> }) => {
+    const openModal = (key: keyof T & string, options?: { title?: string; props?: any }) => {
         setState({ key, title: options?.title, props: options?.props });
     };
 
-    const closeModal = () => {
-        setState(null);
-    };
+    const closeModal = () => setState(null);
 
     const ActiveModal = state ? modals[state.key] : null;
 
@@ -60,8 +56,12 @@ export const ModalProvider = ({ modals, children }: ModalProviderProps) => {
             {children}
             <Dialog open={!!state} onOpenChange={(open) => !open && closeModal()}>
                 <DialogContent className="max-w-lg">
-                    <DialogTitle className={cn("mb-6", !state?.title && "hidden")}>{state?.title}</DialogTitle>
-                    {ActiveModal && <ActiveModal close={closeModal} props={state?.props} />}
+                    <DialogTitle className={cn("mb-6", !state?.title && "hidden")}>
+                        {state?.title}
+                    </DialogTitle>
+                    {ActiveModal && (
+                        <ActiveModal close={closeModal} props={state?.props} />
+                    )}
                 </DialogContent>
             </Dialog>
         </ModalContext.Provider>

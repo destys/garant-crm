@@ -1,75 +1,55 @@
+// components/modals/ConfirmModal.tsx
+import z from "zod";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
 import { Loader2Icon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { useOutcomes } from "@/hooks/use-outcomes";
-import { useIncomes } from "@/hooks/use-incomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { Textarea } from "@/components/ui/textarea";
+import { useClients } from "@/hooks/use-clients";
+
 
 const formSchema = z
     .object({
-        count: z.string(),
-        note: z.string().optional(),
+        name: z.string().min(3, "Введите ФИО"),
+        phone: z.string().min(10, "Введите корректный телефон"),
+        address: z.string(),
     })
 
-interface Props {
+type MasterFormValues = z.infer<typeof formSchema>
+
+export const AddClientModal = ({
+    close
+}: {
     close: () => void;
-    props?: {
-        type: 'income' | 'outcome'
-        orderId: string;
-        masterId: number;
-    }
-}
-
-type IncomesOutcomeFormValues = z.infer<typeof formSchema>
-
-
-export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
+}) => {
+    const { createClient } = useClients(1, 1);
     const [loading, setLoading] = useState(false);
-    const { createIncome } = useIncomes(1, 1)
-    const { createOutcome } = useOutcomes(1, 1)
-    const queryClient = useQueryClient();
 
-    const form = useForm<IncomesOutcomeFormValues>({
+    const form = useForm<MasterFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            count: "0",
-            note: "",
+            name: "",
+            phone: "",
+            address: "",
         },
     })
 
-    const onSubmit = async (values: IncomesOutcomeFormValues) => {
+    const onSubmit = async (data: MasterFormValues) => {
         const payload = {
-            count: +values.count,
-            note: values.note,
-            order: props?.orderId,
-            user: props?.masterId,
+            name: data.name,
+            phone: data.phone,
+            address: data.address,
         };
 
         try {
             setLoading(true)
-            if (props?.type === 'income') {
-                await createIncome(payload);
-                toast.success('Доход добавлен')
-            }
+            await createClient(payload);
 
-            if (props?.type === 'outcome') {
-                await createOutcome(payload);
-                toast.success('Расход добавлен')
-            }
-
-            await queryClient.refetchQueries({
-                queryKey: ["order", String(props?.orderId)],
-                exact: true
-            });
-
+            toast.success('Пользователь создан')
             close();
         } catch (e) {
             console.error("Ошибка создания пользователя:", e);
@@ -80,18 +60,19 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
     };
 
     return (
-        <div>
+        <div className="space-y-6">
+
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
-                    {/* Сумма */}
+                    {/* ФИО */}
                     <FormField
                         control={form.control}
-                        name="count"
+                        name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Сумма</FormLabel>
+                                <FormLabel>ФИО</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="0" {...field} />
+                                    <Input placeholder="Иванов Иван Иванович" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -101,12 +82,27 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                     {/* Телефон */}
                     <FormField
                         control={form.control}
-                        name="note"
+                        name="phone"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Телефон</FormLabel>
                                 <FormControl>
-                                    <Textarea placeholder="Комменарий" {...field} />
+                                    <Input placeholder="+7 (999) 123-45-67" mask="+7 (000) 000-00-00" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Email */}
+                    <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Адрес</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Адрес" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -120,5 +116,5 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                 </form>
             </Form>
         </div>
-    )
-}
+    );
+};

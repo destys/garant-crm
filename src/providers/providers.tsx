@@ -13,9 +13,10 @@ import { SiteHeader } from '@/components/site-header'
 import { AppSidebar } from '@/components/app-sidebar'
 import { AddUserModal } from '@/components/modals/add-user-modal'
 import { AddIncomeOutcomeModal } from '@/components/modals/add-income-outcome-modal'
+import { AddClientModal } from '@/components/modals/add-client'
 
 import { AuthProvider } from './auth-provider'
-import { ModalProvider } from './modal-provider'
+import { ModalComponent, ModalProvider } from './modal-provider'
 
 export const Providers = ({ children }: { children: ReactNode }) => {
     const [client] = useState(() => new QueryClient())
@@ -34,7 +35,12 @@ export const Providers = ({ children }: { children: ReactNode }) => {
                     <ModalProvider
                         modals={{
                             addUser: AddUserModal,
-                            incomeOutcome: AddIncomeOutcomeModal,
+                            addClient: AddClientModal,
+                            incomeOutcome: AddIncomeOutcomeModal as ModalComponent<{
+                                type: "income" | "outcome";
+                                orderId: string;
+                                masterId: number;
+                            }>,
                         }}
                     >
                         <AppSidebar variant="inset" />

@@ -112,7 +112,7 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
     accessorKey: "client.phone",
     header: "Телефон",
     cell: ({ row }) =>
-      linkWrapper(row, `+7 (***) ***-${row.original.client.phone.slice(7)}`),
+      linkWrapper(row, `+7 (***) ***-${row.original.client?.phone.slice(7)}`),
   },
   {
     id: "masters",
@@ -155,7 +155,7 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
           </Link>
         </Button>
         <Button size="icon" variant="outline" title="Позвонить" asChild>
-          <Link href={`tel:${row.original.client.phone}`}>
+          <Link href={`tel:${row.original.client?.phone}`}>
             <PhoneIcon className="size-4" />
           </Link>
         </Button>
