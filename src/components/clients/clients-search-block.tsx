@@ -49,8 +49,8 @@ export const ClientSearchBlock = ({ onChange }: ClientSearchBlockProps) => {
 
             onChange({
                 $or: [
-                    { title: { $containsi: trimmed } },
-                    { client: { phone: { $containsi: trimmed } } },
+                    { name: { $containsi: trimmed } },
+                    { phone: { $containsi: trimmed } },
                 ],
             });
         }, 1000);

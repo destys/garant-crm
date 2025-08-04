@@ -2,6 +2,7 @@
 
 import { Loader2Icon, MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react"
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 import {
     Select,
@@ -26,13 +27,8 @@ const OrderPage = () => {
     const { documentId } = useParams();
     const { users } = useUsers(1, 100);
 
-    const query = {
-        documentId: documentId
-    }
-
-    const { updateOrder } = useOrders(1, 1, query)
-    const { order, isLoading } = useOrder(documentId ? documentId.toString() : "");
-
+    const { } = useOrders(1, 1)
+    const { order, isLoading, updateOrder } = useOrder(documentId ? documentId.toString() : "");
     if (!order) return null;
     if (isLoading) return <Loader2Icon className="animate-spin" />
 
@@ -43,13 +39,35 @@ const OrderPage = () => {
 
     const handleSelectMaster = (value: string) => {
         updateOrder({
-            documentId: order.documentId,
-            updatedData: {
-                master: {
-                    id: +value
-                }
+            master: {
+                id: +value
             }
         })
+    }
+
+    const handleApprove = () => {
+        updateOrder({
+            is_revision: false,
+            is_approve: true,
+        })
+
+        toast.success('Заказ утвержден')
+    }
+    const handleOnRevision = () => {
+        updateOrder({
+            is_revision: true,
+            is_approve: false,
+        })
+
+        toast.success('Заказ отправден на доработку')
+    }
+    const handleOnApprove = () => {
+        updateOrder({
+            is_revision: false,
+            is_approve: false,
+        })
+
+        toast.success('Заказ отправлен на проверку')
     }
 
     return (
@@ -78,6 +96,22 @@ const OrderPage = () => {
                     </div>
                 </div>
             </div>
+            {(!order.is_revision && !order.is_approve && order.orderStatus === "Отказ" || order.orderStatus === "Выдан") && (
+                <div className="flex gap-4 mb-6">
+                    <Button variant={'destructive'} onClick={handleOnRevision}>На доработку</Button>
+                    <Button variant={'positive'} onClick={handleApprove}>Утвердить</Button>
+                </div>
+            )}
+            {order.is_revision && (
+                <div className="flex gap-4 mb-6">
+                    <Button variant={'positive'} onClick={handleOnApprove}>Отправить на проверку</Button>
+                </div>
+            )}
+            {order.is_approve && (
+                <div className="flex gap-4 mb-6">
+                    <Button variant={'destructive'} onClick={handleOnRevision}>На доработку</Button>
+                </div>
+            )}
             <Tabs defaultValue="edit">
                 <div className="flex flex-col md:flex-row md:items-center gap-8 lg:gap-16">
                     <TabsList className="md:flex-auto">

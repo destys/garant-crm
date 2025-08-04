@@ -15,18 +15,22 @@ import { useOrderFilterStore } from "@/stores/order-filters-store";
 
 export const OrdersContent = () => {
     const activeTitle = useOrderFilterStore((state) => state.activeTitle);
+    const filters = useOrderFilterStore((state) => state.filters);
 
     // локальные фильтры
     const [formFilters, setFormFilters] = useState({});
     const [searchFilter, setSearchFilter] = useState({});
 
-    const filters = {
+    const filtersMerge = {
+        ...filters,
         ...formFilters,
         ...searchFilter,
     };
 
-    const { data, updateOrder, deleteOrder } = useOrders(1, 50, filters);
-    const { users } = useUsers(1, 50);
+    const sortString = activeTitle === 'Дедлайны' ? ["deadline:asc"] : "";
+
+    const { data, updateOrder, deleteOrder } = useOrders(1, 50, filtersMerge, sortString);
+    const { users } = useUsers(1, 100);
 
     const handleDownloadPdf = () => {
         const doc = new jsPDF();

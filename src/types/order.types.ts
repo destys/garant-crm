@@ -29,6 +29,8 @@ export interface OrderProps {
   equipment: string;
   completed_work: string;
   note: string;
+  is_revision: boolean;
+  is_approve: boolean;
   client: Partial<ClientProps>;
   order_docs: MediaProps[];
   device_photos: MediaProps[];

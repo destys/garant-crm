@@ -64,7 +64,7 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
         }
       );
       queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
+    }, 
   });
 
   return {

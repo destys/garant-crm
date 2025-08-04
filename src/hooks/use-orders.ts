@@ -13,15 +13,22 @@ import { useAuth } from "@/providers/auth-provider";
 /**
  * Хук для работы с заказами (получение, создание, обновление, удаление)
  */
-export const useOrders = (page: number, pageSize: number, query?: unknown) => {
+export const useOrders = (
+  page: number,
+  pageSize: number,
+  query?: unknown,
+  sort?: unknown
+) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? ""; // Если `token === null`, передаем пустую строку
 
   const queryString = qs.stringify(
-    { filters: query },
+    { filters: query, sort: sort },
     { encodeValuesOnly: true }
   );
+
+  const queryKey = ["clients", page, pageSize, query];
 
   // ✅ Получение заказов (чистый массив + `total`)
   const ordersQuery = useQuery<{ orders: OrderProps[]; total: number }, Error>({
@@ -63,20 +70,32 @@ export const useOrders = (page: number, pageSize: number, query?: unknown) => {
   // ✅ Удаление заказа
   const deleteOrderMutation = useMutation({
     mutationFn: (documentId: string) => deleteOrder(authToken, documentId),
-    onSuccess: (_, documentId) => {
-      queryClient.setQueriesData<{ orders: OrderProps[]; total: number }>(
-        { queryKey: ["orders"] }, // обновляем все кэши с этим ключом
-        (oldData) => {
-          if (!oldData) return { orders: [], total: 0 };
-          return {
-            orders: oldData.orders.filter(
-              (order) => order.documentId !== documentId
-            ),
-            total: oldData.total - 1,
-          };
-        }
-      );
-      queryClient.invalidateQueries({ queryKey: ["orders"] }); // сбросим кэш и перезапросим
+    onMutate: async (documentId: string) => {
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<{
+        clients: OrderProps[];
+        total: number;
+      }>(queryKey);
+
+      if (previousData) {
+        queryClient.setQueryData(queryKey, {
+          clients: previousData.clients.filter(
+            (client) => client.documentId !== documentId
+          ),
+          total: previousData.total - 1,
+        });
+      }
+
+      return { previousData };
+    },
+    onError: (_err, _documentId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"], exact: false });
     },
   });
 

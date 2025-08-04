@@ -68,9 +68,9 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
     },
   },
   {
-    accessorKey: "departure_date",
+    accessorKey: "visit_date",
     header: "Дата выезда",
-    cell: ({ row }) => row.original.departure_date ? linkWrapper(row, format(new Date(row.original.departure_date), "dd.MM.yyyy")) : "-"
+    cell: ({ row }) => row.original.visit_date ? linkWrapper(row, format(new Date(row.original.visit_date), "dd.MM.yyyy HH:mm")) : "-"
   },
   {
     accessorKey: "deadline",
@@ -127,10 +127,6 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
             updatedData: { master: { id: +value } },
           });
 
-          if (refetch) {
-            refetch();
-          }
-
           toast.success("Мастер назначен")
         }}
       >
@@ -163,7 +159,13 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
           </Link>
         </Button>
         <Button size="icon" variant="destructive" title="Удалить" onClick={
-          () => deleteOrder(row.original.documentId)
+          () => {
+            deleteOrder(row.original.documentId)
+            if (refetch) {
+              refetch();
+            }
+            toast.success("Заказ удален")
+          }
         }>
           <TrashIcon className="size-4" />
         </Button>

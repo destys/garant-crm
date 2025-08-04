@@ -115,7 +115,15 @@ export const SIDEBAR_MENU = [
     icon: Settings2,
     hideForAdmin: true,
     filters: {
-      $and: [{ is_revision: { $ne: true } }],
+      $and: [
+        {
+          $or: [
+            { orderStatus: { $eq: "Отказ" } },
+            { orderStatus: { $eq: "Выдан" } },
+          ],
+        },
+        { is_revision: { $eq: true } },
+      ],
     },
   },
   { separator: true },
@@ -133,12 +141,8 @@ export const SIDEBAR_MENU = [
             { orderStatus: { $eq: "Выдан" } },
           ],
         },
-        {
-          $or: [
-            { is_approve: { $null: true } },
-            { is_approve: { $eq: false } },
-          ],
-        },
+        { is_revision: { $eq: false } },
+        { is_approve: { $eq: false } },
       ],
     },
   },

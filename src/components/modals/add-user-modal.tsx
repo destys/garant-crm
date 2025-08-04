@@ -99,7 +99,7 @@ export const AddUserModal = ({
                             <FormItem>
                                 <FormLabel>Телефон</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="+7 (999) 123-45-67" mask="+7 (000) 000-00-00" {...field} />
+                                    <Input placeholder="+7 (999) 123-45-67" mask="+7 (000) 000-0000" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
