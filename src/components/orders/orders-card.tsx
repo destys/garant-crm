@@ -54,7 +54,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
         <Card className="flex flex-col justify-between h-full">
             <CardHeader>
                 <CardTitle className="space-y-2">
-                    <p>{data.order_number}</p>
+                    <p className="uppercase">{data.title}</p>
 
                 </CardTitle>
                 <CardAction className="space-x-2 mt-2">
@@ -84,16 +84,16 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
                 <Separator />
                 <div>
                     <span className="font-medium">Устройство:</span>{" "}
-                    {data.device?.type ?? "—"} / {data.device?.brand ?? "—"} / {data.device?.model ?? "—"}
+                    {data.device_type || "-"} / {data.brand || "-"} / {data.model || "-"}
                 </div>
                 <div>
                     <span className="font-medium">Оплата:</span>{" "}
-                    {data.payment?.prepay ?? 0} ₽ / {data.payment?.total ?? 0} ₽
+                    {data.prepay ?? 0} ₽ / {data.total_cost ?? 0} ₽
                 </div>
                 <Separator />
                 <div>
                     <span className="font-medium">Мастер:</span>{" "}
-                    {data.masters?.[0]?.name ?? "—"}
+                    {data.master?.name ?? "—"}
                 </div>
             </CardContent>
         </Card>

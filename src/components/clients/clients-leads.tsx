@@ -8,12 +8,18 @@ import { DataTable } from "../data-table";
 
 export const ClientsLeads = ({ data }: { data: ClientProps }) => {
     const { users } = useUsers(1, 50);
-    const { updateOrder, deleteOrder } = useOrders(1, 50);
+    const query = {
+        client: {
+            documentId: data.documentId
+        }
+    }
+    const { data: orders, updateOrder, deleteOrder } = useOrders(1, 50, query);
+
 
     return (
         <div>
             <DataTable
-                data={data.orders}
+                data={orders}
                 columns={ordersColumns(users, updateOrder, deleteOrder)}
                 cardComponent={({ data }) => (
                     <OrdersCard data={data} />

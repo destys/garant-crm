@@ -7,6 +7,7 @@ import {
 import { format, differenceInDays } from "date-fns"
 import { EyeIcon, PhoneIcon, TrashIcon } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -112,7 +113,7 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
     accessorKey: "client.phone",
     header: "Телефон",
     cell: ({ row }) =>
-      linkWrapper(row, `+7 (***) ***-${row.original.client?.phone.slice(7)}`),
+      linkWrapper(row, `+7 (***) ***-${row.original.client?.phone?.slice(7)}`),
   },
   {
     id: "masters",
@@ -129,6 +130,8 @@ export const ordersColumns = (users: UserProps[], updateOrder: (data: { document
           if (refetch) {
             refetch();
           }
+
+          toast.success("Мастер назначен")
         }}
       >
         <SelectTrigger className="w-[180px]">

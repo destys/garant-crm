@@ -1,6 +1,7 @@
 "use strict";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import QueryString from "qs";
 
 import { useAuth } from "@/providers/auth-provider";
 import { ClientProps, UpdateClientDto } from "@/types/client.types";
@@ -11,10 +12,15 @@ import {
   updateClient,
 } from "@/services/clients-service";
 
-export const useClients = (page: number, pageSize: number, query?: string) => {
+export const useClients = (page: number, pageSize: number, query?: unknown) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? "";
+
+  const queryString = QueryString.stringify(
+    { filters: query },
+    { encodeValuesOnly: true }
+  );
 
   // Ключ запроса
   const queryKey = ["clients", page, pageSize, query];
@@ -22,7 +28,7 @@ export const useClients = (page: number, pageSize: number, query?: string) => {
   // Запрос всех клиентов
   const clientsQuery = useQuery<{ clients: ClientProps[]; total: number }>({
     queryKey,
-    queryFn: () => fetchClients(authToken, page, pageSize, query),
+    queryFn: () => fetchClients(authToken, page, pageSize, queryString),
     enabled: !!token,
   });
 

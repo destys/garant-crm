@@ -1,23 +1,28 @@
 'use client';
 import { PlusCircleIcon } from "lucide-react"
+import { useState } from "react";
 
 import { useClients } from "@/hooks/use-clients";
 import { useModal } from "@/providers/modal-provider";
-
-import { SearchBlock } from "../search-block"
-import { Button } from "../ui/button"
-
-import { ClientsTable } from "./clients-table"
+import { Button } from "@/components/ui/button"
+import { ClientsTable } from "@/components/clients/clients-table"
+import { ClientSearchBlock } from "@/components/clients/clients-search-block";
 
 export const ClientsContent = () => {
-    const { clients, deleteClient } = useClients(1, 500);
+    const [searchFilter, setSearchFilter] = useState({});
+
+    const filters = {
+        ...searchFilter,
+    };
+
+    const { clients, deleteClient } = useClients(1, 500, filters);
     const { openModal } = useModal();
 
     return (
         <div>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
                 <h1 className="flex-auto">Все клиенты</h1>
-                <SearchBlock />
+                <ClientSearchBlock onChange={setSearchFilter} />
             </div>
             <Button className="mb-10"
                 onClick={() =>

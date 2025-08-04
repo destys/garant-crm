@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -26,13 +27,11 @@ import {
     CommandInput,
     CommandItem,
 } from "@/components/ui/command"
-import { useOrderFilterStore } from "@/stores/order-filters-store"
+import { useUsers } from "@/hooks/use-users"
 
-const masters = [
-    { label: "Иванов Иван", value: "ivanov" },
-    { label: "Петров Пётр", value: "petrov" },
-    { label: "Сидоров Сидор", value: "sidorov" },
-]
+interface OrdersFiltersProps {
+    onChange: (filters: Record<string, any>) => void;
+}
 
 const formSchema = z.object({
     dateRange: z
@@ -47,7 +46,8 @@ const formSchema = z.object({
     master: z.string().optional(),
 })
 
-export const OrdersFilters = () => {
+export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
+    const { users } = useUsers(1, 100);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -60,16 +60,34 @@ export const OrdersFilters = () => {
     });
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        const { filters: currentFilters, setFilters } = useOrderFilterStore.getState();
-        setFilters({
-            ...currentFilters,
-            ...values,
-        });
+        const filters: Record<string, any> = {};
+
+        const from = values.dateRange?.from;
+        const to = values.dateRange?.to;
+
+        if (from || to) {
+            filters.createdAt = {};
+            if (from) filters.createdAt.$gte = from.toISOString();
+            if (to) filters.createdAt.$lte = to.toISOString();
+        }
+
+        if (values.master) {
+            filters.master = { id: values.master };
+        }
+
+        onChange(filters); // 🔁 прокидываем наверх
     };
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid lg:grid-cols-3 items-end gap-4 border rounded-md p-4 mb-6 lg:mb-14">
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                onReset={() => {
+                    form.reset();
+                    onChange({});
+                }}
+                className="grid lg:grid-cols-3 items-end gap-4 border rounded-md p-4 mb-6 lg:mb-14"
+            >
                 <FormField
                     control={form.control}
                     name="dateRange"
@@ -135,7 +153,7 @@ export const OrdersFilters = () => {
                                             !field.value && "text-muted-foreground"
                                         )}
                                     >
-                                        {masters.find((m) => m.value === field.value)?.label || "Выберите мастера"}
+                                        {users.find((m) => m.id.toString() === field.value)?.name || "Выберите мастера"}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -144,10 +162,10 @@ export const OrdersFilters = () => {
                                         <CommandInput placeholder="Поиск мастера..." />
                                         <CommandEmpty>Мастер не найден</CommandEmpty>
                                         <CommandGroup>
-                                            {masters.map((master) => (
+                                            {users.map((master) => (
                                                 <CommandItem
-                                                    key={master.value}
-                                                    value={master.value}
+                                                    key={master.id}
+                                                    value={master.id.toString()}
                                                     onSelect={(val) => {
                                                         form.setValue("master", val)
                                                     }}
@@ -155,10 +173,10 @@ export const OrdersFilters = () => {
                                                     <CheckIcon
                                                         className={cn(
                                                             "mr-2 h-4 w-4",
-                                                            field.value === master.value ? "opacity-100" : "opacity-0"
+                                                            field.value === master.id.toString() ? "opacity-100" : "opacity-0"
                                                         )}
                                                     />
-                                                    {master.label}
+                                                    {master.name}
                                                 </CommandItem>
                                             ))}
                                         </CommandGroup>
@@ -170,7 +188,11 @@ export const OrdersFilters = () => {
                     )}
                 />
 
-                <Button type="submit">Применить</Button>
+                <div className="grid grid-cols-2 gap-4">
+                    <Button type="submit">Применить</Button>
+                    <Button type="reset" variant={'destructive'}>Сбросить</Button>
+                </div>
+
             </form>
         </Form>
     )

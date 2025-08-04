@@ -17,7 +17,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 
-interface SearchBlockProps {
+interface ClientSearchBlockProps {
     onChange: (filters: Record<string, any>) => void;
 }
 
@@ -25,7 +25,7 @@ const FormSchema = z.object({
     search: z.string().optional(),
 });
 
-export const SearchBlock = ({ onChange }: SearchBlockProps) => {
+export const ClientSearchBlock = ({ onChange }: ClientSearchBlockProps) => {
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {

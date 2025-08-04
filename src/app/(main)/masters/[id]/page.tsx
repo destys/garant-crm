@@ -1,7 +1,7 @@
 'use client';
 
 import { BanknoteArrowDownIcon, BanknoteArrowUpIcon } from "lucide-react"
-import React, { Usable } from "react";
+import { useParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -10,13 +10,10 @@ import { MasterLeads } from "@/components/masters/master-leads"
 import { MasterAccounting } from "@/components/masters/master-accounting"
 import { useUser } from "@/hooks/use-user"
 
-interface Props {
-    id: number;
-}
-
-const MasterPage = ({ params }: { params: Usable<Props> }) => {
-    const { id } = React.use(params);
-    const { data } = useUser(id);
+const MasterPage = () => {
+    const params = useParams();
+    const { id } = params;
+    const { data } = useUser(id ? +id : null);
 
     if (!data) return null;
 

@@ -1,34 +1,49 @@
 import { create } from "zustand";
-
-interface DateRange {
-  from?: Date;
-  to?: Date;
-}
+import { persist } from "zustand/middleware";
 
 export interface Filters {
-  search?: string;
-  dateRange?: DateRange;
-  master?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 interface OrderFilterState {
   filters: Filters;
   activeTitle: string | null;
-  setFilters: (filters: Partial<Filters>) => void;
+  setFilters: (filters: Filters) => void;
   resetFilters: () => void;
   setActiveTitle: (title: string | null) => void;
 }
 
-export const useOrderFilterStore = create<OrderFilterState>((set) => ({
-  filters: {},
-  activeTitle: null,
-  setFilters: (filters) =>
-    set((state) => ({
-      filters: { ...state.filters, ...filters },
-    })),
-  resetFilters: () =>
-    set({
+export const useOrderFilterStore = create<OrderFilterState>()(
+  persist(
+    (set) => ({
       filters: {},
+      activeTitle: null,
+      setFilters: (filters) =>
+        set({
+          filters, // 🔄 перезаписываем полностью
+        }),
+      resetFilters: () =>
+        set({
+          filters: {},
+          activeTitle: null,
+        }),
+      setActiveTitle: (title) => set({ activeTitle: title }),
     }),
-  setActiveTitle: (title) => set({ activeTitle: title }),
-}));
+    {
+      name: "order-filters", // ключ в sessionStorage
+      storage: {
+        getItem: (name) => {
+          const value = sessionStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        },
+        setItem: (name, value) => {
+          sessionStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          sessionStorage.removeItem(name);
+        },
+      },
+    }
+  )
+);

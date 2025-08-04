@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2Icon, MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react"
-import React, { Usable } from "react"
+import { useParams } from "next/navigation";
 
 import {
     Select,
@@ -21,12 +21,9 @@ import { useOrders } from "@/hooks/use-orders"
 import { useUsers } from "@/hooks/use-users";
 import { useOrder } from "@/hooks/use-order";
 
-interface Props {
-    documentId: string;
-}
 
-const OrderPage = ({ params }: { params: Usable<Props> }) => {
-    const { documentId } = React.use<Props>(params);
+const OrderPage = () => {
+    const { documentId } = useParams();
     const { users } = useUsers(1, 100);
 
     const query = {
@@ -34,7 +31,7 @@ const OrderPage = ({ params }: { params: Usable<Props> }) => {
     }
 
     const { updateOrder } = useOrders(1, 1, query)
-    const { order, isLoading } = useOrder(documentId);
+    const { order, isLoading } = useOrder(documentId ? documentId.toString() : "");
 
     if (!order) return null;
     if (isLoading) return <Loader2Icon className="animate-spin" />

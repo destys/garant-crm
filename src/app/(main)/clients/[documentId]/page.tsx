@@ -1,18 +1,15 @@
 'use client';
-import React, { Usable } from "react";
+import { useParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClients } from "@/hooks/use-clients";
 import { ClientsEdit } from "@/components/clients/clients-edit";
 import { ClientsLeads } from "@/components/clients/clients-leads";
 
-interface Props {
-    documentId: number;
-}
+const ClientPage = () => {
+    const params = useParams();
 
-const ClientPage = ({ params }: { params: Usable<Props> }) => {
-    const { documentId } = React.use(params);
-
+    const { documentId } = params;
     const query = `&filters[documentId]=${documentId}`;
 
     const { clients } = useClients(1, 1, query);

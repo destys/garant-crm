@@ -32,8 +32,20 @@ export const useOrders = (page: number, pageSize: number, query?: unknown) => {
 
   // ✅ Создание заказа
   const createOrderMutation = useMutation({
-    mutationFn: (order: Partial<OrderProps>) => createOrder(authToken, order),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders"] }),
+    mutationFn: async (order: Partial<OrderProps>) => {
+      const created = await createOrder(authToken, order); // должен вернуть заказ с id
+      const orderId = created.id;
+
+      // Обновляем title: zv-{id}
+      await updateOrder(authToken, created.documentId, {
+        title: `zv-${orderId}`,
+      });
+
+      return created;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
   });
 
   // ✅ Обновление заказа

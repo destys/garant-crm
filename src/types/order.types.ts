@@ -4,6 +4,7 @@ import { MediaProps } from "./media.types";
 import { UserProps } from "./user.types";
 
 export interface OrderProps {
+  id: number;
   title: string;
   documentId: string;
   orderStatus: string;
@@ -28,7 +29,7 @@ export interface OrderProps {
   equipment: string;
   completed_work: string;
   note: string;
-  client: ClientProps;
+  client: Partial<ClientProps>;
   order_docs: MediaProps[];
   device_photos: MediaProps[];
   incomes: IncomeOutcomeProps[];

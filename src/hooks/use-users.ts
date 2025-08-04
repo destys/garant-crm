@@ -1,6 +1,7 @@
 "use strict";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import QueryString from "qs";
 
 import { UpdateUserDto, UserProps } from "@/types/user.types";
 import {
@@ -11,14 +12,19 @@ import {
 } from "@/services/users-service";
 import { useAuth } from "@/providers/auth-provider";
 
-export const useUsers = (page: number, pageSize: number, query?: string) => {
+export const useUsers = (page: number, pageSize: number, query?: unknown) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
+  const queryString = QueryString.stringify(
+    { filters: query },
+    { encodeValuesOnly: true }
+  );
+
   const usersQuery = useQuery<{ users: UserProps[]; total: number }, Error>({
     queryKey: ["users", page, pageSize, query],
-    queryFn: () => fetchUsers(authToken, page, pageSize, query),
+    queryFn: () => fetchUsers(authToken, page, pageSize, queryString),
     enabled: !!token,
   });
 

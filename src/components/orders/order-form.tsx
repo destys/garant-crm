@@ -88,47 +88,47 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+
 interface Props {
-    data: OrderProps
+    data?: OrderProps | null
+    clientDocumentId?: string
+    masterId?: string
 }
 
-export default function RepairOrderForm({ data }: Props) {
-    const { updateOrder } = useOrders(1, 1)
+export default function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
+    const isNew = !data;
+    const { updateOrder, createOrder } = useOrders(1, 1)
 
-    // Разделяем `visit_date` на дату и время из ISO строки
-    const visitDate = data.visit_date ? parseISO(data.visit_date) : undefined
+    const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined
     const visitTime = visitDate
-        ? `${visitDate.getHours().toString().padStart(2, "0")}:${visitDate
-            .getMinutes()
-            .toString()
-            .padStart(2, "0")}`
+        ? `${visitDate.getHours().toString().padStart(2, "0")}:${visitDate.getMinutes().toString().padStart(2, "0")}`
         : ""
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            orderStatus: data.orderStatus || "Новая",
-            source: data.source || "",
-            warranty: data.warranty || "",
-            type_of_repair: data.type_of_repair || "",
-            kind_of_repair: data.kind_of_repair || "",
-            visit_date: visitDate || undefined,
+            orderStatus: data?.orderStatus || "Новая",
+            source: data?.source || "",
+            warranty: data?.warranty || "",
+            type_of_repair: data?.type_of_repair || "",
+            kind_of_repair: data?.kind_of_repair || "",
+            visit_date: visitDate,
             visit_time: visitTime,
-            diagnostic_date: data.diagnostic_date ? parseISO(data.diagnostic_date) : undefined,
-            date_of_issue: data.date_of_issue ? parseISO(data.date_of_issue) : undefined,
-            deadline: data.deadline ? parseISO(data.deadline) : undefined,
-            device_type: data.device_type || "",
-            brand: data.brand || "",
-            model: data.model || "",
-            serial_number: data.serial_number || "",
-            reason_for_refusal: data.reason_for_refusal || "",
-            defect: data.defect || "",
-            conclusion: data.conclusion || "",
-            total_cost: data.total_cost || "",
-            prepay: data.prepay || "",
-            equipment: data.equipment || "",
-            completed_work: data.completed_work || "",
-            note: data.note || "",
+            diagnostic_date: data?.diagnostic_date ? parseISO(data.diagnostic_date) : undefined,
+            date_of_issue: data?.date_of_issue ? parseISO(data.date_of_issue) : undefined,
+            deadline: data?.deadline ? parseISO(data.deadline) : undefined,
+            device_type: data?.device_type || "",
+            brand: data?.brand || "",
+            model: data?.model || "",
+            serial_number: data?.serial_number || "",
+            reason_for_refusal: data?.reason_for_refusal || "",
+            defect: data?.defect || "",
+            conclusion: data?.conclusion || "",
+            total_cost: data?.total_cost || "",
+            prepay: data?.prepay || "",
+            equipment: data?.equipment || "",
+            completed_work: data?.completed_work || "",
+            note: data?.note || "",
         },
     })
 
@@ -136,9 +136,7 @@ export default function RepairOrderForm({ data }: Props) {
     const [open, setOpen] = useState(false)
 
     const onSubmit = (value: FormData) => {
-        // Собираем visit_date + visit_time в ISO-строку
         let visitDateTime: string | undefined = undefined;
-
         if (value.visit_date) {
             const date = new Date(value.visit_date);
             if (value.visit_time) {
@@ -148,38 +146,25 @@ export default function RepairOrderForm({ data }: Props) {
             visitDateTime = date.toISOString();
         }
 
-        // Приводим все даты в строку перед отправкой
-        updateOrder({
-            documentId: data.documentId,
-            updatedData: {
-                orderStatus: value.orderStatus,
-                source: value.source,
-                warranty: value.warranty,
-                type_of_repair: value.type_of_repair,
-                kind_of_repair: value.kind_of_repair,
-                visit_date: visitDateTime,
-                diagnostic_date: value.diagnostic_date
-                    ? value.diagnostic_date.toISOString()
-                    : undefined,
-                date_of_issue: value.date_of_issue
-                    ? value.date_of_issue.toISOString()
-                    : undefined,
-                deadline: value.deadline ? value.deadline.toISOString() : undefined,
-                device_type: value.device_type,
-                brand: value.brand,
-                model: value.model,
-                serial_number: value.serial_number,
-                reason_for_refusal: value.reason_for_refusal,
-                defect: value.defect,
-                conclusion: value.conclusion,
-                total_cost: value.total_cost,
-                prepay: value.prepay,
-                equipment: value.equipment,
-                completed_work: value.completed_work,
-                note: value.note,
-            },
-        });
-    };
+        const payload = {
+            ...value,
+            visit_date: visitDateTime,
+            diagnostic_date: value.diagnostic_date?.toISOString(),
+            date_of_issue: value.date_of_issue?.toISOString(),
+            deadline: value.deadline?.toISOString(),
+            client: { documentId: clientDocumentId ? clientDocumentId : undefined },
+            master: { id: masterId ? +masterId : undefined },
+        }
+
+        if (isNew) {
+            createOrder(payload)
+        } else {
+            updateOrder({
+                documentId: data!.documentId,
+                updatedData: payload,
+            })
+        }
+    }
 
     const renderDateField = (name: keyof FormData, label: string) => (
         <FormField
