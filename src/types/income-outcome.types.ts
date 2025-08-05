@@ -11,6 +11,7 @@ export interface IncomeOutcomeProps {
   user: Partial<UserProps>;
   order: Partial<OrderProps>;
   outcome_category: string;
+  income_category: string;
 }
 
 export type UpdateIncomeOutcomeDto = Omit<IncomeOutcomeProps, "user, order"> & {

@@ -6,7 +6,7 @@ import { format, parseISO } from "date-fns"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -132,6 +132,15 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
 
     const status = form.watch("orderStatus")
     const [open, setOpen] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+    const [createdId, setCreatedId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (countdown === 0 && createdId) {
+            router.push(`/orders/${createdId}`);
+        }
+    }, [countdown, createdId, router]);
 
     const onSubmit = async (value: FormData) => {
         let visitDateTime: string | undefined = undefined;
@@ -150,12 +159,12 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
             diagnostic_date: value.diagnostic_date?.toISOString(),
             date_of_issue: value.date_of_issue?.toISOString(),
             deadline: value.deadline?.toISOString(),
-
         }
 
         delete payload.visit_time;
 
         if (isNew) {
+            if (isNew) setIsSubmitting(true);
             const isNewPayload = {
                 ...payload,
                 client: clientDocumentId ? clientDocumentId : undefined,
@@ -163,13 +172,21 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
             }
             try {
                 const created = await createOrder(isNewPayload);
-
+                setCreatedId(created.documentId);
                 toast("Заказ создан", {
                     action: {
                         label: "Перейти",
                         onClick: () => router.push(`/orders/${created.documentId}`),
                     },
                 })
+                const timer = setInterval(() => {
+                    setCountdown((prev) => {
+                        if (prev === 1) {
+                            clearInterval(timer);
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
             } catch (error) {
                 console.error(error);
                 toast.error("Ошибка при создании заказа");
@@ -462,7 +479,19 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
                     )} />
                 </div>
 
-                <Button type="submit">Сохранить</Button>
+                <div className="flex items-center gap-4">
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? "Сохраняем..." : "Сохранить"}
+                    </Button>
+                    {isSubmitting && createdId && (
+                        <>
+                            <span className="text-muted-foreground">Переход через {countdown} сек</span>
+                            <Button variant="secondary" onClick={() => router.push(`/orders/${createdId}`)}>
+                                Перейти сейчас
+                            </Button>
+                        </>
+                    )}
+                </div>
             </form>
         </Form>
     )

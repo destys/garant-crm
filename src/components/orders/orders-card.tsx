@@ -62,7 +62,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
                         <PhoneIcon className="size-4" />
                     </Button>
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={`/orders/546asd5a6d4a56sd4a5ds45sadasghfgjg`}>
+                        <Link href={`/orders/${data.documentId}`}>
                             <LinkIcon className="size-4" />
                         </Link>
                     </Button>

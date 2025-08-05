@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2Icon, MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react"
+import { Loader2Icon } from "lucide-react"
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -17,10 +17,10 @@ import { RepairOrderForm } from "@/components/orders/order-form"
 import { OrderMedia } from "@/components/orders/order-photos"
 import { OrderClient } from "@/components/orders/order-client"
 import { OrderAccounting } from "@/components/orders/order-accounting"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useOrders } from "@/hooks/use-orders"
 import { useUsers } from "@/hooks/use-users";
 import { useOrder } from "@/hooks/use-order";
+import { OrderDocs } from "@/components/orders/order-docs";
 
 
 const OrderPage = () => {
@@ -96,7 +96,7 @@ const OrderPage = () => {
                     </div>
                 </div>
             </div>
-            {(!order.is_revision && !order.is_approve && order.orderStatus === "Отказ" || order.orderStatus === "Выдан") && (
+            {(!order.is_revision && !order.is_approve && (order.orderStatus === "Отказ" || order.orderStatus === "Выдан")) && (
                 <div className="flex gap-4 mb-6">
                     <Button variant={'destructive'} onClick={handleOnRevision}>На доработку</Button>
                     <Button variant={'positive'} onClick={handleApprove}>Утвердить</Button>
@@ -122,28 +122,7 @@ const OrderPage = () => {
                         <TabsTrigger value="client">Клиент</TabsTrigger>
                         <TabsTrigger value="calculations">Расчеты</TabsTrigger>
                     </TabsList>
-                    <div className="flex gap-2">
-                        <Button>
-                            <PhoneCallIcon />
-                        </Button>
-                        <Button>
-                            <MailIcon />
-                        </Button>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button>
-                                    <PrinterIcon />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="grid gap-4">
-                                <Button variant={'secondary'}>Договор</Button>
-                                <Button variant={'secondary'}>Акт</Button>
-                                <Button variant={'secondary'}>Гарантия</Button>
-                                <Button variant={'secondary'}>Техническое заключение</Button>
-                            </PopoverContent>
-                        </Popover>
-
-                    </div>
+                    <OrderDocs data={order} />
                 </div>
                 <TabsContent value="edit">
                     <RepairOrderForm data={order} />

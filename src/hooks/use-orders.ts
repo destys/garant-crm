@@ -24,7 +24,7 @@ export const useOrders = (
   const authToken = token ?? ""; // Если `token === null`, передаем пустую строку
 
   const queryString = qs.stringify(
-    { filters: query, sort: sort },
+    { filters: query, sort: sort ? sort : ["createdAt:desc"] },
     { encodeValuesOnly: true }
   );
 

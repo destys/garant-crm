@@ -1,6 +1,7 @@
 "use strict";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import QueryString from "qs";
 
 import { useAuth } from "@/providers/auth-provider";
 import {
@@ -14,17 +15,27 @@ import {
   UpdateIncomeOutcomeDto,
 } from "@/types/income-outcome.types";
 
-export const useIncomes = (page: number, pageSize: number, query?: string) => {
+export const useIncomes = (
+  page: number,
+  pageSize: number,
+  query?: unknown,
+  sort?: unknown
+) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? "";
+
+  const queryString = QueryString.stringify(
+    { filters: query, sort: sort },
+    { encodeValuesOnly: true }
+  );
 
   const incomesQuery = useQuery<{
     incomes: IncomeOutcomeProps[];
     total: number;
   }>({
     queryKey: ["incomes", page, pageSize, query],
-    queryFn: () => fetchIncomes(authToken, page, pageSize, query),
+    queryFn: () => fetchIncomes(authToken, page, pageSize, queryString),
     enabled: !!token,
   });
 

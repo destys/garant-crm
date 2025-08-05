@@ -141,8 +141,18 @@ export const SIDEBAR_MENU = [
             { orderStatus: { $eq: "Выдан" } },
           ],
         },
-        { is_revision: { $eq: false } },
-        { is_approve: { $eq: false } },
+        {
+          $or: [
+            { is_revision: { $eq: false } },
+            { is_revision: { $null: true } },
+          ],
+        },
+        {
+          $or: [
+            { is_approve: { $eq: false } },
+            { is_approve: { $null: true } },
+          ],
+        },
       ],
     },
   },
@@ -249,3 +259,16 @@ export const WORKSHOP_EXPENSES = [
   "Курьерские услуги",
   "Бонусы и премии",
 ];
+
+export const INCOME_CATEGORIES = [
+  "Оплата за ремонт",
+  "Продажа запчастей",
+  "Диагностика (платная)",
+  "Выезд мастера",
+  "Продажа техники",
+  "Продажа аксессуаров и расходников",
+  "Доход от курьерской доставки",
+  "Дополнительные услуги",
+  "Гарантийный платёж",
+  "Аренда оборудования",
+] as const;

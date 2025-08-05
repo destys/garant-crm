@@ -10,9 +10,11 @@ const ClientPage = () => {
     const params = useParams();
 
     const { documentId } = params;
-    const query = `&filters[documentId]=${documentId}`;
+    const filters = {
+        documentId: documentId
+    }
 
-    const { clients } = useClients(1, 1, query);
+    const { clients } = useClients(1, 1, filters);
     const data = clients[0];
 
     if (!data) return null;

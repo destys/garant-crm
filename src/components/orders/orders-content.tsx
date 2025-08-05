@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { jsPDF } from "jspdf";
 import { useState } from "react";
 
 import { SearchBlock } from "@/components/search-block";
@@ -13,9 +13,12 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 import { useOrderFilterStore } from "@/stores/order-filters-store";
 
+import { generateMasterReportPdf } from "../pdfs/generate-master-report-pdf";
+
 export const OrdersContent = () => {
     const activeTitle = useOrderFilterStore((state) => state.activeTitle);
     const filters = useOrderFilterStore((state) => state.filters);
+    const [period, setPeriod] = useState<{ from?: Date; to?: Date }>({});
 
     // локальные фильтры
     const [formFilters, setFormFilters] = useState({});
@@ -33,8 +36,8 @@ export const OrdersContent = () => {
     const { users } = useUsers(1, 100);
 
     const handleDownloadPdf = () => {
-        const doc = new jsPDF();
-        doc.save("orders-report.pdf");
+        if (!period.from || !period.to || !data.length) return;
+        generateMasterReportPdf(data, period.from, period.to);
     };
 
     return (
@@ -43,11 +46,24 @@ export const OrdersContent = () => {
                 <h1 className="flex-auto">{activeTitle || "Все заявки"}</h1>
                 <div className="flex flex-col sm:flex-row gap-2">
                     <SearchBlock onChange={setSearchFilter} />
-                    <Button onClick={handleDownloadPdf}>Скачать отчет в PDF</Button>
+                    <Button onClick={handleDownloadPdf} disabled={!period.from || !period.to || !data.length}>Скачать отчет в PDF</Button>
                 </div>
             </div>
 
-            <OrdersFilters onChange={setFormFilters} />
+            <OrdersFilters
+                onChange={(filters: any) => {
+                    setFormFilters(filters);
+
+                    // если есть период в filters.createdAt — сохраняем
+                    if (filters.createdAt) {
+                        const from = filters.createdAt.$gte ? new Date(filters.createdAt.$gte) : undefined;
+                        const to = filters.createdAt.$lte ? new Date(filters.createdAt.$lte) : undefined;
+                        setPeriod({ from, to });
+                    } else {
+                        setPeriod({});
+                    }
+                }}
+            />
 
             <DataTable
                 data={data}

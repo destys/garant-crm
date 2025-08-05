@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { DateRange } from 'react-day-picker'
 import { Check, ChevronsUpDown, PrinterCheckIcon } from 'lucide-react'
 
@@ -24,34 +24,66 @@ import {
 } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useUsers } from '@/hooks/use-users'
+import { useOrders } from '@/hooks/use-orders'
+import { useIncomes } from '@/hooks/use-incomes'
 
-const masters = [
-    { id: 1, name: 'Иванов' },
-    { id: 2, name: 'Петров' },
-    { id: 3, name: 'Сидоров' },
-]
-
-const masterStats = {
-    open: 3,
-    completed: 18,
-    rejected: 2,
-    income: 14300,
-}
+import { generateMasterReportPdf } from '../pdfs/generate-master-report-pdf'
 
 type Props = {
     range: DateRange | undefined
 }
 
 export const MasterReport = ({ range }: Props) => {
-    console.warn('range: ', range);
     const [open, setOpen] = useState(false)
     const [selected, setSelected] = useState<string | null>(null)
 
+    const { users } = useUsers(1, 50)
+
+    const orderFilters = useMemo(() => {
+        if (!range?.from || !range?.to || !selected) return undefined
+        return {
+            $and: [
+                { createdAt: { $gte: range.from } },
+                { createdAt: { $lte: range.to } },
+                { master: { id: { $eq: Number(selected) } } },
+            ],
+        }
+    }, [range, selected])
+
+    const accountingFilters = useMemo(() => {
+        if (!range?.from || !range?.to || !selected) return undefined
+        return {
+            $and: [
+                { createdAt: { $gte: range.from } },
+                { createdAt: { $lte: range.to } },
+                { user: { id: { $eq: Number(selected) } } },
+            ],
+        }
+    }, [range, selected])
+
+    const { data: orders = [] } = useOrders(1, 500, orderFilters)
+    const { incomes = [] } = useIncomes(1, 500, accountingFilters)
+
+    const openCount = orders.filter((o) =>
+        ['Новая', 'Согласовать', 'Отремонтировать', 'Купить запчасти', 'Отправить курьера'].includes(o.orderStatus)
+    ).length
+
+    const completedCount = orders.filter(
+        (o) => o.orderStatus === 'Выдан' && o.is_approve === true
+    ).length
+
+    const rejectedCount = orders.filter(
+        (o) => o.orderStatus === 'Отказ' && o.is_approve === true
+    ).length
+
+    const totalIncome = incomes.reduce((acc, curr) => acc + (curr.count || 0), 0)
+
     const statCards = [
-        { title: 'Открытые', value: masterStats.open },
-        { title: 'Завершено', value: masterStats.completed },
-        { title: 'Отказов', value: masterStats.rejected },
-        { title: 'Доход', value: `${masterStats.income} ₽` },
+        { title: 'Открытые', value: openCount },
+        { title: 'Завершено', value: completedCount },
+        { title: 'Отказов', value: rejectedCount },
+        { title: 'Доход', value: `${totalIncome} ₽` },
     ]
 
     return (
@@ -70,7 +102,7 @@ export const MasterReport = ({ range }: Props) => {
                                 className="w-full justify-between"
                             >
                                 {selected
-                                    ? masters.find((m) => m.id.toString() === selected)?.name
+                                    ? users.find((m) => m.id.toString() === selected)?.name
                                     : 'Выберите мастера'}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -80,7 +112,7 @@ export const MasterReport = ({ range }: Props) => {
                                 <CommandInput placeholder="Поиск мастера..." />
                                 <CommandEmpty>Не найдено</CommandEmpty>
                                 <CommandGroup>
-                                    {masters.map((m) => (
+                                    {users.map((m) => (
                                         <CommandItem
                                             key={m.id}
                                             value={m.id.toString()}
@@ -107,7 +139,14 @@ export const MasterReport = ({ range }: Props) => {
 
                     <div></div>
 
-                    <Button>
+                    <Button
+                        disabled={!selected || !range?.from}
+                        onClick={() => {
+                            if (range?.from && range?.to) {
+                                generateMasterReportPdf(orders, range.from, range.to)
+                            }
+                        }}
+                    >
                         <PrinterCheckIcon className="mr-2 h-4 w-4" />
                         Скачать отчет в pdf
                     </Button>
@@ -122,7 +161,7 @@ export const MasterReport = ({ range }: Props) => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="text-2xl font-bold">
-                                {stat.value}
+                                {selected ? stat.value : '—'}
                             </CardContent>
                         </Card>
                     ))}

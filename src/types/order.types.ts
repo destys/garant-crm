@@ -6,6 +6,7 @@ import { UserProps } from "./user.types";
 export interface OrderProps {
   id: number;
   title: string;
+  createdAt: string;
   documentId: string;
   orderStatus: string;
   device_type: string;

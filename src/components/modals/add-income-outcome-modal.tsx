@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2Icon } from "lucide-react";
+import { CheckIcon, ChevronsUpDown, Loader2Icon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 
@@ -14,6 +14,14 @@ import { useOutcomes } from "@/hooks/use-outcomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
     Form,
     FormField,
@@ -29,16 +37,21 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { WORKSHOP_EXPENSES } from "@/constants";
+import { INCOME_CATEGORIES, WORKSHOP_EXPENSES } from "@/constants";
+import { useUsers } from "@/hooks/use-users";
+import { cn } from "@/lib/utils";
 
 const incomeSchema = z.object({
     count: z.string(),
     note: z.string().optional(),
+    master: z.string(),
+    income_category: z.string().min(1, "Выберите статью расходов"),
 });
 type IncomeValues = z.infer<typeof incomeSchema>;
 
 const outcomeSchema = z.object({
     count: z.string(),
+    master: z.string(),
     note: z.string().optional(),
     outcome_category: z.string().min(1, "Выберите статью расходов"),
 });
@@ -58,6 +71,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
     const queryClient = useQueryClient();
     const { createIncome } = useIncomes(1, 1);
     const { createOutcome } = useOutcomes(1, 1);
+    const { users } = useUsers(1, 100)
 
     // Определим форму и схему в зависимости от типа
     const isOutcome = props?.type === "outcome";
@@ -78,7 +92,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                 count: +values.count,
                 note: values.note,
                 order: props?.orderId,
-                user: props?.masterId,
+                user: props?.masterId ? props?.masterId : values.master,
             };
 
             if (isOutcome) {
@@ -86,6 +100,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                 await createOutcome(payload);
                 toast.success("Расход добавлен");
             } else {
+                payload.income_category = (values as IncomeValues).income_category;
                 await createIncome(payload);
                 toast.success("Доход добавлен");
             }
@@ -126,6 +141,59 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                         )}
                     />
 
+                    {!props?.masterId && (
+                        <FormField
+                            control={form.control}
+                            name="master"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Мастер</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn(
+                                                    "w-full justify-between",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                {users.find((m) => m.id.toString() === field.value)?.name || "Выберите мастера"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="p-0">
+                                            <Command>
+                                                <CommandInput placeholder="Поиск мастера..." />
+                                                <CommandEmpty>Мастер не найден</CommandEmpty>
+                                                <CommandGroup>
+                                                    {users.map((master) => (
+                                                        <CommandItem
+                                                            key={master.id}
+                                                            value={master.id.toString()}
+                                                            onSelect={(val) => {
+                                                                form.setValue("master", val)
+                                                            }}
+                                                        >
+                                                            <CheckIcon
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    field.value === master.id.toString() ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {master.name}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+
                     {/* Статья расходов — только если type === outcome */}
                     {isOutcome && (
                         <FormField
@@ -153,6 +221,46 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {WORKSHOP_EXPENSES.map((item) => (
+                                                    <SelectItem key={item} value={item}>
+                                                        {item}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+
+                    {/* Статья доходов — только если type !== outcome */}
+                    {!isOutcome && (
+                        <FormField
+                            control={form.control}
+                            name="income_category"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Статья доходов</FormLabel>
+                                    <FormControl>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={(value) => {
+                                                field.onChange(value);
+
+                                                // Если note пустой — запишем туда выбранную категорию
+                                                const note = form.getValues("note");
+                                                if (!note?.trim()) {
+                                                    form.setValue("note", value);
+                                                }
+                                            }}
+
+                                        >
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Выберите статью" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {INCOME_CATEGORIES.map((item) => (
                                                     <SelectItem key={item} value={item}>
                                                         {item}
                                                     </SelectItem>
