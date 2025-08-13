@@ -40,6 +40,7 @@ import {
 import { INCOME_CATEGORIES, WORKSHOP_EXPENSES } from "@/constants";
 import { useUsers } from "@/hooks/use-users";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-provider";
 
 const incomeSchema = z.object({
     count: z.string(),
@@ -66,12 +67,15 @@ interface Props {
     };
 }
 
+const SALARY_LABEL = "Зарплата сотрудников";
+
 export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
     const [loading, setLoading] = useState(false);
     const queryClient = useQueryClient();
     const { createIncome } = useIncomes(1, 1);
     const { createOutcome } = useOutcomes(1, 1);
-    const { users } = useUsers(1, 100)
+    const { users, updateUser } = useUsers(1, 100);
+    const { roleId } = useAuth();
 
     // Определим форму и схему в зависимости от типа
     const isOutcome = props?.type === "outcome";
@@ -98,6 +102,34 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
             if (isOutcome) {
                 payload.outcome_category = (values as OutcomeValues).outcome_category;
                 await createOutcome(payload);
+
+                if (payload.outcome_category === SALARY_LABEL) {
+                    const userObj = users.find((u) => u.id === payload.user);
+                    const currentBalance = Number(userObj?.balance);
+                    const countNum = Number(payload.count);
+
+                    let newBalance: number;
+
+                    if (Number.isFinite(currentBalance) && Number.isFinite(countNum)) {
+                        newBalance = currentBalance + countNum;
+                    } else if (Number.isFinite(countNum)) {
+                        newBalance = countNum; // баланса нет или он не число → ставим только сумму
+                    } else {
+                        newBalance = 0; // если и count некорректен
+                    }
+
+                    const updatedData = {
+                        balance: newBalance,
+                    };
+
+                    updateUser({
+                        userId: payload.user,
+                        updatedData: updatedData
+                    });
+                    toast.success("Зарплата добавлена");
+                } else {
+                    toast.success("Расход добавлен");
+                }
                 toast.success("Расход добавлен");
             } else {
                 payload.income_category = (values as IncomeValues).income_category;
@@ -220,11 +252,13 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                                                 <SelectValue placeholder="Выберите статью" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {WORKSHOP_EXPENSES.map((item) => (
-                                                    <SelectItem key={item} value={item}>
-                                                        {item}
-                                                    </SelectItem>
-                                                ))}
+                                                {WORKSHOP_EXPENSES
+                                                    .filter(item => roleId !== 1 || item !== SALARY_LABEL)
+                                                    .map(item => (
+                                                        <SelectItem key={item} value={item}>
+                                                            {item}
+                                                        </SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                     </FormControl>

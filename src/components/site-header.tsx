@@ -6,8 +6,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useAuth } from "@/providers/auth-provider"
 
 export function SiteHeader() {
+  const { user, roleId } = useAuth();
   const router = useRouter();
 
   return (
@@ -31,6 +33,9 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <div className="ml-auto flex items-center gap-2">
+          {roleId === 1 && (
+            <div>Баланс: <span className="text-xl font-bold text-green-500">{user?.balance || 0} ₽</span></div>
+          )}
           <Button variant="default" size="sm" asChild>
             <Link href={'/orders/new-order'}>
               <IconCirclePlusFilled />

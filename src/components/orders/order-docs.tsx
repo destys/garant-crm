@@ -1,4 +1,5 @@
 import { MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react"
+import Link from "next/link"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { OrderProps } from '@/types/order.types'
@@ -11,8 +12,10 @@ import { generateWarrantyPdf } from "../pdfs/generate-warranty-pdf"
 export const OrderDocs = ({ data }: { data: OrderProps }) => {
     return (
         <div className="flex gap-2">
-            <Button>
-                <PhoneCallIcon />
+            <Button asChild>
+                <Link href={`tel:${data.client.phone}`}>
+                    <PhoneCallIcon />
+                </Link>
             </Button>
             <Button>
                 <MailIcon />

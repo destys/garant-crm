@@ -58,8 +58,10 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
 
                 </CardTitle>
                 <CardAction className="space-x-2 mt-2">
-                    <Button size="icon" variant="secondary">
-                        <PhoneIcon className="size-4" />
+                    <Button size="icon" variant="default" asChild>
+                        <Link href={`tel:${data.client.phone}`}>
+                            <PhoneIcon className="size-4" />
+                        </Link>
                     </Button>
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/orders/${data.documentId}`}>

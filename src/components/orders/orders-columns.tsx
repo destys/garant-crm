@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import * as React from "react"
@@ -37,139 +38,151 @@ const statusColorMap: Record<string, string> = {
   "Проверить": "bg-orange-100 hover:bg-orange-200",
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const linkWrapper = (row: any, content: React.ReactNode) => (
   <Link href={`/orders/${row.original.documentId}`} className="block w-full h-full">
     {content}
   </Link>
 )
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ordersColumns = (users: UserProps[], updateOrder: (data: { documentId: string; updatedData: any }) => void, deleteOrder: (documentId: string) => void, refetch?: () => void): ColumnDef<OrderProps>[] => [
-  {
-    accessorKey: "order_number",
-    header: "№ Заказа",
-    cell: ({ row }) =>
-      <div className="uppercase">{linkWrapper(row, row.original.title)}</div>,
-  },
-  {
-    accessorKey: "orderStatus",
-    header: "Статус",
-    cell: ({ row }) => {
-      const status = row.original.orderStatus
-      const colorClasses = statusColorMap[status] ?? "bg-white"
-
-      return linkWrapper(
-        row,
-        <Badge variant="outline" className={cn("text-muted-foreground", colorClasses)}>
-          {status}
-        </Badge>
-      )
+export const ordersColumns = (
+  users: UserProps[],
+  updateOrder: (data: { documentId: string; updatedData: any }) => void,
+  deleteOrder: (documentId: string) => void,
+  refetch?: () => void,
+  roleId?: number,
+  user?: UserProps): ColumnDef<OrderProps>[] => [
+    {
+      accessorKey: "order_number",
+      header: "№ Заказа",
+      cell: ({ row }) =>
+        <div className="uppercase">{linkWrapper(row, row.original.title)}</div>,
     },
-  },
-  {
-    accessorKey: "visit_date",
-    header: "Дата выезда",
-    cell: ({ row }) => row.original.visit_date ? linkWrapper(row, format(new Date(row.original.visit_date), "dd.MM.yyyy HH:mm")) : "-"
-  },
-  {
-    accessorKey: "deadline",
-    header: "Дедлайн",
-    cell: ({ row }) => {
-      if (!row.original.deadline) return "Не назначен"
-      const deadline = new Date(row.original.deadline)
-      const today = new Date()
-      const diff = differenceInDays(deadline, today)
+    {
+      accessorKey: "orderStatus",
+      header: "Статус",
+      cell: ({ row }) => {
+        const status = row.original.orderStatus
+        const colorClasses = statusColorMap[status] ?? "bg-white"
 
-      let color = "default"
-      let text = format(deadline, "dd.MM.yyyy")
-
-      if (diff < 0) {
-        color = "destructive"
-        text = `Просрочено на ${Math.abs(diff)} дн.`
-      } else if (diff <= 2) {
-        color = "warning"
-        text = `Остался ${diff} дн.`
-      }
-
-      return linkWrapper(
-        row,
-        <Badge
-          variant={color === "destructive" ? "destructive" : "outline"}
-          className={color === "warning" ? "bg-yellow-200 text-yellow-900" : ""}
-        >
-          {text}
-        </Badge>
-      )
+        return linkWrapper(
+          row,
+          <Badge variant="outline" className={cn("text-muted-foreground", colorClasses)}>
+            {status}
+          </Badge>
+        )
+      },
     },
-  },
-  {
-    accessorKey: "device",
-    header: "Устройство",
-    cell: ({ row }) =>
-      linkWrapper(row, `${row.original.device_type || "-"} / ${row.original.brand || "-"} / ${row.original.model || "-"}`),
-  },
-  {
-    accessorKey: "client.phone",
-    header: "Телефон",
-    cell: ({ row }) =>
-      linkWrapper(row, `+7 (***) ***-${row.original.client?.phone?.slice(7)}`),
-  },
-  {
-    id: "masters",
-    header: "Мастер",
-    cell: ({ row }) => (
-      <Select
-        defaultValue={row.original.master?.id?.toString()}
-        onValueChange={(value) => {
-          updateOrder({
-            documentId: row.original.documentId,
-            updatedData: { master: { id: +value } },
-          });
+    {
+      accessorKey: "visit_date",
+      header: "Дата выезда",
+      cell: ({ row }) => row.original.visit_date ? linkWrapper(row, format(new Date(row.original.visit_date), "dd.MM.yyyy HH:mm")) : "-"
+    },
+    {
+      accessorKey: "deadline",
+      header: "Дедлайн",
+      cell: ({ row }) => {
+        if (!row.original.deadline) return "Не назначен"
+        const deadline = new Date(row.original.deadline)
+        const today = new Date()
+        const diff = differenceInDays(deadline, today)
 
-          toast.success("Мастер назначен")
-        }}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Выбрать" />
-        </SelectTrigger>
-        <SelectContent>
-          {users.map((user) => (
-            <SelectItem key={user.id} value={user.id.toString()}>
-              {user.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select >
-    ),
-  },
-  {
-    accessorKey: "actions",
-    header: "",
-    cell: ({ row }) => (
-      <div className="flex gap-2 justify-end">
-        <Button size="icon" variant="outline" title="Посмотреть" asChild>
-          <Link href={`/orders/${row.original.documentId}`}>
-            <EyeIcon className="size-4" />
-          </Link>
-        </Button>
-        <Button size="icon" variant="outline" title="Позвонить" asChild>
-          <Link href={`tel:${row.original.client?.phone}`}>
-            <PhoneIcon className="size-4" />
-          </Link>
-        </Button>
-        <Button size="icon" variant="destructive" title="Удалить" onClick={
-          () => {
-            deleteOrder(row.original.documentId)
-            if (refetch) {
-              refetch();
-            }
-            toast.success("Заказ удален")
-          }
-        }>
-          <TrashIcon className="size-4" />
-        </Button>
-      </div>
-    ),
-  },
-]
+        let color = "default"
+        let text = format(deadline, "dd.MM.yyyy")
+
+        if (diff < 0) {
+          color = "destructive"
+          text = `Просрочено на ${Math.abs(diff)} дн.`
+        } else if (diff <= 2) {
+          color = "warning"
+          text = `Остался ${diff} дн.`
+        }
+
+        return linkWrapper(
+          row,
+          <Badge
+            variant={color === "destructive" ? "destructive" : "outline"}
+            className={color === "warning" ? "bg-yellow-200 text-yellow-900" : ""}
+          >
+            {text}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "device",
+      header: "Устройство",
+      cell: ({ row }) =>
+        linkWrapper(row, `${row.original.device_type || "-"} / ${row.original.brand || "-"} / ${row.original.model || "-"}`),
+    },
+    {
+      accessorKey: "client.phone",
+      header: "Телефон",
+      cell: ({ row }) =>
+        linkWrapper(row, `+7 (***) ***-${row.original.client?.phone?.slice(7)}`),
+    },
+    {
+      id: "masters",
+      header: "Мастер",
+      cell: ({ row }) => (
+        roleId === 1 ?
+          (
+            <div>{user?.name || "Не заполнено имя"}</div>
+          ) : (
+            <Select
+              defaultValue={row.original.master?.id?.toString()}
+              onValueChange={(value) => {
+                updateOrder({
+                  documentId: row.original.documentId,
+                  updatedData: { master: { id: +value } },
+                });
+
+                toast.success("Мастер назначен")
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Выбрать" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select >
+          )
+      ),
+    },
+    {
+      accessorKey: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <div className="flex gap-2 justify-end">
+          <Button size="icon" variant="outline" title="Посмотреть" asChild>
+            <Link href={`/orders/${row.original.documentId}`}>
+              <EyeIcon className="size-4" />
+            </Link>
+          </Button>
+          <Button size="icon" variant="outline" title="Позвонить" asChild>
+            <Link href={`tel:${row.original.client?.phone}`}>
+              <PhoneIcon className="size-4" />
+            </Link>
+          </Button>
+          {roleId !== 1 && (
+            <Button size="icon" variant="destructive" title="Удалить" onClick={
+              () => {
+                deleteOrder(row.original.documentId)
+                if (refetch) {
+                  refetch();
+                }
+                toast.success("Заказ удален")
+              }
+            }>
+              <TrashIcon className="size-4" />
+            </Button>
+          )}
+
+        </div>
+      ),
+    },
+  ]

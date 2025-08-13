@@ -19,6 +19,7 @@ import { cn, formatDate } from '@/lib/utils'
 import { OrderProps } from '@/types/order.types'
 import { IncomeOutcomeProps } from '@/types/income-outcome.types'
 import { useModal } from '@/providers/modal-provider'
+import { useAuth } from '@/providers/auth-provider'
 
 interface Props {
     data: OrderProps;
@@ -26,6 +27,7 @@ interface Props {
 
 export const OrderAccounting = ({ data }: Props) => {
     const { openModal } = useModal();
+    const { roleId } = useAuth();
 
     const renderTable = (
         data: IncomeOutcomeProps[],
@@ -71,7 +73,7 @@ export const OrderAccounting = ({ data }: Props) => {
                     <CardTitle className="text-lg">Приходы</CardTitle>
                     <Button size="sm" variant="default" className="w-full sm:w-auto"
                         onClick={() =>
-                            openModal("incomeOutcome", { title: "Добавить приход", props: { type: "income", orderId: data.documentId, masterId: data.master?.id } })
+                            openModal("incomeOutcome", { title: "Добавить приход", props: { type: "income", orderId: data.documentId, masterId: roleId === 1 ? data.master.id : null } })
                         }
                     >
                         <PlusIcon className="w-4 h-4 mr-1" />
@@ -88,7 +90,7 @@ export const OrderAccounting = ({ data }: Props) => {
                     <CardTitle className="text-lg">Расходы</CardTitle>
                     <Button size="sm" variant="outline" className="w-full sm:w-auto"
                         onClick={() =>
-                            openModal("incomeOutcome", { title: "Добавить расход", props: { type: "outcome", orderId: data.documentId, masterId: data.master?.id } })
+                            openModal("incomeOutcome", { title: "Добавить расход", props: { type: "outcome", orderId: data.documentId, masterId: roleId === 1 ? data.master.id : null } })
                         }
                     >
                         <PlusIcon className="w-4 h-4 mr-1" />

@@ -54,12 +54,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter()
     const queryClient = useQueryClient()
 
+    // Инициализация из кук
     useEffect(() => {
         setJwt(getCookie('garant_token'))
         setRole(getCookie('user_role'))
         const id = getCookie('user_role_id')
         setRoleId(id ? Number(id) : null)
     }, [])
+
+    // Если есть jwt — подтягиваем пользователя с сервера (после F5 или новой вкладки)
+    useEffect(() => {
+        let aborted = false
+        async function loadMe() {
+            if (!jwt) return
+            try {
+                const res = await fetch('/api/me', { cache: 'no-store' })
+                if (!res.ok) return
+                const data = await res.json()
+                if (aborted) return
+                if (data?.user) setUser(data.user)
+                if (data?.role) setRole(data.role)
+                if (data?.roleId != null) setRoleId(data.roleId)
+            } catch (e) {
+                console.warn('loadMe error:', e)
+            }
+        }
+        loadMe()
+        return () => { aborted = true }
+    }, [jwt])
 
     const loginMutation = useMutation({
         mutationFn: async ({ email, password }: { email: string; password: string }) => {
@@ -68,22 +90,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             })
-
             if (!res.ok) {
-                const data = await res.json()
+                const data = await res.json().catch(() => ({}))
                 throw new Error(data?.message || 'Ошибка авторизации')
             }
-
             return res.json()
         },
         onSuccess: (data) => {
-            setTimeout(() => {
-                setJwt(getCookie('garant_token'))
-                setRole(data.role ?? getCookie('user_role'))
-                setRoleId(data.roleId ?? Number(getCookie('user_role_id')))
-                setUser(data.user ?? null)
-                queryClient.invalidateQueries()
-            }, 100)
+            // сразу кладём всё из ответа
+            setJwt(getCookie('garant_token'))
+            setRole(data.role ?? getCookie('user_role'))
+            setRoleId(data.roleId ?? Number(getCookie('user_role_id')))
+            setUser(data.user ?? null)
+            queryClient.invalidateQueries()
         },
     })
 
@@ -114,7 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             login,
             logout,
         }),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [role, roleId, jwt, user]
     )
 

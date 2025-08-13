@@ -181,7 +181,7 @@ export const SIDEBAR_MENU = [
     icon: DollarSignIcon,
     adminOnly: true,
   },
-  { separator: true },
+  { separator: true, adminOnly: true },
   {
     to: "/reports",
     title: "Отчёты",

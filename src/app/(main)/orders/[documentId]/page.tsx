@@ -17,19 +17,19 @@ import { RepairOrderForm } from "@/components/orders/order-form"
 import { OrderMedia } from "@/components/orders/order-photos"
 import { OrderClient } from "@/components/orders/order-client"
 import { OrderAccounting } from "@/components/orders/order-accounting"
-import { useOrders } from "@/hooks/use-orders"
 import { useUsers } from "@/hooks/use-users";
 import { useOrder } from "@/hooks/use-order";
 import { OrderDocs } from "@/components/orders/order-docs";
+import { useAuth } from "@/providers/auth-provider";
 
 
 const OrderPage = () => {
     const { documentId } = useParams();
     const { users } = useUsers(1, 100);
-
-    const { } = useOrders(1, 1)
+    const { user, roleId } = useAuth();
     const { order, isLoading, updateOrder } = useOrder(documentId ? documentId.toString() : "");
     if (!order) return null;
+    if (!user || !roleId || (roleId === 1 && order.master?.id !== user.id)) return <div>У вас нет доступа к данному заказу</div>;
     if (isLoading) return <Loader2Icon className="animate-spin" />
 
     // 1️⃣ Считаем доход = сумма incomes - сумма outcomes
@@ -74,27 +74,30 @@ const OrderPage = () => {
         <div>
             <div className="flex md:justify-between flex-col md:flex-row md:items-center gap-4 mb-8">
                 <h1 className="flex-auto">Заказ №<span className="uppercase">{order.title}</span></h1>
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <p>Доход с заказа:</p>
-                        <p className="text-xl font-semibold text-green-500">{profit} ₽</p>
+                {roleId === 3 && (
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <p>Доход с заказа:</p>
+                            <p className="text-xl font-semibold text-green-500">{profit} ₽</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span>Мастер:</span>
+                            <Select onValueChange={handleSelectMaster} defaultValue={order.master?.id?.toString() || ""}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Выбрать" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {users.map((master) => (
+                                        <SelectItem key={master.id} value={master.id.toString()}>
+                                            {master.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span>Мастер:</span>
-                        <Select onValueChange={handleSelectMaster} defaultValue={order.master?.id?.toString() || ""}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Выбрать" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {users.map((master) => (
-                                    <SelectItem key={master.id} value={master.id.toString()}>
-                                        {master.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+                )}
+
             </div>
             {(!order.is_revision && !order.is_approve && (order.orderStatus === "Отказ" || order.orderStatus === "Выдан")) && (
                 <div className="flex gap-4 mb-6">
