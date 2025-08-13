@@ -44,6 +44,8 @@ export function OrdersSidebarMenu() {
         router.push(to);
     };
 
+    if (!user || !roleId) return null;
+
     return (
         <SidebarMenu className="mt-10">
             <Button variant="default" size="sm" className="mb-8" asChild>

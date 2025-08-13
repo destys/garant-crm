@@ -27,10 +27,7 @@ export const SIDEBAR_MENU = [
     title: "Все заявки",
     icon: FileText,
     filters: {
-      $and: [
-        { orderStatus: { $ne: "Отказ" } },
-        { orderStatus: { $ne: "Выдан" } },
-      ],
+      $and: [{ orderStatus: { $ne: "Выдан" } }],
     },
   },
   {
