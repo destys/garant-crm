@@ -32,6 +32,8 @@ export interface OrderProps {
   note: string;
   is_revision: boolean;
   is_approve: boolean;
+  add_address: string;
+  add_phone: string;
   client: Partial<ClientProps>;
   order_docs: MediaProps[];
   device_photos: MediaProps[];

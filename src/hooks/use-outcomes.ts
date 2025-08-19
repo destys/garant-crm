@@ -77,6 +77,9 @@ export const useOutcomes = (
       });
       queryClient.invalidateQueries({ queryKey: ["outcomes"] });
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["outcomes"], exact: false });
+    },
   });
 
   return {

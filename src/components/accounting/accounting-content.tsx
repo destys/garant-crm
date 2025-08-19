@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Link2Icon, PlusIcon } from "lucide-react";
+import { Link2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useMemo } from "react";
 
 import { DataTable } from "@/components/data-table";
@@ -16,8 +16,8 @@ import { cn, formatDate } from "@/lib/utils";
 import { useModal } from '@/providers/modal-provider'
 
 export const AccountingContent = () => {
-    const { incomes } = useIncomes(1, 500)
-    const { outcomes } = useOutcomes(1, 500)
+    const { incomes, deleteIncome } = useIncomes(1, 500)
+    const { outcomes, deleteOutcome } = useOutcomes(1, 500)
     const { users } = useUsers(1, 100);
     const { openModal } = useModal();
 
@@ -63,11 +63,26 @@ export const AccountingContent = () => {
             accessorKey: "orderId",
             header: "",
             cell: ({ row }) =>
-                <Button variant={'secondary'} disabled={!!!row.original.order} asChild>
-                    <Link href={`/orders/${row.original.order?.documentId}`} className={cn(!!!row.original.order && "pointer-events-none opacity-50")}>
-                        <Link2Icon />
-                    </Link>
-                </Button>
+                <div className="space-x-2">
+                    <Button variant={'secondary'} disabled={!!!row.original.order} asChild>
+                        <Link href={`/orders/${row.original.order?.documentId}`} className={cn(!!!row.original.order && "pointer-events-none opacity-50")}>
+                            <Link2Icon />
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={() => {
+                            if (row.original.type === "income") {
+                                deleteIncome(row.original.documentId)
+                            }
+                            if (row.original.type === "expense") {
+                                deleteOutcome(row.original.documentId)
+                            }
+                        }}
+                    >
+                        <Trash2Icon />
+                    </Button>
+                </div >
         },
     ];
 

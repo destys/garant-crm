@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -73,6 +74,8 @@ const schema = z.object({
     equipment: z.string().optional(),
     completed_work: z.string().optional(),
     note: z.string().optional(),
+    add_address: z.string(),
+    add_phone: z.string(),
 }).superRefine((data, ctx) => {
     if (data.orderStatus === "Отказ" && !data.reason_for_refusal?.trim()) {
         ctx.addIssue({
@@ -127,6 +130,8 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
             equipment: data?.equipment || "",
             completed_work: data?.completed_work || "",
             note: data?.note || "",
+            add_address: data?.add_address || "",
+            add_phone: data?.add_phone || "",
         },
     })
 
@@ -237,6 +242,22 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField name="add_phone" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Доп. телефон клиента</FormLabel>
+                            <FormControl><Input mask="+0 000 000 00-00" {...field} /></FormControl>
+                        </FormItem>
+                    )} />
+                    <FormField name="add_address" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Доп. адрес клиента</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                        </FormItem>
+                    )} />
+                </div>
+                <Separator />
+
                 {/* Общие поля */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <FormField
@@ -486,8 +507,10 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
                     {isSubmitting && createdId && (
                         <>
                             <span className="text-muted-foreground">Переход через {countdown} сек</span>
-                            <Button variant="secondary" onClick={() => router.push(`/orders/${createdId}`)}>
-                                Перейти сейчас
+                            <Button type="button" variant="secondary" asChild>
+                                <Link href={`/orders/${createdId}`}>
+                                    Перейти сейчас
+                                </Link>
                             </Button>
                         </>
                     )}

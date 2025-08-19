@@ -10,7 +10,7 @@ import {
     SidebarProvider,
 } from "@/components/ui/sidebar"
 import { SiteHeader } from '@/components/site-header'
-import { AppSidebar } from '@/components/app-sidebar'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { AddUserModal } from '@/components/modals/add-user-modal'
 import { AddIncomeOutcomeModal } from '@/components/modals/add-income-outcome-modal'
 import { AddClientModal } from '@/components/modals/add-client'

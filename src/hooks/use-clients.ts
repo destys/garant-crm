@@ -1,5 +1,3 @@
-"use strict";
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import QueryString from "qs";
 
@@ -22,51 +20,56 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
     { encodeValuesOnly: true }
   );
 
-  // Ключ запроса
   const queryKey = ["clients", page, pageSize, query];
 
-  // Запрос всех клиентов
+  const invalidateOrdersRelated = async () => {
+    // 1) список заказов
+    await queryClient.invalidateQueries({ queryKey: ["orders"], exact: false });
+    // 2) все конкретные заказы ['order', *]
+    await queryClient.invalidateQueries({
+      predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "order",
+    });
+  };
+
   const clientsQuery = useQuery<{ clients: ClientProps[]; total: number }>({
     queryKey,
     queryFn: () => fetchClients(authToken, page, pageSize, queryString),
     enabled: !!token,
   });
 
-  // Создание клиента (оптимистичное обновление)
   const createMutation = useMutation({
     mutationFn: (data: Partial<UpdateClientDto>) =>
       createClient(authToken, data),
     onMutate: async (newClient) => {
       await queryClient.cancelQueries({ queryKey });
-
       const previousData = queryClient.getQueryData<{
         clients: ClientProps[];
         total: number;
       }>(queryKey);
-
       if (previousData) {
         queryClient.setQueryData(queryKey, {
           clients: [
-            { ...newClient, documentId: `temp-${Date.now()}` },
+            { ...newClient, documentId: `temp-${Date.now()}` } as ClientProps,
             ...previousData.clients,
           ],
           total: previousData.total + 1,
         });
       }
-
       return { previousData };
     },
-    onError: (_err, _data, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
-      }
+    onError: (_err, _data, ctx) => {
+      if (ctx?.previousData)
+        queryClient.setQueryData(queryKey, ctx.previousData);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"], exact: false });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["clients"],
+        exact: false,
+      });
+      await invalidateOrdersRelated(); // << важно
     },
   });
 
-  // Обновление клиента
   const updateMutation = useMutation({
     mutationFn: ({
       documentId,
@@ -77,12 +80,10 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
     }) => updateClient(authToken, documentId, updatedData),
     onMutate: async ({ documentId, updatedData }) => {
       await queryClient.cancelQueries({ queryKey });
-
       const previousData = queryClient.getQueryData<{
         clients: ClientProps[];
         total: number;
       }>(queryKey);
-
       if (previousData) {
         queryClient.setQueryData(queryKey, {
           ...previousData,
@@ -91,48 +92,49 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
           ),
         });
       }
-
       return { previousData };
     },
-    onError: (_err, _data, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
-      }
+    onError: (_err, _data, ctx) => {
+      if (ctx?.previousData)
+        queryClient.setQueryData(queryKey, ctx.previousData);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"], exact: false });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["clients"],
+        exact: false,
+      });
+      await invalidateOrdersRelated(); // << важно
     },
   });
 
-  // Удаление клиента (оптимистично)
   const deleteMutation = useMutation({
     mutationFn: (documentId: string) => deleteClient(authToken, documentId),
     onMutate: async (documentId: string) => {
       await queryClient.cancelQueries({ queryKey });
-
       const previousData = queryClient.getQueryData<{
         clients: ClientProps[];
         total: number;
       }>(queryKey);
-
       if (previousData) {
         queryClient.setQueryData(queryKey, {
           clients: previousData.clients.filter(
-            (client) => client.documentId !== documentId
+            (c) => c.documentId !== documentId
           ),
           total: previousData.total - 1,
         });
       }
-
       return { previousData };
     },
-    onError: (_err, _documentId, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
-      }
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previousData)
+        queryClient.setQueryData(queryKey, ctx.previousData);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"], exact: false });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["clients"],
+        exact: false,
+      });
+      await invalidateOrdersRelated(); // << важно
     },
   });
 
@@ -142,8 +144,9 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
     isLoading: clientsQuery.isLoading,
     isError: clientsQuery.isError,
     error: clientsQuery.error,
-    createClient: createMutation.mutate,
-    updateClient: updateMutation.mutate,
-    deleteClient: deleteMutation.mutate,
+    // ВОЗВРАЩАЕМ mutateAsync, чтобы await в модалке реально ждал завершения
+    createClient: createMutation.mutateAsync,
+    updateClient: updateMutation.mutateAsync,
+    deleteClient: deleteMutation.mutateAsync,
   };
 };

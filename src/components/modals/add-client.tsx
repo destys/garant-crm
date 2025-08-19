@@ -1,15 +1,16 @@
-// components/modals/ConfirmModal.tsx
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { useClients } from "@/hooks/use-clients";
+import { ClientProps } from "@/types/client.types";
 
 
 const formSchema = z
@@ -22,19 +23,22 @@ const formSchema = z
 type MasterFormValues = z.infer<typeof formSchema>
 
 export const AddClientModal = ({
+    props,
     close
 }: {
+    props?: { orderId?: string, client: ClientProps },
     close: () => void;
 }) => {
-    const { createClient } = useClients(1, 1);
+    const { createClient, updateClient } = useClients(1, 1);
     const [loading, setLoading] = useState(false);
+    const qc = useQueryClient();
 
     const form = useForm<MasterFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
-            phone: "",
-            address: "",
+            name: props?.client.name || "",
+            phone: props?.client.phone || "",
+            address: props?.client.address || "",
         },
     })
 
@@ -47,9 +51,17 @@ export const AddClientModal = ({
 
         try {
             setLoading(true)
-            await createClient(payload);
-
-            toast.success('Пользователь создан')
+            if (props?.client.documentId) {
+                await updateClient({
+                    documentId: props.client.documentId,
+                    updatedData: payload
+                });
+                qc.invalidateQueries({ queryKey: ['order', props?.orderId] })
+                toast.success('Пользователь обновлен')
+            } else {
+                await createClient(payload);
+                toast.success('Пользователь создан')
+            }
             close();
         } catch (e) {
             console.error("Ошибка создания пользователя:", e);
@@ -87,7 +99,7 @@ export const AddClientModal = ({
                             <FormItem>
                                 <FormLabel>Телефон</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="+7 (999) 123-45-67" mask="+7 (000) 000-00-00" {...field} />
+                                    <Input placeholder="+7 (999) 123-45-67" mask="+0 (000) 000-00-00" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

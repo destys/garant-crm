@@ -77,6 +77,10 @@ export const useIncomes = (
       });
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
     },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["incomes"], exact: false });
+    },
   });
 
   return {

@@ -36,7 +36,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "src/components/pdfs/generate-act-pdf.tsч"
   ],
   "exclude": [
     "node_modules"
