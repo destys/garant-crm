@@ -8,12 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUsers } from "@/hooks/use-users"
 import { useClients } from "@/hooks/use-clients"
 import { RepairOrderForm } from "@/components/orders/order-form"
+import { ClientProps } from "@/types/client.types";
+import { AddClientModal } from "@/components/modals/add-client";
+import { Separator } from "@/components/ui/separator";
 
 const NewOrderPage = () => {
     const { users } = useUsers(1, 100)
     const { clients, createClient } = useClients(1, 100)
 
     const [phone, setPhone] = useState("")
+    const [client, setClient] = useState<ClientProps | null>(null)
     const [clientId, setClientId] = useState<string | null>(null)
     const [masterId, setMasterId] = useState<string>("")
     const [loadingClient, setLoadingClient] = useState(false)
@@ -25,11 +29,13 @@ const NewOrderPage = () => {
         const existing = clients.find(c => c.phone?.replace(/\D/g, "") === phone.replace(/\D/g, ""))
 
         if (existing) {
+            setClient(existing)
             setClientId(existing.documentId)
             setLoadingClient(false)
         } else {
             createClient({ phone }, {
                 onSuccess: (created) => {
+                    setClient(created)
                     setClientId(created.documentId)
                     setLoadingClient(false)
                 },
@@ -78,7 +84,21 @@ const NewOrderPage = () => {
             </div>
 
             {clientId && (
-                <RepairOrderForm clientDocumentId={clientId} masterId={masterId} />
+                <>
+                    {client && (
+                        <div className="space-y-4">
+                            <div className="max-w-3xl border rounded-2xl p-4">
+                                <h3 className="mb-4 font-bold text-xl">Данные клиента</h3>
+                                <AddClientModal close={() => undefined} props={{ client: client }} />
+                            </div>
+                            <Separator />
+                        </div>
+
+                    )}
+
+                    <RepairOrderForm clientDocumentId={clientId} masterId={masterId} />
+                </>
+
             )}
         </div>
     )

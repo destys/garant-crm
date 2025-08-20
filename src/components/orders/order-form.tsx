@@ -240,282 +240,284 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
     )
 
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField name="add_phone" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Доп. телефон клиента</FormLabel>
-                            <FormControl><Input mask="+0 000 000 00-00" {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="add_address" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Доп. адрес клиента</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                </div>
-                <Separator />
-
-                {/* Общие поля */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <FormField
-                        name="orderStatus"
-                        control={form.control}
-                        render={({ field }) => (
+        <div>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField name="add_phone" control={form.control} render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Статус заказа</FormLabel>
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Выберите статус" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {ORDER_STATUSES.map((item) => (
-                                            <SelectItem key={item} value={item}>
-                                                {item}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField name="warranty" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Гарантия</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField
-                        name="source"
-                        control={form.control}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Источник</FormLabel>
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Выберите источник" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {ORDER_SOURCES.map((item) => (
-                                            <SelectItem key={item} value={item}>
-                                                {item}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormItem>
-                        )}
-                    />
-                    {status === "Отказ" && (
-                        <FormField name="reason_for_refusal" control={form.control} render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Причина отказа</FormLabel>
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Выберите причину отказа" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {settings?.reasons_for_refusal.map((item) => (
-                                            <SelectItem key={item.id} value={item.title}>
-                                                {item.title}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
+                                <FormLabel>Доп. телефон клиента</FormLabel>
+                                <FormControl><Input mask="+0 000 000 00-00" {...field} /></FormControl>
                             </FormItem>
                         )} />
-                    )}
-                </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <FormField name="type_of_repair" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Тип ремонта</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Выберите тип" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {REPAIR_TYPE.map((item) => (
-                                        <SelectItem key={item} value={item}>
-                                            {item}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                    <FormField name="kind_of_repair" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Вид ремонта</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Выберите вид" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {REPAIR_KIND.map((item) => (
-                                        <SelectItem key={item} value={item}>
-                                            {item}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                </div>
-
-                <Separator />
-
-                {/* Дата выезда */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="col-span-2">
-                            {renderDateField("visit_date", "Дата выезда")}
-                        </div>
-                        <FormField name="visit_time" control={form.control} render={({ field }) => (
+                        <FormField name="add_address" control={form.control} render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Время выезда</FormLabel>
-                                <FormControl><Input type="time" {...field} /></FormControl>
+                                <FormLabel>Доп. адрес клиента</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
                             </FormItem>
                         )} />
                     </div>
-                    {renderDateField("diagnostic_date", "Дата диагностики")}
-                    {renderDateField("date_of_issue", "Дата выдачи")}
-                    {renderDateField("deadline", "Дедлайн")}
-                </div>
+                    <Separator />
 
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    <FormField name="device_type" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Тип устройства</FormLabel>
-                            <ShadcnPopover open={open} onOpenChange={setOpen}>
-                                <ShadcnPopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button variant="outline" role="combobox" className="w-full justify-between">
-                                            {field.value || "Выберите устройство"}
-                                            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl>
-                                </ShadcnPopoverTrigger>
-                                <ShadcnPopoverContent className="w-full p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Поиск..." />
-                                        <CommandEmpty>Ничего не найдено</CommandEmpty>
-                                        <CommandGroup>
-                                            {settings?.types_of_equipment.map((device) => (
-                                                <CommandItem key={device.id} value={device.title} onSelect={() => { form.setValue("device_type", device.title); setOpen(false) }}>
-                                                    <CheckIcon className={cn("mr-2 h-4 w-4", device.title === field.value ? "opacity-100" : "opacity-0")} />
-                                                    {device.title}
-                                                </CommandItem>
+                    {/* Общие поля */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <FormField
+                            name="orderStatus"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Статус заказа</FormLabel>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Выберите статус" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {ORDER_STATUSES.map((item) => (
+                                                <SelectItem key={item} value={item}>
+                                                    {item}
+                                                </SelectItem>
                                             ))}
-                                        </CommandGroup>
-                                    </Command>
-                                </ShadcnPopoverContent>
-                            </ShadcnPopover>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    <FormField name="brand" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Производитель</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="model" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Модель</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="serial_number" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Серийный номер</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                </div>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField name="warranty" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Гарантия</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField
+                            name="source"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Источник</FormLabel>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Выберите источник" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {ORDER_SOURCES.map((item) => (
+                                                <SelectItem key={item} value={item}>
+                                                    {item}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FormItem>
+                            )}
+                        />
+                        {status === "Отказ" && (
+                            <FormField name="reason_for_refusal" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Причина отказа</FormLabel>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Выберите причину отказа" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {settings?.reasons_for_refusal.map((item) => (
+                                                <SelectItem key={item.id} value={item.title}>
+                                                    {item.title}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        )}
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    <FormField name="equipment" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Комплектация</FormLabel>
-                            <FormControl><Textarea {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="defect" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Неисправность</FormLabel>
-                            <FormControl><Textarea rows={2} {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="conclusion" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Заключение</FormLabel>
-                            <FormControl><Textarea rows={2} {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="completed_work" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Выполненные работы</FormLabel>
-                            <FormControl><Textarea rows={2} {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <FormField name="type_of_repair" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Тип ремонта</FormLabel>
+                                <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Выберите тип" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {REPAIR_TYPE.map((item) => (
+                                            <SelectItem key={item} value={item}>
+                                                {item}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormItem>
+                        )} />
+                        <FormField name="kind_of_repair" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Вид ремонта</FormLabel>
+                                <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Выберите вид" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {REPAIR_KIND.map((item) => (
+                                            <SelectItem key={item} value={item}>
+                                                {item}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormItem>
+                        )} />
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <FormField name="total_cost" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Общая стоимость</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField name="prepay" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Предоплата</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                </div>
+                    {/* Дата выезда */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="col-span-2">
+                                {renderDateField("visit_date", "Дата выезда")}
+                            </div>
+                            <FormField name="visit_time" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Время выезда</FormLabel>
+                                    <FormControl><Input type="time" {...field} /></FormControl>
+                                </FormItem>
+                            )} />
+                        </div>
+                        {renderDateField("diagnostic_date", "Дата диагностики")}
+                        {renderDateField("date_of_issue", "Дата выдачи")}
+                        {renderDateField("deadline", "Дедлайн")}
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                <div>
-                    <FormField name="note" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Примечание</FormLabel>
-                            <FormControl><Textarea rows={2} {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <FormField name="device_type" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Тип устройства</FormLabel>
+                                <ShadcnPopover open={open} onOpenChange={setOpen}>
+                                    <ShadcnPopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button variant="outline" role="combobox" className="w-full justify-between">
+                                                {field.value || "Выберите устройство"}
+                                                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </ShadcnPopoverTrigger>
+                                    <ShadcnPopoverContent className="w-full p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Поиск..." />
+                                            <CommandEmpty>Ничего не найдено</CommandEmpty>
+                                            <CommandGroup>
+                                                {settings?.types_of_equipment.map((device) => (
+                                                    <CommandItem key={device.id} value={device.title} onSelect={() => { form.setValue("device_type", device.title); setOpen(false) }}>
+                                                        <CheckIcon className={cn("mr-2 h-4 w-4", device.title === field.value ? "opacity-100" : "opacity-0")} />
+                                                        {device.title}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </Command>
+                                    </ShadcnPopoverContent>
+                                </ShadcnPopover>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField name="brand" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Производитель</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField name="model" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Модель</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField name="serial_number" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Серийный номер</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                    </div>
 
-                <div className="flex items-center gap-4">
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Сохраняем..." : "Сохранить"}
-                    </Button>
-                    {isSubmitting && createdId && (
-                        <>
-                            <span className="text-muted-foreground">Переход через {countdown} сек</span>
-                            <Button type="button" variant="secondary" asChild>
-                                <Link href={`/orders/${createdId}`}>
-                                    Перейти сейчас
-                                </Link>
-                            </Button>
-                        </>
-                    )}
-                </div>
-            </form>
-        </Form>
+                    <Separator />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <FormField name="equipment" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Комплектация</FormLabel>
+                                <FormControl><Textarea {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField name="defect" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Неисправность</FormLabel>
+                                <FormControl><Textarea rows={2} {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField name="conclusion" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Заключение</FormLabel>
+                                <FormControl><Textarea rows={2} {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField name="completed_work" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Выполненные работы</FormLabel>
+                                <FormControl><Textarea rows={2} {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <FormField name="total_cost" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Общая стоимость</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                        <FormField name="prepay" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Предоплата</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                        <FormField name="note" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Примечание</FormLabel>
+                                <FormControl><Textarea rows={2} {...field} /></FormControl>
+                            </FormItem>
+                        )} />
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Сохраняем..." : "Сохранить"}
+                        </Button>
+                        {isSubmitting && createdId && (
+                            <>
+                                <span className="text-muted-foreground">Переход через {countdown} сек</span>
+                                <Button type="button" variant="secondary" asChild>
+                                    <Link href={`/orders/${createdId}`}>
+                                        Перейти сейчас
+                                    </Link>
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                </form>
+            </Form>
+        </div>
     )
 }
