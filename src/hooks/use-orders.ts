@@ -43,9 +43,9 @@ export const useOrders = (
       const created = await createOrder(authToken, order); // должен вернуть заказ с id
       const orderId = created.id;
 
-      // Обновляем title: zv-{id}
+      // Обновляем title: vz-{id}
       await updateOrder(authToken, created.documentId, {
-        title: `zv-${orderId}`,
+        title: `vz-${orderId}`,
       });
 
       return created;
