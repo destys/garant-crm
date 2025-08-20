@@ -118,7 +118,7 @@ export const ordersColumns = (
       accessorKey: "client.phone",
       header: "Телефон",
       cell: ({ row }) =>
-        linkWrapper(row, `+7 (***) ***-${row.original.client?.phone?.slice(7)}`),
+        linkWrapper(row, `${row.original.client?.phone}`),
     },
     {
       id: "masters",
