@@ -32,8 +32,8 @@ export const IncomeExpenseChart = ({ range }: Props) => {
         }
     }, [range])
 
-    const { incomes = [] } = useIncomes(1, 1000, filters)
-    const { outcomes = [] } = useOutcomes(1, 1000, filters)
+    const { incomes = [] } = useIncomes(1, 100, filters)
+    const { outcomes = [] } = useOutcomes(1, 100, filters)
 
     const groupedIncomes = useMemo(() => {
         const result: Record<string, number> = {}

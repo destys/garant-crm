@@ -15,7 +15,7 @@ import { DataTable } from "@/components/data-table";
 import { useOrderFilterStore } from "@/stores/order-filters-store";
 import { useAuth } from "@/providers/auth-provider";
 
-import { generateMasterReportPdf } from "../pdfs/generate-master-report-pdf";
+import { generateOrdersReportPdf } from "../pdfs/generate-orders-pdf";
 
 export const OrdersContent = () => {
     const activeTitle = useOrderFilterStore((state) => state.activeTitle);
@@ -62,7 +62,7 @@ export const OrdersContent = () => {
 
     const handleDownloadPdf = () => {
         if (!period.from || !period.to || !data.length) return;
-        generateMasterReportPdf(data, period.from, period.to);
+        generateOrdersReportPdf(data, period);
     };
 
     if (!user || !roleId) return <div className="flex justify-center items-center h-96"><Loader2Icon className="animate-spin" /></div>

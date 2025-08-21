@@ -7,20 +7,27 @@ import {
     Pie,
     Cell,
     Tooltip,
-    Legend
+    Legend,
 } from 'recharts'
 import { DateRange } from 'react-day-picker'
+import { useQueries } from '@tanstack/react-query'
+import qs from 'qs'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useOrders } from '@/hooks/use-orders'
+import { fetchOrders } from '@/services/orders-service'
+import { useAuth } from '@/providers/auth-provider'
 
 const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#00C49F', '#8884D8']
+const PAGE_SIZE = 100
 
 type Props = {
     range: DateRange | undefined
 }
 
 export const RejectionCharts = ({ range }: Props) => {
+    const { jwt: token } = useAuth()
+
     const filters = useMemo(() => {
         if (!range?.from || !range?.to) return undefined
         return {
@@ -31,36 +38,77 @@ export const RejectionCharts = ({ range }: Props) => {
         }
     }, [range])
 
-    const { data: orders = [] } = useOrders(1, 500, filters)
+    // 1) первая страница через твой хук
+    const {
+        data: firstOrders = [],
+        total = 0,
+        isLoading: firstLoading,
+    } = useOrders(1, PAGE_SIZE, filters)
 
-    // Причины отказов — только заказы со статусом "Отказ"
+    const pageCount = Math.ceil(total / PAGE_SIZE)
+
+    // те же параметры, что и в хуке
+    const ordersQueryString = useMemo(
+        () =>
+            qs.stringify(
+                { filters, sort: ['createdAt:desc'] },
+                { encodeValuesOnly: true }
+            ),
+        [filters]
+    )
+
+    // 2) остальные страницы 2..N
+    const otherPages = useQueries({
+        queries:
+            pageCount > 1
+                ? Array.from({ length: pageCount - 1 }, (_, i) => {
+                    const page = i + 2
+                    return {
+                        queryKey: ['orders', page, PAGE_SIZE, filters],
+                        queryFn: () =>
+                            fetchOrders(token ?? '', page, PAGE_SIZE, ordersQueryString),
+                        enabled: !!token && !!filters && total > PAGE_SIZE,
+                        staleTime: 60_000,
+                    }
+                })
+                : [],
+    })
+
+    const isLoading = firstLoading || otherPages.some((q) => q.isLoading)
+
+    // 3) собираем полный набор заказов
+    const allOrders = useMemo(() => {
+        const rest = otherPages.flatMap((q) => q.data?.orders ?? [])
+        return [...firstOrders, ...rest]
+    }, [firstOrders, otherPages])
+
+    // 4) агрегации
     const refusalData = useMemo(() => {
         const grouped: Record<string, number> = {}
 
-        orders
-            .filter(o => o.orderStatus === "Отказ")
-            .forEach(order => {
+        allOrders
+            .filter((o) => o.orderStatus === 'Отказ')
+            .forEach((order) => {
                 const reason = order.reason_for_refusal || 'Без причины'
                 grouped[reason] = (grouped[reason] || 0) + 1
             })
 
         return Object.entries(grouped).map(([name, value]) => ({ name, value }))
-    }, [orders])
+    }, [allOrders])
 
-    // Источники обращений — все заказы
     const sourceData = useMemo(() => {
         const grouped: Record<string, number> = {}
 
-        orders.forEach(order => {
+        allOrders.forEach((order) => {
             const source = order.source || 'Без источника'
             grouped[source] = (grouped[source] || 0) + 1
         })
 
         return Object.entries(grouped).map(([name, value]) => ({ name, value }))
-    }, [orders])
+    }, [allOrders])
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Card>
                 <CardHeader>
                     <CardTitle>Причины отказов</CardTitle>
@@ -85,6 +133,9 @@ export const RejectionCharts = ({ range }: Props) => {
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>
+                    {isLoading && (
+                        <div className="mt-2 text-xs text-muted-foreground">Загрузка…</div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -112,6 +163,9 @@ export const RejectionCharts = ({ range }: Props) => {
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>
+                    {isLoading && (
+                        <div className="mt-2 text-xs text-muted-foreground">Загрузка…</div>
+                    )}
                 </CardContent>
             </Card>
         </div>

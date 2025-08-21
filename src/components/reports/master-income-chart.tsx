@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
     ResponsiveContainer,
@@ -8,48 +8,92 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend
-} from 'recharts'
-import { DateRange } from 'react-day-picker'
-import { useMemo } from 'react'
+    Legend,
+} from 'recharts';
+import { DateRange } from 'react-day-picker';
+import { useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
+import qs from 'qs';
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { useIncomes } from '@/hooks/use-incomes'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useIncomes } from '@/hooks/use-incomes';
+import { useAuth } from '@/providers/auth-provider';
+import { fetchIncomes } from '@/services/incomes-service'; // <-- тот же сервис, что использует хук
 
 type Props = {
-    range: DateRange | undefined
-}
+    range: DateRange | undefined;
+};
+
+const PAGE_SIZE = 100;
 
 export const MasterIncomeChart = ({ range }: Props) => {
+    const { jwt: token } = useAuth();
+
     const filters = useMemo(() => {
-        if (!range?.from || !range?.to) return undefined
+        if (!range?.from || !range?.to) return undefined;
         return {
             $and: [
                 { createdAt: { $gte: range.from } },
                 { createdAt: { $lte: range.to } },
             ],
-        }
-    }, [range])
+        };
+    }, [range]);
 
-    const { incomes = [] } = useIncomes(1, 1000, filters)
+    // 1) Первая страница через твой хук (не меняем его)
+    const {
+        incomes: firstPage = [],
+        total: totalIncomes = 0,
+        isLoading: firstLoading,
+    } = useIncomes(1, PAGE_SIZE, filters);
 
-    // Группировка по мастерам
+    const pageCount = Math.ceil(totalIncomes / PAGE_SIZE);
+
+    // Строка запроса — как в хуке
+    const queryString = useMemo(
+        () =>
+            qs.stringify({ filters }, { encodeValuesOnly: true }),
+        [filters]
+    );
+
+    // 2) Остальные страницы 2..N тянем параллельно через те же сервисы
+    const otherPagesQueries = useQueries({
+        queries:
+            pageCount > 1
+                ? Array.from({ length: pageCount - 1 }, (_, i) => {
+                    const page = i + 2;
+                    return {
+                        queryKey: ['incomes', page, PAGE_SIZE, filters],
+                        queryFn: () =>
+                            fetchIncomes(token ?? '', page, PAGE_SIZE, queryString),
+                        enabled: !!token && totalIncomes > PAGE_SIZE,
+                        staleTime: 60_000,
+                    };
+                })
+                : [],
+    });
+
+    // 3) Собираем полный массив доходов
+    const allIncomes = useMemo(() => {
+        const rest = otherPagesQueries.flatMap((q) => q.data?.incomes ?? []);
+        return [...firstPage, ...rest];
+    }, [firstPage, otherPagesQueries]);
+
+    const isLoading =
+        firstLoading || otherPagesQueries.some((q) => q.isLoading);
+
+    // 4) Группировка по мастерам (по полному набору)
     const data = useMemo(() => {
-        const grouped: Record<string, number> = {}
+        const grouped: Record<string, number> = {};
 
-        for (const income of incomes) {
-            const masterName = income.user?.name || 'Без мастера'
-            const amount = income.count || 0
+        for (const income of allIncomes) {
+            const masterName = income.user?.name || 'Без мастера';
+            const amount = income.count || 0;
 
-            if (!grouped[masterName]) {
-                grouped[masterName] = 0
-            }
-
-            grouped[masterName] += amount
+            grouped[masterName] = (grouped[masterName] ?? 0) + amount;
         }
 
-        return Object.entries(grouped).map(([name, income]) => ({ name, income }))
-    }, [incomes])
+        return Object.entries(grouped).map(([name, income]) => ({ name, income }));
+    }, [allIncomes]);
 
     return (
         <Card>
@@ -58,16 +102,20 @@ export const MasterIncomeChart = ({ range }: Props) => {
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={data} margin={{ top: 16, right: 20, left: 0, bottom: 5 }}>
+                    <BarChart
+                        data={data}
+                        margin={{ top: 16, right: 20, left: 0, bottom: 5 }}
+                    >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="income" fill="#4ade80" name="Доход" />
+                        <Bar dataKey="income" name="Доход" />
                     </BarChart>
                 </ResponsiveContainer>
+                {isLoading && <div className="mt-2 text-xs text-muted-foreground">Загрузка…</div>}
             </CardContent>
         </Card>
-    )
-}
+    );
+};
