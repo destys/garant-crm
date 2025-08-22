@@ -24,10 +24,10 @@ export const generateOrdersReportPdf = (
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
 
-    // сетка → теперь 2 колонки × 4 строки = 8 карточек
+    // сетка → 2 колонки × 4 строки = 8 карточек
     const margin = 10;
     const gutterX = 5;
-    const gutterY = 6; // чуть меньше зазор
+    const gutterY = 6;
     const cols = 2;
     const rows = 4;
     const cardsPerPage = cols * rows;
@@ -52,6 +52,10 @@ export const generateOrdersReportPdf = (
 
     const labelColor = { r: 15, g: 52, b: 96 };
     const labelGap = 2.5;
+
+    // настройки рамки карточки
+    const borderColor = { r: 180, g: 180, b: 180 };
+    const borderLineWidth = 0.3; // мм
 
     const cards = orders.map((o) => {
         const number =
@@ -103,6 +107,11 @@ export const generateOrdersReportPdf = (
         const x = round1(margin + col * (colW + gutterX));
         const y = round1(margin + row * (rowH + gutterY));
 
+        // === РАМКА КАРТОЧКИ (граница) ===
+        doc.setDrawColor(borderColor.r, borderColor.g, borderColor.b);
+        doc.setLineWidth(borderLineWidth);
+        doc.rect(x, y, colW, rowH); // сплошной прямоугольник-рамка
+
         const contentX = x + padX;
         let curY = y + padTop;
 
@@ -110,6 +119,9 @@ export const generateOrdersReportPdf = (
         const labelMaxW = Math.max(...card.lines.map((l) => doc.getTextWidth(l.label)));
         const valueStartX = contentX + labelMaxW + labelGap;
         const valueMaxW = colW - padX * 2 - labelMaxW - labelGap;
+
+        // вернуть цвет текста для контента
+        doc.setTextColor(0, 0, 0);
 
         card.lines.forEach(({ label, value }) => {
             doc.setTextColor(labelColor.r, labelColor.g, labelColor.b);
@@ -121,7 +133,7 @@ export const generateOrdersReportPdf = (
 
             let localY = curY + lineH;
             for (let j = 1; j < wrapped.length; j++) {
-                if (localY > y + rowH) break;
+                if (localY > y + rowH - 1) break; // -1 чтобы не упираться в рамку
                 doc.text(wrapped[j], valueStartX, localY);
                 localY += lineH;
             }

@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import Image from 'next/image'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
+import { Logo } from './logo'
 
 const schema = z.object({
   email: z.string().email({ message: 'Введите корректный email' }),
@@ -111,7 +112,7 @@ export function LoginForm({
           </form>
 
           <div className="items-center justify-center bg-muted relative hidden md:flex px-10">
-            <Image src={'/logo.png'} alt='logo' width={200} height={200} />
+            <Logo className="size-[300px]" />
           </div>
         </CardContent>
       </Card>
