@@ -43,18 +43,26 @@ const formSchema = z.object({
             message: "Начальная дата не может быть позже конечной",
             path: ["to"],
         }),
+    dateVisitRange: z
+        .object({
+            from: z.date().optional(),
+            to: z.date().optional(),
+        })
+        .refine((data) => !data.from || !data.to || data.from <= data.to, {
+            message: "Начальная дата не может быть позже конечной",
+            path: ["to"],
+        }),
     master: z.string().optional(),
 })
 
 export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
     const { users } = useUsers(1, 100);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            dateRange: {
-                from: undefined,
-                to: undefined,
-            },
+            dateRange: { from: undefined, to: undefined },
+            dateVisitRange: { from: undefined, to: undefined },
             master: "",
         },
     });
@@ -64,6 +72,8 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
 
         const from = values.dateRange?.from;
         const to = values.dateRange?.to;
+        const visitFrom = values.dateVisitRange?.from;
+        const visitTo = values.dateVisitRange?.to;
 
         if (from || to) {
             filters.createdAt = {};
@@ -71,11 +81,17 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
             if (to) filters.createdAt.$lte = to.toISOString();
         }
 
+        if (visitFrom || visitTo) {
+            filters.visit_date = {};
+            if (visitFrom) filters.visit_date.$gte = visitFrom.toISOString();
+            if (visitTo) filters.visit_date.$lte = visitTo.toISOString();
+        }
+
         if (values.master) {
             filters.master = { id: values.master };
         }
 
-        onChange(filters); // 🔁 прокидываем наверх
+        onChange(filters);
     };
 
     return (
@@ -86,14 +102,15 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                     form.reset();
                     onChange({});
                 }}
-                className="grid lg:grid-cols-3 items-end gap-4 border rounded-md p-4 mb-6 lg:mb-14"
+                className="grid lg:grid-cols-4 items-end gap-4 border rounded-md p-4 mb-6 lg:mb-14"
             >
+                {/* Дата создания */}
                 <FormField
                     control={form.control}
                     name="dateRange"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Выберите даты</FormLabel>
+                            <FormLabel>Дата создания</FormLabel>
                             <FormControl>
                                 <Popover>
                                     <PopoverTrigger asChild>
@@ -137,6 +154,57 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                     )}
                 />
 
+                {/* Дата выезда */}
+                <FormField
+                    control={form.control}
+                    name="dateVisitRange"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Дата выезда</FormLabel>
+                            <FormControl>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !field.value?.from && !field.value?.to && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {field.value?.from ? (
+                                                field.value.to ? (
+                                                    `${format(field.value.from, "dd.MM.yyyy")} – ${format(field.value.to, "dd.MM.yyyy")}`
+                                                ) : (
+                                                    format(field.value.from, "dd.MM.yyyy")
+                                                )
+                                            ) : (
+                                                <span>Выберите даты</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="range"
+                                            selected={field.value as DateRange}
+                                            onSelect={field.onChange}
+                                            defaultMonth={
+                                                field.value?.from
+                                                    ? field.value.from
+                                                    : new Date(new Date().getFullYear(), new Date().getMonth() - 1)
+                                            }
+                                            numberOfMonths={2}
+                                            className="rounded-lg border shadow-sm"
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                {/* Мастер */}
                 <FormField
                     control={form.control}
                     name="master"
@@ -190,9 +258,8 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
 
                 <div className="grid grid-cols-2 gap-4">
                     <Button type="submit">Применить</Button>
-                    <Button type="reset" variant={'destructive'}>Сбросить</Button>
+                    <Button type="reset" variant="destructive">Сбросить</Button>
                 </div>
-
             </form>
         </Form>
     )
