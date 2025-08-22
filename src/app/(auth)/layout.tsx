@@ -30,6 +30,10 @@ export const metadata: Metadata = {
     "msapplication-TileImage": "/favicons/favicon-144x144.png",
     "msapplication-config": "/favicons/browserconfig.xml",
   },
+  robots: {
+    index: false,
+    follow: false
+  }
 };
 
 import "@/app/globals.css";
