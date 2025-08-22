@@ -86,11 +86,26 @@ export const OrdersContent = () => {
                 onChange={(filters: any) => {
                     setFormFilters(filters);
 
-                    // если есть период в filters.createdAt — сохраняем
-                    if (filters?.createdAt) {
-                        const from = filters.createdAt.$gte ? new Date(filters.createdAt.$gte) : undefined;
-                        const to = filters.createdAt.$lte ? new Date(filters.createdAt.$lte) : undefined;
-                        setPeriod({ from, to });
+                    // 1) пробуем взять период из dateVisitRange -> filters.visit_date
+                    const vFrom = filters?.visit_date?.$gte
+                        ? new Date(filters.visit_date.$gte)
+                        : undefined;
+                    const vTo = filters?.visit_date?.$lte
+                        ? new Date(filters.visit_date.$lte)
+                        : undefined;
+
+                    // 2) если его нет — берём из dateRange -> filters.createdAt
+                    const cFrom = filters?.createdAt?.$gte
+                        ? new Date(filters.createdAt.$gte)
+                        : undefined;
+                    const cTo = filters?.createdAt?.$lte
+                        ? new Date(filters.createdAt.$lte)
+                        : undefined;
+
+                    if ((vFrom && vTo) || (vFrom && !vTo) || (!vFrom && vTo)) {
+                        setPeriod({ from: vFrom, to: vTo });
+                    } else if ((cFrom && cTo) || (cFrom && !cTo) || (!cFrom && cTo)) {
+                        setPeriod({ from: cFrom, to: cTo });
                     } else {
                         setPeriod({});
                     }
