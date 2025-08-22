@@ -56,6 +56,9 @@ export const getUserById = async (
         outcomes: {
           populate: "*",
         },
+        manual_income_outcomes: {
+          populate: "*",
+        },
       },
     },
     { encodeValuesOnly: true }

@@ -14,6 +14,7 @@ import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { AddUserModal } from '@/components/modals/add-user-modal'
 import { AddIncomeOutcomeModal } from '@/components/modals/add-income-outcome-modal'
 import { AddClientModal } from '@/components/modals/add-client'
+import { AddMasterManualIncomeOutcome } from '@/components/modals/add-master-manual-income-outcome'
 
 import { AuthProvider } from './auth-provider'
 import { ModalComponent, ModalProvider } from './modal-provider'
@@ -37,6 +38,11 @@ export const Providers = ({ children }: { children: ReactNode }) => {
                             addUser: AddUserModal,
                             addClient: AddClientModal,
                             incomeOutcome: AddIncomeOutcomeModal as ModalComponent<{
+                                type: "income" | "outcome";
+                                orderId: string;
+                                masterId: number;
+                            }>,
+                            manualIncomeOutcome: AddMasterManualIncomeOutcome as ModalComponent<{
                                 type: "income" | "outcome";
                                 orderId: string;
                                 masterId: number;

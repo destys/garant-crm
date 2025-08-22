@@ -64,7 +64,7 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
         }
       );
       queryClient.invalidateQueries({ queryKey: ["users"] });
-    }, 
+    },
   });
 
   return {
@@ -75,7 +75,7 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
     error: usersQuery.error,
     createUser: createUserMutation.mutate,
     createUserAsync: createUserMutation.mutateAsync, // можно использовать await и try/catch
-    updateUser: updateUserMutation.mutate,
+    updateUser: updateUserMutation.mutateAsync,
     deleteUser: deleteUserMutation.mutate,
   };
 };

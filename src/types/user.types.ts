@@ -1,4 +1,5 @@
 import { IncomeOutcomeProps } from "./income-outcome.types";
+import { ManualIncomeOutcomeProps } from "./manual-io.types";
 import { OrderProps } from "./order.types";
 
 export interface UserProps {
@@ -14,6 +15,7 @@ export interface UserProps {
   };
   incomes: IncomeOutcomeProps[];
   outcomes: IncomeOutcomeProps[];
+  manual_income_outcomes: ManualIncomeOutcomeProps;
 }
 
 export type UpdateUserDto = Omit<UserProps, "role"> & {

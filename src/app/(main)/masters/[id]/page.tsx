@@ -9,11 +9,15 @@ import { MasterEdit } from "@/components/masters/master-edit"
 import { MasterLeads } from "@/components/masters/master-leads"
 import { MasterAccounting } from "@/components/masters/master-accounting"
 import { useUser } from "@/hooks/use-user"
+import { useModal } from "@/providers/modal-provider";
+import { useAuth } from "@/providers/auth-provider";
 
 const MasterPage = () => {
     const params = useParams();
     const { id } = params;
     const { data } = useUser(id ? +id : null);
+    const { openModal } = useModal();
+    const { user, roleId } = useAuth();
 
     if (!data) return null;
 
@@ -39,14 +43,25 @@ const MasterPage = () => {
                         <TabsTrigger value="leads">Заявки в работе</TabsTrigger>
                         <TabsTrigger value="accounting">Расчеты</TabsTrigger>
                     </TabsList>
-                    <div className="flex gap-2">
-                        <Button variant={'positive'}>
-                            <BanknoteArrowUpIcon />
-                        </Button>
-                        <Button variant={'destructive'}>
-                            <BanknoteArrowDownIcon />
-                        </Button>
-                    </div>
+                    {roleId === 3 && (
+                        <div className="flex gap-2">
+                            <Button variant={'positive'}
+                                onClick={() => {
+                                    openModal("manualIncomeOutcome", { title: "Добавить приход", props: { type: "income", agent: user?.name, masterId: id } })
+                                }}
+                            >
+                                <BanknoteArrowUpIcon />
+                            </Button>
+                            <Button variant={'destructive'}
+                                onClick={() => {
+                                    openModal("manualIncomeOutcome", { title: "Добавить списание", props: { type: "outcome", agent: user?.name, masterId: id } })
+                                }}
+                            >
+                                <BanknoteArrowDownIcon />
+                            </Button>
+                        </div>
+                    )}
+
                 </div>
                 <TabsContent value="edit">
                     <MasterEdit data={data} />
