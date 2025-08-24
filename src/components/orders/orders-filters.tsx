@@ -4,9 +4,10 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { format } from "date-fns"
+import { format, startOfDay, endOfDay } from "date-fns"
 import { CalendarIcon, CheckIcon, ChevronsUpDown } from "lucide-react"
 import { DateRange } from "react-day-picker"
+
 
 import {
     Form,
@@ -75,16 +76,18 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
         const visitFrom = values.dateVisitRange?.from;
         const visitTo = values.dateVisitRange?.to;
 
+        // createdAt — нормализуем до границ дня
         if (from || to) {
             filters.createdAt = {};
-            if (from) filters.createdAt.$gte = from.toISOString();
-            if (to) filters.createdAt.$lte = to.toISOString();
+            if (from) filters.createdAt.$gte = startOfDay(from).toISOString();
+            if (to) filters.createdAt.$lte = endOfDay(to).toISOString();
         }
 
+        // visit_date (datetime в Strapi) — тоже границы дня
         if (visitFrom || visitTo) {
             filters.visit_date = {};
-            if (visitFrom) filters.visit_date.$gte = visitFrom.toISOString();
-            if (visitTo) filters.visit_date.$lte = visitTo.toISOString();
+            if (visitFrom) filters.visit_date.$gte = startOfDay(visitFrom).toISOString();
+            if (visitTo) filters.visit_date.$lte = endOfDay(visitTo).toISOString();
         }
 
         if (values.master) {
