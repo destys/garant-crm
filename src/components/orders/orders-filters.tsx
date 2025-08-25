@@ -140,7 +140,7 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                                         <div className="flex gap-2 p-2 border-t">
                                             {["Завтра", "Послезавтра", "Через 3 дня"].map((label, i) => {
                                                 const d = new Date();
-                                                d.setDate(d.getDate() + (i + 1));
+                                                d.setDate(d.getDate() + i);
                                                 return (
                                                     <Button
                                                         key={label}
@@ -207,7 +207,7 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                                         <div className="flex gap-2 p-2 border-t">
                                             {["Завтра", "Послезавтра", "Через 3 дня"].map((label, i) => {
                                                 const d = new Date();
-                                                d.setDate(d.getDate() + (i + 1));
+                                                d.setDate(d.getDate() + i);
                                                 return (
                                                     <Button
                                                         key={label}
