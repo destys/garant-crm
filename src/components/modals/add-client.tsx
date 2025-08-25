@@ -12,12 +12,15 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { useClients } from "@/hooks/use-clients";
 import { ClientProps } from "@/types/client.types";
 
+import { RatingStars } from "../rating-stars";
+
 
 const formSchema = z
     .object({
         name: z.string().min(3, "Введите ФИО"),
         phone: z.string().min(10, "Введите корректный телефон"),
         address: z.string(),
+        rating: z.number(),
     })
 
 type MasterFormValues = z.infer<typeof formSchema>
@@ -39,6 +42,7 @@ export const AddClientModal = ({
             name: props?.client.name || "",
             phone: props?.client.phone || "",
             address: props?.client.address || "",
+            rating: props?.client.rating || 0,
         },
     })
 
@@ -47,6 +51,7 @@ export const AddClientModal = ({
             name: data.name,
             phone: data.phone,
             address: data.address,
+            rating: data.rating,
         };
 
         try {
@@ -115,6 +120,21 @@ export const AddClientModal = ({
                                 <FormLabel>Адрес</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Адрес" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Рейтинг */}
+                    <FormField
+                        control={form.control}
+                        name="rating"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Рейтинг клиента</FormLabel>
+                                <FormControl>
+                                    <RatingStars value={field.value} onChange={field.onChange} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

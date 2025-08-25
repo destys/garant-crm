@@ -11,11 +11,14 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { useClients } from "@/hooks/use-clients";
 import { ClientProps } from '@/types/client.types'
 
+import { RatingStars } from "../rating-stars";
+
 const formSchema = z
     .object({
         name: z.string().min(3, "Введите ФИО"),
         phone: z.string().min(10, "Введите корректный телефон"),
         address: z.string(),
+        rating: z.number(),
     })
 
 type MasterFormValues = z.infer<typeof formSchema>
@@ -30,6 +33,7 @@ export const ClientsEdit = ({ data }: { data: ClientProps }) => {
             name: data.name || "",
             phone: data.phone || "",
             address: data.address || "",
+            rating: data.rating || 0,
         },
     })
 
@@ -38,6 +42,7 @@ export const ClientsEdit = ({ data }: { data: ClientProps }) => {
             name: values.name,
             phone: values.phone,
             address: values.address,
+            rating: values.rating,
         };
 
         try {
@@ -100,6 +105,21 @@ export const ClientsEdit = ({ data }: { data: ClientProps }) => {
                                 <FormLabel>Адрес</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Адрес" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Rating */}
+                    <FormField
+                        control={form.control}
+                        name="rating"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Адрес</FormLabel>
+                                <FormControl>
+                                    <RatingStars value={field.value} onChange={field.onChange} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

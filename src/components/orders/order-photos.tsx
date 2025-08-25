@@ -3,9 +3,10 @@
 import { useState, useRef } from "react"
 import { FilePond } from "react-filepond"
 import type { FilePond as ReactFilePondType } from "react-filepond"
-import { Trash2Icon, FileTextIcon } from "lucide-react"
+import { Trash2Icon, FileTextIcon, DownloadIcon } from "lucide-react"
 import Image from "next/image"
 import Lightbox from "yet-another-react-lightbox"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { API_URL } from "@/constants"
@@ -198,23 +199,32 @@ export const OrderMedia = ({ data }: Props) => {
                             </div>
 
                             <div className="p-2 text-sm truncate border-t bg-background">{file.name}</div>
-
-                            <Button
-                                type="button"
-                                size="icon"
-                                variant="destructive"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleDeleteFile(file.id, fieldName, existing, setExisting)}
-                            >
-                                <Trash2Icon className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-2 absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                    type="button"
+                                    size="icon"
+                                    className=""
+                                    asChild
+                                >
+                                    <Link href={`${file.url}`} target="_blank" download>
+                                        <DownloadIcon className="w-4 h-4" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="destructive"
+                                    className=""
+                                    onClick={() => handleDeleteFile(file.id, fieldName, existing, setExisting)}
+                                >
+                                    <Trash2Icon className="w-4 h-4" />
+                                </Button>
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {lightboxIndex !== null && (
-                    <Lightbox open index={lightboxIndex} close={() => setLightboxIndex(null)} slides={lightboxImages} />
-                )}
+
             </div>
         )
     }
@@ -223,6 +233,10 @@ export const OrderMedia = ({ data }: Props) => {
         <div className="space-y-8">
             {renderGallery("Документы и чеки", "order_docs", docs, setDocs, pondDocsRef)}
             {renderGallery("Фотографии", "device_photos", photos, setPhotos, pondPhotosRef)}
+
+            {lightboxIndex !== null && (
+                <Lightbox open index={lightboxIndex} close={() => setLightboxIndex(null)} slides={lightboxImages} className="relative z-[10000]" />
+            )}
         </div>
     )
 }

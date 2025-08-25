@@ -12,7 +12,8 @@ const FONT = "Roboto-Regular";
 
 export const generateOrdersReportPdf = (
     orders: OrderProps[],
-    period?: Period
+    activeTitle?: string,
+    period?: Period,
 ) => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
 
@@ -142,7 +143,7 @@ export const generateOrdersReportPdf = (
         });
     });
 
-    doc.save(buildFilename(period));
+    doc.save(buildFilename(period, activeTitle));
 };
 
 // helpers
@@ -161,15 +162,17 @@ function safeDate(v?: string) {
         return "";
     }
 }
-function buildFilename(period?: Period) {
+function buildFilename(period?: Period, activeTitle?: string) {
+    const safeTitle = activeTitle?.trim().replace(/\s+/g, "_") || "Все";
     if (period?.from && period?.to) {
-        return `Отчет_заявки_${format(period.from, "dd.MM.yy")}_${format(
+        return `Отчет_${safeTitle}_${format(period.from, "dd.MM.yy")}_${format(
             period.to,
             "dd.MM.yy"
         )}.pdf`;
     }
-    return "Отчет_заявки.pdf";
+    return `Отчет_${safeTitle}.pdf`;
 }
+
 function round1(n: number) {
     return Math.round(n * 10) / 10;
 }

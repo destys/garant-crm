@@ -7,6 +7,7 @@ export interface ClientProps {
   address: string;
   orders: OrderProps[];
   name: string;
+  rating: number;
 }
 
 export type UpdateClientDto = Omit<ClientProps, "user, order"> & {

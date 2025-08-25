@@ -76,6 +76,12 @@ export const SIDEBAR_MENU = [
   },
   {
     to: "/orders",
+    title: "Привезет сам",
+    icon: Send,
+    filters: { orderStatus: { $eq: "Привезет сам" } },
+  },
+  {
+    to: "/orders",
     title: "Продать",
     icon: DollarSign,
     filters: { orderStatus: { $eq: "Продать" } },

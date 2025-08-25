@@ -137,6 +137,23 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
+                                        <div className="flex gap-2 p-2 border-t">
+                                            {["Завтра", "Послезавтра", "Через 3 дня"].map((label, i) => {
+                                                const d = new Date();
+                                                d.setDate(d.getDate() + (i + 1));
+                                                return (
+                                                    <Button
+                                                        key={label}
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => field.onChange({ from: d, to: d })}
+                                                    >
+                                                        {label}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </div>
                                         <Calendar
                                             mode="range"
                                             selected={field.value as DateRange}
@@ -187,6 +204,23 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
+                                        <div className="flex gap-2 p-2 border-t">
+                                            {["Завтра", "Послезавтра", "Через 3 дня"].map((label, i) => {
+                                                const d = new Date();
+                                                d.setDate(d.getDate() + (i + 1));
+                                                return (
+                                                    <Button
+                                                        key={label}
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => field.onChange({ from: d, to: d })}
+                                                    >
+                                                        {label}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </div>
                                         <Calendar
                                             mode="range"
                                             selected={field.value as DateRange}

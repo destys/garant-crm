@@ -63,6 +63,11 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 12, // 🔹 по умолчанию 20 строк
+      },
+    },
   })
 
   // Переключение на cardView при <1280px

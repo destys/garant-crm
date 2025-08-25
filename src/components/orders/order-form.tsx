@@ -77,14 +77,23 @@ const schema = z.object({
     add_address: z.string(),
     add_phone: z.string(),
 }).superRefine((data, ctx) => {
-    if (data.orderStatus === "Отказ" && !data.reason_for_refusal?.trim()) {
-        ctx.addIssue({
-            path: ["reason_for_refusal"],
-            code: z.ZodIssueCode.custom,
-            message: "Укажите причину отказа",
-        })
+    if (data.orderStatus === "Отказ") {
+        if (!data.reason_for_refusal?.trim()) {
+            ctx.addIssue({
+                path: ["reason_for_refusal"],
+                code: z.ZodIssueCode.custom,
+                message: "Укажите причину отказа",
+            });
+        }
+        if (!data.device_type?.trim()) {
+            ctx.addIssue({
+                path: ["device_type"],
+                code: z.ZodIssueCode.custom,
+                message: "Укажите тип устройства",
+            });
+        }
     }
-})
+});
 
 type FormData = z.infer<typeof schema>
 
@@ -105,6 +114,10 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
         ? `${visitDate.getHours().toString().padStart(2, "0")}:${visitDate.getMinutes().toString().padStart(2, "0")}`
         : ""
 
+
+    const toStrapiDate = (d?: Date) => (d ? format(d, "yyyy-MM-dd") : undefined)
+    const fromStrapiDate = (s?: string) => (s ? new Date(`${s}T00:00:00`) : undefined)
+
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -115,9 +128,15 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
             kind_of_repair: data?.kind_of_repair || "Стационарный",
             visit_date: visitDate,
             visit_time: visitTime,
-            diagnostic_date: data?.diagnostic_date ? parseISO(data.diagnostic_date) : undefined,
-            date_of_issue: data?.date_of_issue ? parseISO(data.date_of_issue) : undefined,
-            deadline: data?.deadline ? parseISO(data.deadline) : undefined,
+            diagnostic_date: data?.diagnostic_date
+                ? fromStrapiDate(data.diagnostic_date)
+                : undefined,
+            date_of_issue: data?.date_of_issue
+                ? fromStrapiDate(data.date_of_issue)
+                : undefined,
+            deadline: data?.deadline
+                ? fromStrapiDate(data.deadline)
+                : undefined,
             device_type: data?.device_type || "",
             brand: data?.brand || "",
             model: data?.model || "",
@@ -147,6 +166,7 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
         }
     }, [countdown, createdId, router]);
 
+
     const onSubmit = async (value: FormData) => {
         let visitDateTime: string | undefined = undefined;
         if (value.visit_date) {
@@ -161,9 +181,9 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
         const payload = {
             ...value,
             visit_date: visitDateTime,
-            diagnostic_date: value.diagnostic_date?.toISOString(),
-            date_of_issue: value.date_of_issue?.toISOString(),
-            deadline: value.deadline?.toISOString(),
+            diagnostic_date: toStrapiDate(value.diagnostic_date),
+            date_of_issue: toStrapiDate(value.date_of_issue),
+            deadline: toStrapiDate(value.deadline),
         }
 
         delete payload.visit_time;

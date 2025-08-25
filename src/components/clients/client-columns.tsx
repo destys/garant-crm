@@ -7,6 +7,8 @@ import { LinkIcon, PhoneIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientProps } from "@/types/client.types";
 
+import { RatingStars } from "../rating-stars";
+
 export const clientsColumns = (
     deleteClient: (documentId: string) => void
 ): ColumnDef<ClientProps>[] => [
@@ -34,6 +36,13 @@ export const clientsColumns = (
                         {row.original.orders?.length ?? 0}
                     </span>
                 </div>
+            ),
+        },
+        {
+            accessorKey: "rating",
+            header: "Рейтинг",
+            cell: ({ row }) => (
+                <RatingStars value={row.original.rating} />
             ),
         },
         {

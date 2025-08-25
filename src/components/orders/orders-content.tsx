@@ -18,7 +18,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { generateOrdersReportPdf } from "../pdfs/generate-orders-pdf";
 
 export const OrdersContent = () => {
-    const activeTitle = useOrderFilterStore((state) => state.activeTitle);
+    const activeTitle = useOrderFilterStore((state) => state.activeTitle) || undefined;
     const filters = useOrderFilterStore((state) => state.filters);
     const [period, setPeriod] = useState<{ from?: Date; to?: Date }>({});
     const { user, roleId } = useAuth();
@@ -62,7 +62,7 @@ export const OrdersContent = () => {
 
     const handleDownloadPdf = () => {
         if (!period.from || !period.to || !data.length) return;
-        generateOrdersReportPdf(data, period);
+        generateOrdersReportPdf(data, activeTitle, period);
     };
 
     if (!user || !roleId) return <div className="flex justify-center items-center h-96"><Loader2Icon className="animate-spin" /></div>

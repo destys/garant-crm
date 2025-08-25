@@ -112,13 +112,25 @@ export const ordersColumns = (
       accessorKey: "device",
       header: "Устройство",
       cell: ({ row }) =>
-        linkWrapper(row, `${row.original.device_type || "-"} / ${row.original.brand || "-"} / ${row.original.model || "-"}`),
+        linkWrapper(row, <div className="space-y-2 text-xs text-center">
+          <div>{row.original.device_type || "-"}</div>
+          <div>{row.original.brand || "-"} / {row.original.model || "-"}</div>
+        </div >),
     },
     {
       accessorKey: "client.phone",
       header: "Телефон",
       cell: ({ row }) =>
         linkWrapper(row, `${row.original.client?.phone}`),
+    },
+    {
+      id: "cost",
+      header: "Цена",
+      cell: ({ row }) =>
+        linkWrapper(row, <div className="space-y-2">
+          <div className="flex items-center justify-between gap-1">Стоимость: <Badge variant={+row.original.total_cost > 0 ? "success" : "default"}>{row.original.total_cost || 0} ₽</Badge></div>
+          <div className="flex items-center justify-between gap-1">Предоплата: <Badge variant={+row.original.prepay > 0 ? "success" : "default"}>{row.original.prepay || 0} ₽</Badge></div>
+        </div>),
     },
     {
       id: "masters",

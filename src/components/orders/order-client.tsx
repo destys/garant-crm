@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { OrderProps } from '@/types/order.types'
 import { useModal } from '@/providers/modal-provider'
 
+import { RatingStars } from '../rating-stars'
+
 interface Props {
     data: OrderProps;
 }
@@ -39,7 +41,10 @@ export const OrderClient = ({ data }: Props) => {
                 </CardAction>
             </CardHeader>
             <CardContent>
-                {client.address || "Адрес не указан"}
+                <div className='flex justify-between'>
+                    {client.address || "Адрес не указан"}
+                    <RatingStars value={client.rating} />
+                </div>
             </CardContent>
         </Card>
     )
