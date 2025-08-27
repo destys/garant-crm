@@ -42,15 +42,19 @@ export const OrdersContent = () => {
         const andArr: any[] = Array.isArray(result.$and) ? [...result.$and] : [];
 
         // убираем возможный корневой master, чтобы не конфликтовал
-        if (result.master) delete result.master;
+
 
         // если мастер — добавляем условие в $and
         if (roleId === 1 && user?.id) {
             andArr.push({ master: { $eq: user.id } });
+        } else {
+            andArr.push({ master: result.master });
         }
 
         // записываем $and обратно, если есть условия
         if (andArr.length) result.$and = andArr;
+
+        if (result.master) delete result.master;
 
         return result;
     }, [baseFilters, roleId, user?.id]);

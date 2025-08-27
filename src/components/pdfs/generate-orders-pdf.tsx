@@ -81,7 +81,7 @@ export const generateOrdersReportPdf = (
             lines: [
                 { label: "Номер заявки:", value: number },
                 { label: "Дата выезда:", value: departure },
-                { label: "ФИО мастера:", value: master },
+                { label: "ФИО сотрудника:", value: master },
                 { label: "Номер клиента:", value: clientNumber },
                 { label: "Адрес выезда:", value: address },
                 { label: "Тип техники:", value: deviceType },

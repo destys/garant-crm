@@ -60,7 +60,7 @@ export const OrderMedia = ({ data }: Props) => {
     /** Удаление файла */
     const handleDeleteFile = async (
         fileId: number,
-        fieldName: "order_docs" | "device_photos",
+        fieldName: "order_docs" | "device_photos" | "device_photos_site",
         existing: MediaFile[],
         setExisting: React.Dispatch<React.SetStateAction<MediaFile[]>>
     ) => {
@@ -88,7 +88,7 @@ export const OrderMedia = ({ data }: Props) => {
     /** Привязка после загрузки */
     const handleAttach = async (
         uploaded: MediaFile[],
-        fieldName: "order_docs" | "device_photos",
+        fieldName: "order_docs" | "device_photos" | "device_photos_site",
         existing: MediaFile[],
         setExisting: React.Dispatch<React.SetStateAction<MediaFile[]>>
     ) => {
@@ -118,7 +118,7 @@ export const OrderMedia = ({ data }: Props) => {
 
     const renderGallery = (
         title: string,
-        fieldName: "order_docs" | "device_photos",
+        fieldName: "order_docs" | "device_photos" | "device_photos_site",
         existing: MediaFile[],
         setExisting: React.Dispatch<React.SetStateAction<MediaFile[]>>,
         pondRef: React.MutableRefObject<ReactFilePondType | null>
@@ -233,6 +233,7 @@ export const OrderMedia = ({ data }: Props) => {
         <div className="space-y-8">
             {renderGallery("Документы и чеки", "order_docs", docs, setDocs, pondDocsRef)}
             {renderGallery("Фотографии", "device_photos", photos, setPhotos, pondPhotosRef)}
+            {renderGallery("Фотографии для сайта", "device_photos_site", photos, setPhotos, pondPhotosRef)}
 
             {lightboxIndex !== null && (
                 <Lightbox open index={lightboxIndex} close={() => setLightboxIndex(null)} slides={lightboxImages} className="relative z-[10000]" />

@@ -134,7 +134,7 @@ export const ordersColumns = (
     },
     {
       id: "masters",
-      header: "Мастер",
+      header: "Сотрудник",
       cell: ({ row }) => (
         roleId === 1 ?
           (
@@ -148,7 +148,7 @@ export const ordersColumns = (
                   updatedData: { master: { id: +value } },
                 });
 
-                toast.success("Мастер назначен")
+                toast.success("Сотрудник назначен")
               }}
             >
               <SelectTrigger className="w-[180px]">
@@ -164,6 +164,12 @@ export const ordersColumns = (
             </Select >
           )
       ),
+    },
+    {
+      accessorKey: "author",
+      header: "Автор заявки",
+      cell: ({ row }) =>
+        linkWrapper(row, <div className="flex justify-center"><Badge variant={row.original.author ? "success" : "default"}>{row.original.author || "API"}</Badge></div>),
     },
     {
       accessorKey: "actions",

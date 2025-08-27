@@ -65,10 +65,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col">
             <main className="flex-auto p-4 pt-0">
               <div className="flex flex-1 flex-col max-w-[1600px] mx-auto">
-                <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6">
+                <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6 w-full">
                   {children}
                 </div>
               </div>

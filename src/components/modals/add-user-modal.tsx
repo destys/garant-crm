@@ -16,6 +16,7 @@ import { useUsers } from "@/hooks/use-users";
 const formSchema = z
     .object({
         name: z.string().min(3, "Введите ФИО"),
+        position: z.string().optional(),
         phone: z.string().min(10, "Введите корректный телефон"),
         email: z.string().email("Введите корректный email"),
         role: z.string(),
@@ -45,6 +46,7 @@ export const AddUserModal = ({
             role: "1",
             password: "",
             confirm_password: "",
+            position: "",
         },
     })
 
@@ -54,6 +56,7 @@ export const AddUserModal = ({
             name: data.name,
             password: data.password,
             phone: data.phone,
+            position: data.position,
             role: { id: +data.role },
         };
 
@@ -170,6 +173,21 @@ export const AddUserModal = ({
                                         <SelectItem value="3">Администратор</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Должность */}
+                    <FormField
+                        control={form.control}
+                        name="position"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Должность</FormLabel>
+                                <FormControl>
+                                    <Input type="text" placeholder="Должность" {...field} />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}

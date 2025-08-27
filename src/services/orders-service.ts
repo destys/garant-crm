@@ -41,6 +41,7 @@ export const fetchOrders = async (
         order_docs: { populate: "*" },
         device_photos: { populate: "*" },
         client: { populate: "*" },
+        chat: { populate: "*" },
       },
       ...(filterQuery && QueryString.parse(filterQuery)),
     },
@@ -77,6 +78,7 @@ export const fetchOrderById = async (
         order_docs: { populate: "*" },
         device_photos: { populate: "*" },
         client: { populate: "*" },
+        chat: { populate: "*" },
       },
     },
     { encodeValuesOnly: true }

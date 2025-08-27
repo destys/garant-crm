@@ -159,20 +159,20 @@ export const MasterReport = ({ range }: Props) => {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Статистика по мастеру</CardTitle>
+                <CardTitle>Статистика по сотруднику</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-3 gap-4">
                     <Popover open={open} onOpenChange={setOpen}>
                         <PopoverTrigger asChild>
                             <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
-                                {selected ? users.find((m) => m.id.toString() === selected)?.name : 'Выберите мастера'}
+                                {selected ? users.find((m) => m.id.toString() === selected)?.name : 'Выберите сотрудника'}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0">
                             <Command>
-                                <CommandInput placeholder="Поиск мастера..." />
+                                <CommandInput placeholder="Поиск сотрудника..." />
                                 <CommandEmpty>Не найдено</CommandEmpty>
                                 <CommandGroup>
                                     {users.map((m) => (

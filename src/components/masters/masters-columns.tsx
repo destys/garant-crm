@@ -17,7 +17,7 @@ export const mastersColumns = (
 ): ColumnDef<UserProps>[] => [
     {
       accessorKey: "name",
-      header: "ФИО мастера",
+      header: "ФИО сотрудника",
       cell: ({ row }) => row.original.name,
     },
     {
@@ -69,6 +69,15 @@ export const mastersColumns = (
           {row.original.role.id == 3 && "Админ"}
           {row.original.role.id == 4 && "Менеджер"}
           {row.original.role.id == 1 && "Мастер"}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "position",
+      header: "Должность",
+      cell: ({ row }) => (
+        <Badge>
+          {row.original.position || "Должность не указана"}
         </Badge>
       ),
     },

@@ -25,7 +25,7 @@ export const accountingIncomeColumns: ColumnDef<AccountingIncome>[] = [
     },
     {
         accessorKey: "masterId",
-        header: "Мастер",
+        header: "Сотрудник",
         cell: ({ row }) => {
             const master = demoMasters.find(m => m.id === row.original.masterId)
             return master ? master.name : "—"
@@ -62,7 +62,7 @@ export const accountingExpenseColumns: ColumnDef<AccountingExpense>[] = [
     },
     {
         accessorKey: "masterId",
-        header: "Мастер",
+        header: "Сотрудник",
         cell: ({ row }) => {
             const master = demoMasters.find(m => m.id === row.original.masterId)
             return master ? master.name : "—"

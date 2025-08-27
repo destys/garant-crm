@@ -7,6 +7,7 @@ export interface OrderProps {
   id: number;
   title: string;
   createdAt: string;
+  author: string;
   documentId: string;
   orderStatus: string;
   device_type: string;
@@ -34,9 +35,15 @@ export interface OrderProps {
   is_approve: boolean;
   add_address: string;
   add_phone: string;
+  chat: {
+    user: { id: number; name: string };
+    datetime: string;
+    message: string;
+  }[];
   client: Partial<ClientProps>;
   order_docs: MediaProps[];
   device_photos: MediaProps[];
+  device_photos_site: MediaProps[];
   incomes: IncomeOutcomeProps[];
   outcomes: IncomeOutcomeProps[];
   master: Partial<UserProps>;

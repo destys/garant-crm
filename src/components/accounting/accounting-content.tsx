@@ -2,8 +2,9 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Link2Icon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useMemo } from "react";
+import { ImageIcon, Link2Icon, PlusIcon, Trash2Icon } from "lucide-react";
+import { useMemo, useState } from "react";
+import Lightbox from "yet-another-react-lightbox";
 
 import { DataTable } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +15,18 @@ import { IncomeOutcomeProps } from "@/types/income-outcome.types";
 import { useUsers } from "@/hooks/use-users";
 import { cn, formatDate } from "@/lib/utils";
 import { useModal } from '@/providers/modal-provider'
+import { API_URL } from "@/constants";
+
+import "filepond/dist/filepond.min.css"
+import "yet-another-react-lightbox/styles.css"
 
 export const AccountingContent = () => {
     const { incomes, deleteIncome } = useIncomes(1, 500)
     const { outcomes, deleteOutcome } = useOutcomes(1, 500)
     const { users } = useUsers(1, 100);
     const { openModal } = useModal();
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [lightboxImages, setLightboxImages] = useState<{ src: string }[]>([]);
 
     const columns: ColumnDef<IncomeOutcomeProps>[] = [
         {
@@ -37,6 +44,19 @@ export const AccountingContent = () => {
             ),
         },
         {
+            id: "orderNum",
+            header: "Номер заказа",
+            cell: ({ row }) => (
+                row.original.order ? (
+                    <Badge>
+                        {row.original.order.title}
+                    </Badge >
+                ) : (
+                    <div>-</div>
+                )
+            ),
+        },
+        {
             accessorKey: "description",
             header: "Описание",
             cell: ({ row }) => row.original.note,
@@ -44,7 +64,7 @@ export const AccountingContent = () => {
 
         {
             accessorKey: "masterId",
-            header: "Мастер",
+            header: "Сотрудник",
             cell: ({ row }) => {
                 const master = users.find(m => m.id === row.original.user?.id);
                 return master ? master.name : "—";
@@ -60,10 +80,29 @@ export const AccountingContent = () => {
             ),
         },
         {
+            accessorKey: "author",
+            header: "Менеджер",
+            cell: ({ row }) => (
+                <Badge>
+                    {row.original.author || 'Не указан'}
+                </Badge>
+            ),
+        },
+        {
             accessorKey: "orderId",
             header: "",
             cell: ({ row }) =>
                 <div className="space-x-2">
+                    <Button
+                        disabled={!row.original.photo}
+                        variant="default"
+                        onClick={() => {
+                            setLightboxImages([{ src: `${API_URL}${row.original.photo.url}` }]);
+                            setLightboxIndex(0);
+                        }}
+                    >
+                        <ImageIcon />
+                    </Button>
                     <Button variant={'secondary'} disabled={!!!row.original.order} asChild>
                         <Link href={`/orders/${row.original.order?.documentId}`} className={cn(!!!row.original.order && "pointer-events-none opacity-50")}>
                             <Link2Icon />
@@ -117,6 +156,16 @@ export const AccountingContent = () => {
                 </Button>
             </div>
             <DataTable data={allRows} columns={columns} />
+
+            {lightboxIndex !== null && (
+                <Lightbox
+                    open
+                    index={lightboxIndex}
+                    close={() => setLightboxIndex(null)}
+                    slides={lightboxImages}
+                    className="relative z-[10000]"
+                />
+            )}
         </div>
     )
 } 

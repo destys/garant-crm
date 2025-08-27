@@ -39,7 +39,7 @@ export const OrderAccounting = ({ data }: Props) => {
                     <TableRow>
                         <TableHead className="whitespace-nowrap">Дата</TableHead>
                         <TableHead className="whitespace-nowrap">Описание</TableHead>
-                        <TableHead className="whitespace-nowrap">Мастер</TableHead>
+                        <TableHead className="whitespace-nowrap">Сотрудник</TableHead>
                         <TableHead className="text-right whitespace-nowrap">Сумма</TableHead>
                     </TableRow>
                 </TableHeader>

@@ -23,7 +23,7 @@ export const MastersContent = () => {
     return (
         <div>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
-                <h1 className="flex-auto">Все мастера</h1>
+                <h1 className="flex-auto">Все сотрудники</h1>
                 <MastersSearchBlock onChange={setSearchFilter} />
             </div>
             <Button className="mb-10"
@@ -32,7 +32,7 @@ export const MastersContent = () => {
                 }
             >
                 <PlusCircleIcon />
-                Добавить мастера
+                Добавить сотрудника
             </Button>
             <DataTable data={users} columns={mastersColumns(updateUser, deleteUser)} />
         </div>

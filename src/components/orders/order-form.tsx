@@ -6,11 +6,13 @@ import { format, parseISO } from "date-fns"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
+import { useModal } from "@/providers/modal-provider";
+import { useAuth } from "@/providers/auth-provider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
@@ -101,13 +103,16 @@ interface Props {
     data?: OrderProps | null
     clientDocumentId?: string
     masterId?: string
+    onDirtyChange?: (dirty: boolean) => void // ← добавили
 }
 
-export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
+export function RepairOrderForm({ data, clientDocumentId, masterId, onDirtyChange }: Props) {
     const router = useRouter();
     const isNew = !data;
     const { settings } = useSettings();
     const { updateOrder, createOrder } = useOrders(1, 1)
+    const { openModal } = useModal();
+    const { user, roleId } = useAuth();
 
     const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined
     const visitTime = visitDate
@@ -154,17 +159,60 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
         },
     })
 
+    const prepay = form.watch("prepay");
+    const prepayDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const lastOpenedValueRef = useRef<string>("");
+
     const status = form.watch("orderStatus")
     const [open, setOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [countdown, setCountdown] = useState(5);
     const [createdId, setCreatedId] = useState<string | null>(null);
 
+    // +++ ДОБАВИТЬ эффект (ниже деклараций хуков)
+    useEffect(() => {
+        if (prepayDebounceRef.current) clearTimeout(prepayDebounceRef.current);
+
+        const value = (prepay ?? "").toString().trim();
+        if (!value) return;
+
+        prepayDebounceRef.current = setTimeout(() => {
+            // не триггерим для того же значения повторно
+            if (lastOpenedValueRef.current === value) return;
+
+            const amount = Number(value.replace(/\s/g, ""));
+            if (!Number.isFinite(amount) || amount <= 0) return;
+
+            lastOpenedValueRef.current = value;
+
+            openModal("incomeOutcome", {
+                title: "Добавить приход",
+                props: {
+                    type: "income",
+                    orderId: data?.documentId, // при создании нового заказа может быть undefined — это ок
+                    masterId:
+                        roleId === 1
+                            ? (data?.master?.id ??
+                                (masterId ? Number(masterId) : undefined))
+                            : undefined,
+                },
+            });
+        }, 2000);
+
+        return () => {
+            if (prepayDebounceRef.current) clearTimeout(prepayDebounceRef.current);
+        };
+    }, [prepay, roleId, data?.documentId, data?.master?.id, masterId, openModal]);
+
     useEffect(() => {
         if (countdown === 0 && createdId) {
             router.push(`/orders/${createdId}`);
         }
     }, [countdown, createdId, router]);
+
+    useEffect(() => {
+        onDirtyChange?.(form.formState.isDirty)
+    }, [form.formState.isDirty, onDirtyChange])
 
 
     const onSubmit = async (value: FormData) => {
@@ -194,6 +242,7 @@ export function RepairOrderForm({ data, clientDocumentId, masterId }: Props) {
                 ...payload,
                 client: clientDocumentId ? clientDocumentId : undefined,
                 master: masterId ? +masterId : undefined,
+                author: user?.name
             }
             try {
                 const created = await createOrder(isNewPayload);

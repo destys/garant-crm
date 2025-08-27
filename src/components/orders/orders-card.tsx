@@ -1,6 +1,7 @@
 import { format, differenceInDays } from "date-fns"
 import { LinkIcon, PhoneIcon, Trash2Icon } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 import {
     Card,
@@ -15,6 +16,15 @@ import { Button } from "@/components/ui/button"
 import { OrderProps } from "@/types/order.types"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { useUsers } from "@/hooks/use-users"
+import { useOrders } from "@/hooks/use-orders"
 
 const statusColorMap: Record<string, string> = {
     "Новая": "bg-blue-300 hover:bg-blue-400",
@@ -33,10 +43,12 @@ const statusColorMap: Record<string, string> = {
 
 export const OrdersCard = ({ data }: { data: OrderProps }) => {
     const statusClass = statusColorMap[data.orderStatus] ?? "bg-gray-100"
-    const deadline = data.deadline ? new Date(data.deadline) : null
+    const deadline = data.deadline;
     const today = new Date()
+    const { users } = useUsers(1, 100);
+    const { updateOrder } = useOrders(1, 100);
 
-    let deadlineText = deadline ? format(deadline, "dd.MM.yyyy") : "—"
+    let deadlineText = deadline ? format(deadline, "dd.MM.yyyy") : "Не указан"
     let deadlineClass = ""
 
     if (deadline) {
@@ -59,7 +71,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
                 </CardTitle>
                 <CardAction className="space-x-2 mt-2">
                     <Button size="icon" variant="default" asChild>
-                        <Link href={`tel:${data.client.phone}`}>
+                        <Link href={`tel:${data.add_phone || data.client.phone}`}>
                             <PhoneIcon className="size-4" />
                         </Link>
                     </Button>
@@ -78,24 +90,72 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
             </CardHeader>
             <CardContent className="text-sm space-y-2">
                 <div className="flex gap-4 text-sm text-muted-foreground">
-                    Выезд: {data.departure_date ? format(new Date(data.departure_date), "dd.MM.yyyy") : "—"}
-                    <Badge variant={deadlineClass ? "outline" : "default"} className={cn("ml-1 text-xs", deadlineClass)}>
+                    Дата выезда: {data.visit_date ? format(new Date(data.visit_date), "dd.MM.yyyy") : "—"}
+
+                </div>
+                <div className="flex gap-4 text-muted-foreground">
+                    Дедлайн: <Badge variant={deadlineClass ? "outline" : "default"} className={cn("ml-1 text-xs", deadlineClass)}>
                         {deadlineText}
                     </Badge>
+
                 </div>
                 <Separator />
                 <div>
-                    <span className="font-medium">Устройство:</span>{" "}
-                    {data.device_type || "-"} / {data.brand || "-"} / {data.model || "-"}
+                    <span className="font-medium">Тип техники:</span>{" "}
+                    {data.device_type || "-"}
                 </div>
                 <div>
-                    <span className="font-medium">Оплата:</span>{" "}
-                    {data.prepay ?? 0} ₽ / {data.total_cost ?? 0} ₽
+                    <span className="font-medium">Производитель и модель:</span>{" "}
+                    {data.brand || "-"} / {data.model || "-"}
                 </div>
+                <div>
+                    <span className="font-medium">Неисправность:</span>{" "}
+                    {data.defect || "-"}
+                </div>
+                <div>
+                    <span className="font-medium">Комментарий:</span>{" "}
+                    {data.note || "-"}
+                </div>
+                {data.orderStatus === "Отказ" && (
+                    <div>
+                        <span className="font-medium">Причина отказа:</span>{" "}
+                        {data.reason_for_refusal || "-"}
+                    </div>
+                )}
                 <Separator />
                 <div>
-                    <span className="font-medium">Мастер:</span>{" "}
-                    {data.master?.name ?? "—"}
+                    <span className="font-medium">Номер клиента:</span>{" "}
+                    <Link href={`tel:${data.add_phone || data.client.phone}`} className="font-medium transition-colors hover:text-blue-500">{data.add_phone || data.client.phone || "-"}</Link>
+                </div>
+                <div>
+                    <span className="font-medium">Адрес выезда:</span>{" "}
+                    {data.add_address || data.client.address || "-"}
+                </div>
+                <Separator />
+                <div className="flex gap-2 items-center">
+                    <span className="font-medium">Сотрудник:</span>{" "}
+                    <Select
+                        defaultValue={data.master?.id?.toString()}
+                        onValueChange={(value) => {
+                            updateOrder({
+                                documentId: data.documentId,
+                                updatedData: { master: { id: +value } },
+                            });
+
+                            toast.success("Сотрудник назначен")
+                        }}
+                    >
+                        <SelectTrigger className="">
+                            <SelectValue placeholder="Выбрать" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {users.map((user) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                    {user.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select >
                 </div>
             </CardContent>
         </Card>

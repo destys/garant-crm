@@ -86,7 +86,7 @@ export const MasterIncomeChart = ({ range }: Props) => {
         const grouped: Record<string, number> = {};
 
         for (const income of allIncomes) {
-            const masterName = income.user?.name || 'Без мастера';
+            const masterName = income.user?.name || 'Без сотрудника';
             const amount = income.count || 0;
 
             grouped[masterName] = (grouped[masterName] ?? 0) + amount;
@@ -98,7 +98,7 @@ export const MasterIncomeChart = ({ range }: Props) => {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Доход по мастерам</CardTitle>
+                <CardTitle>Доход по сотрудникам</CardTitle>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={300}>

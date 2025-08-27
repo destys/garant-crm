@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Loader2Icon } from "lucide-react"
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import {
     Select,
@@ -21,6 +23,12 @@ import { useUsers } from "@/hooks/use-users";
 import { useOrder } from "@/hooks/use-order";
 import { OrderDocs } from "@/components/orders/order-docs";
 import { useAuth } from "@/providers/auth-provider";
+import { OrderChat } from "@/components/orders/order-chat";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader, AlertDialogTitle
+} from "@/components/ui/alert-dialog"
 
 
 const OrderPage = () => {
@@ -28,9 +36,31 @@ const OrderPage = () => {
     const { users } = useUsers(1, 100);
     const { user, roleId } = useAuth();
     const { order, isLoading, updateOrder } = useOrder(documentId ? documentId.toString() : "");
+    const [activeTab, setActiveTab] = useState<"edit" | "photo" | "call" | "sms" | "client" | "chat" | "calculations">("edit")
+    const [pendingTab, setPendingTab] = useState<typeof activeTab | null>(null)
+    const [isFormDirty, setIsFormDirty] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+
+    const handleTabChange = (next: typeof activeTab) => {
+        // если уходим с edit и форма грязная — блокируем и показываем подтверждение
+        if (activeTab === "edit" && next !== "edit" && isFormDirty) {
+            setPendingTab(next)
+            setConfirmOpen(true)
+            return
+        }
+        setActiveTab(next)
+    }
+
+    const proceedSwitch = () => {
+        if (pendingTab) setActiveTab(pendingTab)
+        setPendingTab(null)
+        setConfirmOpen(false)
+    }
+
     if (!order) return null;
     if (!user || !roleId || (roleId === 1 && order.master?.id !== user.id)) return <div>У вас нет доступа к данному заказу</div>;
     if (isLoading) return <Loader2Icon className="animate-spin" />
+
 
     // 1️⃣ Считаем доход = сумма incomes - сумма outcomes
     const totalIncome = (order.incomes || []).reduce((acc, item) => acc + (item.count || 0), 0)
@@ -81,7 +111,7 @@ const OrderPage = () => {
                             <p className="text-xl font-semibold text-green-500">{profit} ₽</p>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span>Мастер:</span>
+                            <span>Сотрудник:</span>
                             <Select onValueChange={handleSelectMaster} defaultValue={order.master?.id?.toString() || ""}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Выбрать" />
@@ -115,7 +145,7 @@ const OrderPage = () => {
                     <Button variant={'destructive'} onClick={handleOnRevision}>На доработку</Button>
                 </div>
             )}
-            <Tabs defaultValue="edit">
+            <Tabs defaultValue="edit" value={activeTab} onValueChange={(v) => handleTabChange(v as any)}>
                 <div className="flex flex-col md:flex-row md:items-center gap-8 lg:gap-16">
                     <TabsList className="md:flex-auto">
                         <TabsTrigger value="edit">Редактирование</TabsTrigger>
@@ -123,12 +153,13 @@ const OrderPage = () => {
                         <TabsTrigger value="call">Звонки</TabsTrigger>
                         <TabsTrigger value="sms">СМС</TabsTrigger>
                         <TabsTrigger value="client">Клиент</TabsTrigger>
+                        <TabsTrigger value="chat">Чат</TabsTrigger>
                         <TabsTrigger value="calculations">Расчеты</TabsTrigger>
                     </TabsList>
                     <OrderDocs data={order} />
                 </div>
                 <TabsContent value="edit">
-                    <RepairOrderForm data={order} />
+                    <RepairOrderForm data={order} onDirtyChange={setIsFormDirty} />
                 </TabsContent>
                 <TabsContent value="photo">
                     <OrderMedia data={order} />
@@ -138,10 +169,33 @@ const OrderPage = () => {
                 <TabsContent value="client">
                     <OrderClient data={order} />
                 </TabsContent>
+                <TabsContent value="chat">
+                    <OrderChat data={order} />
+                </TabsContent>
                 <TabsContent value="calculations">
                     <OrderAccounting data={order} />
                 </TabsContent>
             </Tabs>
+
+            {/* AlertDialog подтверждения */}
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Несохранённые изменения</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            У вас есть несохранённые данные в форме. Сначала сохраните изменения или подтвердите переход.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setPendingTab(null); setConfirmOpen(false) }}>
+                            Остаться
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={proceedSwitch}>
+                            Всё равно перейти
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

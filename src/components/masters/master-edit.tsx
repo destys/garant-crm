@@ -14,9 +14,11 @@ import { useUsers } from "@/hooks/use-users"
 
 const formSchema = z.object({
     name: z.string().min(3, "Введите ФИО"),
+    position: z.string().optional(),
     phone: z.string().min(10, "Введите корректный телефон"),
     email: z.string().email("Введите корректный email"),
     role: z.string(),
+    password: z.string().min(6, "Пароль должен быть не менее 6 символов"),
 })
 
 type MasterFormValues = z.infer<typeof formSchema>
@@ -29,17 +31,25 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
             name: data.name || "",
             phone: data.phone || "",
             email: data.email || "",
+            position: data.position || "",
+            password: "",
             role: data.role.id.toString(),
         },
     })
 
+    const password = form.watch("password");
+
     const onSubmit = async (values: MasterFormValues) => {
-        console.warn("📦 Данные мастера:", data)
-        const payload = {
+        console.warn("📦 Данные сотрудника:", data)
+        const payload: Record<string, unknown> = {
             name: values.name,
             phone: values.phone,
             email: values.email,
             role: +values.role,
+        }
+
+        if (password) {
+            payload.password = values.password
         }
 
         try {
@@ -55,7 +65,7 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
     return (
         <div className="flex flex-col gap-4">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 flex-auto">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="grid lg:grid-cols-2 gap-6 flex-auto">
                     {/* ФИО */}
                     <FormField
                         control={form.control}
@@ -101,6 +111,36 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
                         )}
                     />
 
+                    {/* Должность */}
+                    <FormField
+                        control={form.control}
+                        name="position"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Должность</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Должность" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Пароль */}
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Пароль</FormLabel>
+                                <FormControl>
+                                    <Input type="password" placeholder="Пароль" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     {/* Роль */}
                     <FormField
                         control={form.control}
@@ -126,7 +166,7 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
                     />
 
                     {/* Кнопка */}
-                    <Button type="submit">Сохранить</Button>
+                    <Button type="submit" className="w-fit">Сохранить</Button>
                 </form>
             </Form>
         </div>

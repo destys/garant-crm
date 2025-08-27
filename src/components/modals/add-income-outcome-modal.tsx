@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CheckIcon, ChevronsUpDown, Loader2Icon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
+import { FilePond } from "react-filepond";
 
 import { useIncomes } from "@/hooks/use-incomes";
 import { useOutcomes } from "@/hooks/use-outcomes";
@@ -37,10 +38,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { INCOME_CATEGORIES, WORKSHOP_EXPENSES } from "@/constants";
+import { API_URL, INCOME_CATEGORIES, WORKSHOP_EXPENSES } from "@/constants";
 import { useUsers } from "@/hooks/use-users";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
+import { MediaProps } from "@/types/media.types";
 
 const incomeSchema = z.object({
     count: z.string(),
@@ -75,7 +77,8 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
     const { createIncome } = useIncomes(1, 1);
     const { createOutcome } = useOutcomes(1, 1);
     const { users, updateUser } = useUsers(1, 100);
-    const { roleId } = useAuth();
+    const { user, roleId, jwt } = useAuth();
+    const [photo, setPhoto] = useState<MediaProps | null>(null);
 
     // Определим форму и схему в зависимости от типа
     const isOutcome = props?.type === "outcome";
@@ -97,7 +100,12 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                 note: values.note,
                 order: props?.orderId,
                 user: props?.masterId ? props?.masterId : values.master,
+                author: user?.name
             };
+
+            if (photo?.id) {
+                payload.photo = photo.id; // в Strapi — одиночное медиа поле "photo"
+            }
 
             if (isOutcome) {
                 payload.outcome_category = (values as OutcomeValues).outcome_category;
@@ -179,7 +187,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                             name="master"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Мастер</FormLabel>
+                                    <FormLabel>Сотрудник</FormLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -190,14 +198,14 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                                                     !field.value && "text-muted-foreground"
                                                 )}
                                             >
-                                                {users.find((m) => m.id.toString() === field.value)?.name || "Выберите мастера"}
+                                                {users.find((m) => m.id.toString() === field.value)?.name || "Выберите сотрудника"}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="p-0">
                                             <Command>
-                                                <CommandInput placeholder="Поиск мастера..." />
-                                                <CommandEmpty>Мастер не найден</CommandEmpty>
+                                                <CommandInput placeholder="Поиск сотрудника..." />
+                                                <CommandEmpty>Сотрудник не найден</CommandEmpty>
                                                 <CommandGroup>
                                                     {users.map((master) => (
                                                         <CommandItem
@@ -307,6 +315,65 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                             )}
                         />
                     )}
+
+                    <div className="space-y-2">
+                        <FormLabel>Фото (опционально)</FormLabel>
+                        <FilePond
+                            allowMultiple={false}
+                            maxFiles={1}
+                            acceptedFileTypes={["image/*"]}
+                            labelIdle='Перетащите фото или <span class="filepond--label-action">выберите</span>'
+                            onremovefile={() => setPhoto(null)}
+                            server={{
+                                process: (fieldName, file, metadata, load, error, progress, abort) => {
+                                    if (!jwt) {
+                                        error("Нет токена для загрузки");
+                                        return { abort() { } };
+                                    }
+                                    const formData = new FormData();
+                                    formData.append("files", file);
+
+                                    const xhr = new XMLHttpRequest();
+                                    xhr.open("POST", `${API_URL}/api/upload`);
+                                    xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
+
+                                    xhr.upload.onprogress = (e) => progress(e.lengthComputable, e.loaded, e.total);
+
+                                    xhr.onload = () => {
+                                        if (xhr.status >= 200 && xhr.status < 300) {
+                                            try {
+                                                const uploaded = JSON.parse(xhr.responseText);
+                                                const f = uploaded?.[0];
+                                                if (f?.id && f?.url) {
+                                                    setPhoto({
+                                                        id: f.id,
+                                                        name: f.name,
+                                                        url: f.url.startsWith("http") ? f.url : `${API_URL}${f.url}`,
+                                                        mime: f.mime,
+                                                    });
+                                                }
+                                                load("done");
+                                            } catch {
+                                                error("Ошибка парсинга ответа");
+                                            }
+                                        } else {
+                                            error("Ошибка загрузки файла");
+                                        }
+                                    };
+
+                                    xhr.onerror = () => error("Ошибка сети");
+                                    xhr.send(formData);
+
+                                    return {
+                                        abort: () => {
+                                            xhr.abort();
+                                            abort();
+                                        },
+                                    };
+                                },
+                            }}
+                        />
+                    </div>
 
                     {/* Комментарий */}
                     <FormField

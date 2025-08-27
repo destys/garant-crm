@@ -10,6 +10,8 @@ export interface UserProps {
   orders: OrderProps[];
   blocked: boolean;
   email: string;
+  position: string;
+  password: string;
   role: {
     id: number;
   };

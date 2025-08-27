@@ -1,3 +1,4 @@
+import { MediaProps } from "./media.types";
 import { OrderProps } from "./order.types";
 import { UserProps } from "./user.types";
 
@@ -12,6 +13,8 @@ export interface IncomeOutcomeProps {
   order: Partial<OrderProps>;
   outcome_category: string;
   income_category: string;
+  author: string;
+  photo: MediaProps;
 }
 
 export type UpdateIncomeOutcomeDto = Omit<IncomeOutcomeProps, "user, order"> & {

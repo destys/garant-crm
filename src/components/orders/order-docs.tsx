@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { DownloadIcon, EyeIcon, MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react";
+import { IconBrandTelegram, IconBrandWhatsapp } from "@tabler/icons-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,17 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
             <Button asChild>
                 <Link href={`tel:${data.client.phone}`}>
                     <PhoneCallIcon />
+                </Link>
+            </Button>
+
+            <Button asChild className="bg-[#2cb742]">
+                <Link href={`https://wa.me/${data.client.phone}`} target="_blank">
+                    <IconBrandWhatsapp />
+                </Link>
+            </Button>
+            <Button asChild className="bg-[#27a7e7]">
+                <Link href={`https://t.me/${data.client.phone}`} target="_blank">
+                    <IconBrandTelegram />
                 </Link>
             </Button>
 

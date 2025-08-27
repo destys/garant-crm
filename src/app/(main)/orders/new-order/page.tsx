@@ -52,7 +52,7 @@ const NewOrderPage = () => {
                 <h1 className="flex-auto">Новая заявка</h1>
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex items-center gap-4">
-                        <span>Мастер:</span>
+                        <span>Сотрудник:</span>
                         <Select onValueChange={(value) => setMasterId(value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Выбрать" />

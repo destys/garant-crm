@@ -107,7 +107,7 @@ export const useOrders = (
     error: ordersQuery.error,
     refetch: ordersQuery.refetch, // <-- пробрасываем refetch
     createOrder: createOrderMutation.mutateAsync,
-    updateOrder: updateOrderMutation.mutate,
+    updateOrder: updateOrderMutation.mutateAsync,
     deleteOrder: deleteOrderMutation.mutate,
   };
 };

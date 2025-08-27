@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   Archive,
   Calculator,
   Check,
@@ -9,6 +10,7 @@ import {
   FilePieChart,
   FileText,
   ListChecks,
+  Mail,
   Scale,
   Send,
   Settings2,
@@ -76,6 +78,12 @@ export const SIDEBAR_MENU = [
   },
   {
     to: "/orders",
+    title: "Отправить КП",
+    icon: Mail,
+    filters: { orderStatus: { $eq: "Привезет сам" } },
+  },
+  {
+    to: "/orders",
     title: "Привезет сам",
     icon: Send,
     filters: { orderStatus: { $eq: "Привезет сам" } },
@@ -91,6 +99,12 @@ export const SIDEBAR_MENU = [
     title: "Юридический отдел",
     icon: Scale,
     filters: { orderStatus: { $eq: "Юридический отдел" } },
+  },
+  {
+    to: "/orders",
+    title: "Проблемные",
+    icon: AlertCircle,
+    filters: { orderStatus: { $eq: "Проблемные" } },
   },
   { separator: true },
   {
@@ -177,7 +191,7 @@ export const SIDEBAR_MENU = [
     },
   },
   { to: "/clients", title: "Клиенты", icon: Users, adminOnly: true },
-  { to: "/masters", title: "Мастера", icon: Users, adminOnly: true },
+  { to: "/masters", title: "Сотрудники", icon: Users, adminOnly: true },
   {
     to: "/accounting",
     title: "Бухгалтерия",
@@ -208,6 +222,8 @@ export const ORDER_STATUSES = [
   "Отправить инженера",
   "Привезет сам",
   "Продать",
+  "Проблемные",
+  "Отправить КП",
   "Юридический отдел",
   "Проверить",
   "Выдан",

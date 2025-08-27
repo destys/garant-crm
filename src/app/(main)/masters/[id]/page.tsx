@@ -25,7 +25,7 @@ const MasterPage = () => {
         <div>
             <div className="flex md:justify-between flex-col md:flex-row md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="flex-auto">Мастер: {data.name}</h1>
+                    <h1 className="flex-auto">Сотрудник: {data.name}</h1>
 
                 </div>
 
