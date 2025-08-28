@@ -14,6 +14,7 @@ export interface IncomeOutcomeProps {
   outcome_category: string;
   income_category: string;
   author: string;
+  isApproved: boolean;
   photo: MediaProps;
 }
 

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { useUsers } from "@/hooks/use-users"
 import { useOrders } from "@/hooks/use-orders"
+import { useAuth } from "@/providers/auth-provider"
 
 const statusColorMap: Record<string, string> = {
     "Новая": "bg-blue-300 hover:bg-blue-400",
@@ -46,7 +47,8 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
     const deadline = data.deadline;
     const today = new Date()
     const { users } = useUsers(1, 100);
-    const { updateOrder } = useOrders(1, 100);
+    const { updateOrder, deleteOrder } = useOrders(1, 100);
+    const { roleId } = useAuth();
 
     let deadlineText = deadline ? format(deadline, "dd.MM.yyyy") : "Не указан"
     let deadlineClass = ""
@@ -80,9 +82,11 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
                             <LinkIcon className="size-4" />
                         </Link>
                     </Button>
-                    <Button size="icon" variant="destructive">
-                        <Trash2Icon className="size-4" />
-                    </Button>
+                    {roleId === 3 && (
+                        <Button size="icon" variant="destructive" onClick={() => deleteOrder(data.documentId)}>
+                            <Trash2Icon className="size-4" />
+                        </Button>
+                    )}
                 </CardAction>
                 <CardDescription className="mt-2">
                     <Badge className={cn("text-xs text-muted-foreground", statusClass)}>{data.orderStatus}</Badge>

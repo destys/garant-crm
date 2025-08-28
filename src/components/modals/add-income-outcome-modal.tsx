@@ -38,11 +38,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { API_URL, INCOME_CATEGORIES, WORKSHOP_EXPENSES } from "@/constants";
+import { API_URL } from "@/constants";
 import { useUsers } from "@/hooks/use-users";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { MediaProps } from "@/types/media.types";
+import { useSettings } from "@/hooks/use-settings";
 
 const incomeSchema = z.object({
     count: z.string(),
@@ -79,6 +80,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
     const { users, updateUser } = useUsers(1, 100);
     const { user, roleId, jwt } = useAuth();
     const [photo, setPhoto] = useState<MediaProps | null>(null);
+    const { settings } = useSettings();
 
     // Определим форму и схему в зависимости от типа
     const isOutcome = props?.type === "outcome";
@@ -100,7 +102,8 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                 note: values.note,
                 order: props?.orderId,
                 user: props?.masterId ? props?.masterId : values.master,
-                author: user?.name
+                author: user?.name,
+                isApproved: roleId === 3
             };
 
             if (photo?.id) {
@@ -127,7 +130,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                     }
 
                     const updatedData = {
-                        balance: newBalance,
+                        balance: roleId === 3 ? newBalance : currentBalance,
                     };
 
                     updateUser({
@@ -260,11 +263,11 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                                                 <SelectValue placeholder="Выберите статью" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {WORKSHOP_EXPENSES
-                                                    .filter(item => roleId !== 1 || item !== SALARY_LABEL)
+                                                {settings?.outcome_categories
+                                                    .filter(item => roleId !== 1 || item.title !== SALARY_LABEL)
                                                     .map(item => (
-                                                        <SelectItem key={item} value={item}>
-                                                            {item}
+                                                        <SelectItem key={item.id} value={item.title}>
+                                                            {item.title}
                                                         </SelectItem>
                                                     ))}
                                             </SelectContent>
@@ -302,9 +305,9 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                                                 <SelectValue placeholder="Выберите статью" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {INCOME_CATEGORIES.map((item) => (
-                                                    <SelectItem key={item} value={item}>
-                                                        {item}
+                                                {settings?.income_categories.map((item) => (
+                                                    <SelectItem key={item.id} value={item.title}>
+                                                        {item.title}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { ImageIcon, Link2Icon, PlusIcon, Trash2Icon } from "lucide-react";
+import { CheckCheckIcon, CheckIcon, ImageIcon, Link2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useMemo, useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
 
@@ -16,17 +16,19 @@ import { useUsers } from "@/hooks/use-users";
 import { cn, formatDate } from "@/lib/utils";
 import { useModal } from '@/providers/modal-provider'
 import { API_URL } from "@/constants";
+import { useAuth } from "@/providers/auth-provider";
 
 import "filepond/dist/filepond.min.css"
 import "yet-another-react-lightbox/styles.css"
 
 export const AccountingContent = () => {
-    const { incomes, deleteIncome } = useIncomes(1, 500)
-    const { outcomes, deleteOutcome } = useOutcomes(1, 500)
-    const { users } = useUsers(1, 100);
+    const { incomes, deleteIncome, updateIncome } = useIncomes(1, 500)
+    const { outcomes, deleteOutcome, updateOutcome } = useOutcomes(1, 500)
+    const { users, updateUser } = useUsers(1, 100);
     const { openModal } = useModal();
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [lightboxImages, setLightboxImages] = useState<{ src: string }[]>([]);
+    const { roleId } = useAuth()
 
     const columns: ColumnDef<IncomeOutcomeProps>[] = [
         {
@@ -93,6 +95,48 @@ export const AccountingContent = () => {
             header: "",
             cell: ({ row }) =>
                 <div className="space-x-2">
+                    {roleId === 3 && (
+                        <>
+                            {row.original.isApproved ? (
+                                <Button disabled><CheckCheckIcon /></Button>
+                            ) : (
+                                <Button
+                                    variant="default"
+                                    className="bg-green-500"
+                                    onClick={() => {
+                                        if (row.original.type === "income") {
+                                            updateIncome({
+                                                documentId: row.original.documentId,
+                                                updatedData: {
+                                                    isApproved: true
+                                                }
+                                            })
+
+
+                                            if (row.original.user.id && row.original.outcome_category === 'Зарплата сотрудников') {
+                                                updateUser({
+                                                    userId: row.original.user.id,
+                                                    updatedData: {
+                                                        balance: (row.original.user.balance || 0) + row.original.count
+                                                    }
+                                                })
+                                            }
+                                        }
+                                        if (row.original.type === "expense") {
+                                            updateOutcome({
+                                                documentId: row.original.documentId,
+                                                updatedData: {
+                                                    isApproved: true
+                                                }
+                                            })
+                                        }
+                                    }}
+                                >
+                                    <CheckIcon />
+                                </Button>
+                            )}
+                        </>
+                    )}
                     <Button
                         disabled={!row.original.photo}
                         variant="default"
@@ -108,19 +152,22 @@ export const AccountingContent = () => {
                             <Link2Icon />
                         </Link>
                     </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={() => {
-                            if (row.original.type === "income") {
-                                deleteIncome(row.original.documentId)
-                            }
-                            if (row.original.type === "expense") {
-                                deleteOutcome(row.original.documentId)
-                            }
-                        }}
-                    >
-                        <Trash2Icon />
-                    </Button>
+                    {roleId === 3 && (
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                if (row.original.type === "income") {
+                                    deleteIncome(row.original.documentId)
+                                }
+                                if (row.original.type === "expense") {
+                                    deleteOutcome(row.original.documentId)
+                                }
+                            }}
+                        >
+                            <Trash2Icon />
+                        </Button>
+                    )}
+
                 </div >
         },
     ];

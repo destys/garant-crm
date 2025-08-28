@@ -7,4 +7,12 @@ export interface SettingsProps {
     id?: number;
     title: string;
   }[];
+  income_categories: {
+    id?: number;
+    title: string;
+  }[];
+  outcome_categories: {
+    id?: number;
+    title: string;
+  }[];
 }

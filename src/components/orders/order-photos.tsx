@@ -31,7 +31,7 @@ interface Props {
 
 export const OrderMedia = ({ data }: Props) => {
     const { updateOrder } = useOrders(1, 1)
-    const { jwt } = useAuth()
+    const { roleId, jwt } = useAuth()
 
     const [docs, setDocs] = useState<MediaFile[]>(
         (data.order_docs || []).map((file: MediaProps) => ({
@@ -210,15 +210,18 @@ export const OrderMedia = ({ data }: Props) => {
                                         <DownloadIcon className="w-4 h-4" />
                                     </Link>
                                 </Button>
-                                <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="destructive"
-                                    className=""
-                                    onClick={() => handleDeleteFile(file.id, fieldName, existing, setExisting)}
-                                >
-                                    <Trash2Icon className="w-4 h-4" />
-                                </Button>
+                                {roleId === 3 && (
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="destructive"
+                                        className=""
+                                        onClick={() => handleDeleteFile(file.id, fieldName, existing, setExisting)}
+                                    >
+                                        <Trash2Icon className="w-4 h-4" />
+                                    </Button>
+                                )}
+
                             </div>
                         </div>
                     ))}

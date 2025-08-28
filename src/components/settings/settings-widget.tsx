@@ -9,7 +9,7 @@ import { useSettings } from "@/hooks/use-settings";
 
 interface SettingsWidgetProps {
     label: string;
-    settingKey: "reasons_for_refusal" | "types_of_equipment";
+    settingKey: "reasons_for_refusal" | "types_of_equipment" | "income_categories" | "outcome_categories";
     placeholder: string;
 }
 

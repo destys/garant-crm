@@ -21,6 +21,22 @@ export default function SettingsPage() {
                 settingKey="types_of_equipment"
                 placeholder="Введите тип техники (можно через |)"
             />
+
+            <Separator />
+
+            <SettingsWidget
+                label="Статьи доходов"
+                settingKey="income_categories"
+                placeholder="Введите причину (можно через |)"
+            />
+
+            <Separator />
+
+            <SettingsWidget
+                label="Статьи расходов"
+                settingKey="outcome_categories"
+                placeholder="Введите причину (можно через |)"
+            />
         </div>
     );
 }

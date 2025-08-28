@@ -66,7 +66,7 @@ export const OrderAccounting = ({ data }: Props) => {
     )
 
     return (
-        <div className="grid gap-6 mt-6 grid-cols-1 sm:grid-cols-2">
+        <div className="grid gap-6 mt-6 grid-cols-1">
             {/* Приходы */}
             <Card>
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

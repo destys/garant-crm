@@ -186,7 +186,7 @@ export const ordersColumns = (
               <PhoneIcon className="size-4" />
             </Link>
           </Button>
-          {roleId !== 1 && (
+          {roleId === 3 && (
             <Button size="icon" variant="destructive" title="Удалить" onClick={
               () => {
                 deleteOrder(row.original.documentId)
