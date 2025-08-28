@@ -20,6 +20,10 @@ export interface UserProps {
   manual_income_outcomes: ManualIncomeOutcomeProps;
 }
 
+export type UpdateUserOnlyId = Omit<UserProps, "role"> & {
+  role?: number;
+};
+
 export type UpdateUserDto = Omit<UserProps, "role"> & {
   role?: number;
 };

@@ -3,6 +3,7 @@ import {
   Archive,
   Calculator,
   Check,
+  CircleDollarSignIcon,
   ClipboardList,
   Clock2Icon,
   DollarSign,
@@ -80,7 +81,7 @@ export const SIDEBAR_MENU = [
     to: "/orders",
     title: "Отправить КП",
     icon: Mail,
-    filters: { orderStatus: { $eq: "Привезет сам" } },
+    filters: { orderStatus: { $eq: "Отправить КП" } },
   },
   {
     to: "/orders",
@@ -198,6 +199,12 @@ export const SIDEBAR_MENU = [
     icon: DollarSignIcon,
     adminOnly: true,
   },
+  {
+    to: "/cashbox",
+    title: "Касса",
+    icon: CircleDollarSignIcon,
+    adminOnly: true,
+  },
   { separator: true, adminOnly: true },
   {
     to: "/reports",
@@ -255,3 +262,5 @@ export const REPAIR_TYPE = [
 ] as const;
 
 export type RepairType = (typeof REPAIR_TYPE)[number];
+
+export const TRANSACTION_STATUSES = ["Приход", "Расход", "Корректировка"];

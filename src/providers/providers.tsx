@@ -15,6 +15,7 @@ import { AddUserModal } from '@/components/modals/add-user-modal'
 import { AddIncomeOutcomeModal } from '@/components/modals/add-income-outcome-modal'
 import { AddClientModal } from '@/components/modals/add-client'
 import { AddMasterManualIncomeOutcome } from '@/components/modals/add-master-manual-income-outcome'
+import { AddCashboxTransactionModal } from '@/components/modals/add-cashbox-transaction-modal'
 
 import { AuthProvider } from './auth-provider'
 import { ModalComponent, ModalProvider } from './modal-provider'
@@ -37,6 +38,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
                         modals={{
                             addUser: AddUserModal,
                             addClient: AddClientModal,
+                            addTransaction: AddCashboxTransactionModal,
                             incomeOutcome: AddIncomeOutcomeModal as ModalComponent<{
                                 type: "income" | "outcome";
                                 orderId: string;
