@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useAuth } from "@/providers/auth-provider"
+import { useCashbox } from "@/hooks/use-cashbox"
 
 export function SiteHeader() {
   const { user, roleId } = useAuth();
+  const { cashbox } = useCashbox();
   const router = useRouter();
 
   return (
@@ -33,6 +35,9 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <div className="ml-auto flex items-center gap-2">
+          {roleId !== 1 && (
+            <div>Касса: <span className="text-xl font-bold text-green-500">{cashbox?.balance || 0} ₽</span></div>
+          )}
           {roleId !== 3 && (
             <div>Баланс: <span className="text-xl font-bold text-green-500">{user?.balance || 0} ₽</span></div>
           )}

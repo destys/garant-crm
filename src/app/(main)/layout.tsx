@@ -41,7 +41,6 @@ export const metadata: Metadata = {
       { rel: "shortcut icon", url: "/favicons/favicon.ico" },
     ],
   },
-  themeColor: "#ffffff",
   other: {
     "msapplication-TileColor": "#ffffff",
     "msapplication-TileImage": "/favicons/favicon-144x144.png",
