@@ -52,6 +52,8 @@ import { OrderProps } from "@/types/order.types"
 import { useOrders } from "@/hooks/use-orders"
 import { useSettings } from "@/hooks/use-settings"
 
+const NEED_DEADLINE = new Set(["Согласовать", "Отремонтировать", "Готово"])
+
 // Схема валидации
 const schema = z.object({
     orderStatus: z.string(),
@@ -94,6 +96,10 @@ const schema = z.object({
                 message: "Укажите тип устройства",
             });
         }
+    }
+
+    if (NEED_DEADLINE.has(data.orderStatus) && !data.deadline) {
+        ctx.addIssue({ path: ["deadline"], code: z.ZodIssueCode.custom, message: "Укажите дедлайн" })
     }
 });
 
