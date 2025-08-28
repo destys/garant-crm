@@ -60,7 +60,9 @@ export function OrdersSidebarMenu() {
                     return <div key={i} className="my-2 border-t border-border" />;
                 }
 
-                if (roleId !== 3 && item.adminOnly) return null;
+                if (roleId === 4 && item.adminOnly) return null;
+                if (roleId === 1 && (item.adminOnly || item.managerOnly)) return null;
+                if (roleId === 3 && item.hideForAdmin) return null;
 
                 // прокидываем мастер-фильтр внутрь $and
                 const filtersWithMaster = withMasterInAnd(item.filters, roleId, user?.id);

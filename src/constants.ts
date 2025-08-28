@@ -112,7 +112,7 @@ export const SIDEBAR_MENU = [
     to: "/orders",
     title: "Дедлайны",
     icon: Clock2Icon,
-    adminOnly: true,
+    managerOnly: true,
     filters: {
       orderStatus: {
         $in: [

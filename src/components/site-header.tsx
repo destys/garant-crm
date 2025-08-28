@@ -33,7 +33,7 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <div className="ml-auto flex items-center gap-2">
-          {roleId === 1 && (
+          {roleId !== 3 && (
             <div>Баланс: <span className="text-xl font-bold text-green-500">{user?.balance || 0} ₽</span></div>
           )}
           <Button variant="default" size="sm" asChild>
