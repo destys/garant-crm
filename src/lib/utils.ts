@@ -39,3 +39,13 @@ export const getMonthRanges = (base = new Date()) => {
     prev: buildRange(startOfMonth(prev), endOfMonth(prev)),
   };
 };
+
+export const formatName = (fullName?: string) => {
+  if (!fullName) return "";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]; // если одно слово
+
+  const [lastName, ...rest] = parts;
+  const initials = rest.map((p) => p.charAt(0).toUpperCase() + ".").join(" ");
+  return `${lastName} ${initials}`;
+};

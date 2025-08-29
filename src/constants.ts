@@ -74,7 +74,6 @@ export const SIDEBAR_MENU = [
     to: "/orders",
     title: "Отправить инженера",
     icon: Send,
-    adminOnly: true,
     filters: { orderStatus: { $eq: "Отправить инженера" } },
   },
   {

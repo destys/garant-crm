@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+import { cn, formatName } from "@/lib/utils"
 import { OrderProps } from "@/types/order.types"
 import { UserProps } from "@/types/user.types"
 
@@ -167,9 +167,9 @@ export const ordersColumns = (
     },
     {
       accessorKey: "author",
-      header: "Автор заявки",
+      header: "Создал",
       cell: ({ row }) =>
-        linkWrapper(row, <div className="flex justify-center"><Badge variant={row.original.author ? "success" : "default"}>{row.original.author || "API"}</Badge></div>),
+        linkWrapper(row, <div className="flex justify-center"><Badge variant={row.original.author ? "success" : "default"}>{formatName(row.original.author) || "API"}</Badge></div>),
     },
     {
       accessorKey: "actions",

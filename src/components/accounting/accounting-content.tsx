@@ -13,7 +13,7 @@ import { useIncomes } from "@/hooks/use-incomes";
 import { useOutcomes } from "@/hooks/use-outcomes";
 import { IncomeOutcomeProps } from "@/types/income-outcome.types";
 import { useUsers } from "@/hooks/use-users";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatName } from "@/lib/utils";
 import { useModal } from '@/providers/modal-provider'
 import { API_URL } from "@/constants";
 import { useAuth } from "@/providers/auth-provider";
@@ -86,7 +86,7 @@ export const AccountingContent = () => {
             header: "Менеджер",
             cell: ({ row }) => (
                 <Badge>
-                    {row.original.author || 'Не указан'}
+                    {formatName(row.original.author) || 'Не указан'}
                 </Badge>
             ),
         },
