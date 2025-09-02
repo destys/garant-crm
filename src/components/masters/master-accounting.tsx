@@ -140,7 +140,7 @@ export const MasterAccounting = ({ data }: { data: UserProps }) => {
     return (
         <div>
             <div className="flex justify-between items-center gap-4 mb-3">
-                <h2 className="flex-auto">Движения по балансу сотрудника</h2>
+                <h2 className="flex-auto">Движения по балансу</h2>
             </div>
             <DataTable data={rows} columns={columns} />
         </div>

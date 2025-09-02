@@ -11,6 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { UserProps } from "@/types/user.types";
 import { useUsers } from "@/hooks/use-users"
+import { useAuth } from "@/providers/auth-provider"
 
 const formSchema = z.object({
     name: z.string().min(3, "Введите ФИО"),
@@ -25,6 +26,7 @@ type MasterFormValues = z.infer<typeof formSchema>
 
 export const MasterEdit = ({ data }: { data: UserProps }) => {
     const { updateUser } = useUsers(1, 1);
+    const { roleId } = useAuth();
     const form = useForm<MasterFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -142,28 +144,31 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
                     />
 
                     {/* Роль */}
-                    <FormField
-                        control={form.control}
-                        name="role"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Роль</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Выберите роль" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="1">Мастер</SelectItem>
-                                        <SelectItem value="4">Менеджер</SelectItem>
-                                        <SelectItem value="3">Администратор</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    {roleId === 3 && (
+                        <FormField
+                            control={form.control}
+                            name="role"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Роль</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Выберите роль" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="1">Мастер</SelectItem>
+                                            <SelectItem value="4">Менеджер</SelectItem>
+                                            <SelectItem value="3">Администратор</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+
 
                     {/* Кнопка */}
                     <Button type="submit" className="w-fit">Сохранить</Button>

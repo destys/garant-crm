@@ -51,6 +51,7 @@ export const SearchBlock = ({ onChange }: SearchBlockProps) => {
                 $or: [
                     { title: { $containsi: trimmed } },
                     { client: { phone: { $containsi: trimmed } } },
+                    { client: { address: { $containsi: trimmed } } },
                 ],
             });
         }, 1000);
