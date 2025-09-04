@@ -110,7 +110,7 @@ export const AccountingContent = () => {
                                     variant="default"
                                     className="bg-green-500"
                                     onClick={() => {
-                                        if (row.original.type === "income") {
+                                        if (row.original.type === "expense") {
                                             updateIncome({
                                                 documentId: row.original.documentId,
                                                 updatedData: {
