@@ -58,6 +58,12 @@ export const AccountingContent = () => {
                 )
             ),
         },
+
+        {
+            accessorKey: "outcome_category",
+            header: "test",
+            cell: ({ row }) => row.original.outcome_category,
+        },
         {
             accessorKey: "description",
             header: "Описание",

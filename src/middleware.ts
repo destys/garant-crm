@@ -18,6 +18,7 @@ const ROLE_ACCESS: Record<number, (string | RegExp)[]> = {
   1: [
     "/", // только главная!
     "/orders",
+    "/account",
     /^\/orders(\/.*)?$/,
     // добавляй нужные страницы явно, напр. "/orders" или /^\/orders(\/.*)?$/
   ],

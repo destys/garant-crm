@@ -115,19 +115,12 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                 await createOutcome(payload);
 
                 if (payload.outcome_category === SALARY_LABEL) {
-                    const userObj = users.find((u) => u.id === payload.user);
-                    const currentBalance = Number(userObj?.balance);
+                    const userObj = users.find((u) => u.id === +payload.user);
+                    const currentBalance = userObj?.balance || 0;
                     const countNum = Number(payload.count);
 
-                    let newBalance: number;
 
-                    if (Number.isFinite(currentBalance) && Number.isFinite(countNum)) {
-                        newBalance = currentBalance + countNum;
-                    } else if (Number.isFinite(countNum)) {
-                        newBalance = countNum; // баланса нет или он не число → ставим только сумму
-                    } else {
-                        newBalance = 0; // если и count некорректен
-                    }
+                    const newBalance = currentBalance + countNum;
 
                     const updatedData = {
                         balance: roleId === 3 ? newBalance : currentBalance,
