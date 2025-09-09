@@ -1,13 +1,13 @@
-import { IconCirclePlusFilled } from "@tabler/icons-react"
-import { MoveLeftIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { IconCirclePlusFilled } from "@tabler/icons-react";
+import { FilePieChart, MoveLeftIcon, SettingsIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { useAuth } from "@/providers/auth-provider"
-import { useCashbox } from "@/hooks/use-cashbox"
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/providers/auth-provider";
+import { useCashbox } from "@/hooks/use-cashbox";
 
 export function SiteHeader() {
   const { user, roleId } = useAuth();
@@ -26,7 +26,7 @@ export function SiteHeader() {
           onClick={() => router.back()}
           className="p-1 rounded-md hover:bg-muted transition-colors"
           title="Назад"
-          size={'sm'}
+          size={"sm"}
         >
           <MoveLeftIcon className="w-5 h-5" />
         </Button>
@@ -36,19 +36,43 @@ export function SiteHeader() {
         />
         <div className="ml-auto flex items-center gap-2">
           {roleId !== 1 && (
-            <div>Касса: <span className="text-xl font-bold text-green-500">{cashbox?.balance || 0} ₽</span></div>
+            <div>
+              Касса:{" "}
+              <span className="text-xl font-bold text-green-500">
+                {cashbox?.balance || 0} ₽
+              </span>
+            </div>
           )}
           {roleId !== 3 && (
-            <div>Баланс: <span className="text-xl font-bold text-green-500">{user?.balance || 0} ₽</span></div>
+            <div>
+              Баланс:{" "}
+              <span className="text-xl font-bold text-green-500">
+                {user?.balance || 0} ₽
+              </span>
+            </div>
           )}
           <Button variant="default" size="sm" asChild>
-            <Link href={'/orders/new-order'}>
+            <Link href={"/orders/new-order"}>
               <IconCirclePlusFilled />
               <span className="hidden sm:block">Создать заявку</span>
             </Link>
           </Button>
+          {roleId === 3 && (
+            <>
+              <Button asChild variant={"secondary"}>
+                <Link href={"/reports"}>
+                  <FilePieChart />
+                </Link>
+              </Button>
+              <Button asChild variant={"secondary"}>
+                <Link href={"/settings"}>
+                  <SettingsIcon />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
-  )
+  );
 }

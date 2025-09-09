@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -9,10 +9,10 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { LayoutGrid, Table as TableIcon } from "lucide-react"
+} from "@tanstack/react-table";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -20,13 +20,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useTableViewStore } from "@/stores/table-view-store"
+} from "@/components/ui/table";
+import { useTableViewStore } from "@/stores/table-view-store";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  cardComponent?: React.ComponentType<{ data: TData }>
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  cardComponent?: React.ComponentType<{ data: TData }>;
 }
 
 export function OrdersTable<TData, TValue>({
@@ -34,14 +34,17 @@ export function OrdersTable<TData, TValue>({
   data,
   cardComponent: CardComponent,
 }: DataTableProps<TData, TValue>) {
-  const viewKey = CardComponent?.name ?? "default"
-  const { views, setView } = useTableViewStore()
-  const currentView = views[viewKey] ?? "table"
+  const viewKey = CardComponent?.name ?? "default";
+  const { views, setView } = useTableViewStore();
+  const currentView = views[viewKey] ?? "table";
 
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data,
@@ -57,29 +60,29 @@ export function OrdersTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-  })
+  });
 
   // Переключение на cardView при <1280px
   React.useEffect(() => {
     const handleResize = () => {
-      const isSmall = window.innerWidth < 1280
+      const isSmall = window.innerWidth < 1280;
       if (isSmall && CardComponent && currentView !== "card") {
-        setView(viewKey, "card")
+        setView(viewKey, "card");
       }
-    }
+    };
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [viewKey, currentView, setView])
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [viewKey, currentView, setView]);
 
   React.useEffect(() => {
     if (!CardComponent && currentView !== "table") {
-      setView(viewKey, "table")
+      setView(viewKey, "table");
     }
-  }, [CardComponent, currentView, setView, viewKey])
+  }, [CardComponent, currentView, setView, viewKey]);
 
-  const isTableView = currentView === "table"
+  const isTableView = currentView === "table";
 
   return (
     <div className="w-full">
@@ -111,10 +114,13 @@ export function OrdersTable<TData, TValue>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-center">
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -123,17 +129,26 @@ export function OrdersTable<TData, TValue>({
             <TableBody>
               {table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     Нет данных.
                   </TableCell>
                 </TableRow>
@@ -144,9 +159,11 @@ export function OrdersTable<TData, TValue>({
       ) : CardComponent ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map((row) => (
-              <CardComponent key={row.id} data={row.original} />
-            ))
+            table
+              .getRowModel()
+              .rows.map((row) => (
+                <CardComponent key={row.id} data={row.original} />
+              ))
           ) : (
             <div className="col-span-full text-center text-muted-foreground py-8">
               Нет данных.
@@ -155,5 +172,5 @@ export function OrdersTable<TData, TValue>({
         </div>
       ) : null}
     </div>
-  )
+  );
 }

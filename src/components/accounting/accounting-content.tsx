@@ -41,7 +41,7 @@ export const AccountingContent = () => {
     {
       accessorKey: "date",
       header: "Дата",
-      cell: ({ row }) => formatDate(row.original.createdAt, "PPP HH:mm"),
+      cell: ({ row }) => formatDate(row.original.createdAt, "dd.MM.yy HH:mm"),
     },
     {
       accessorKey: "type",
@@ -66,13 +66,6 @@ export const AccountingContent = () => {
         ) : (
           <div>-</div>
         ),
-    },
-
-    {
-      id: "category",
-      header: "Категория",
-      cell: ({ row }) =>
-        row.original.outcome_category || row.original.income_category,
     },
     {
       accessorKey: "description",
