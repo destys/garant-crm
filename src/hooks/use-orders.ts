@@ -9,6 +9,7 @@ import {
   deleteOrder,
 } from "@/services/orders-service";
 import { useAuth } from "@/providers/auth-provider";
+import { MetaProps } from "@/types/meta.types";
 
 /**
  * Хук для работы с заказами (получение, создание, обновление, удаление)
@@ -31,7 +32,7 @@ export const useOrders = (
   const queryKey = ["clients", page, pageSize, query];
 
   // ✅ Получение заказов (чистый массив + `total`)
-  const ordersQuery = useQuery<{ orders: OrderProps[]; total: number }, Error>({
+  const ordersQuery = useQuery<{ orders: OrderProps[]; total: number, meta: MetaProps }, Error>({
     queryKey: ["orders", page, pageSize, query],
     queryFn: () => fetchOrders(authToken, page, pageSize, queryString),
     enabled: !!token,
@@ -101,6 +102,7 @@ export const useOrders = (
 
   return {
     data: ordersQuery.data?.orders || [],
+    meta: ordersQuery.data?.meta,
     total: ordersQuery.data?.total || 0,
     isLoading: ordersQuery.isLoading,
     isError: ordersQuery.isError,

@@ -2,6 +2,7 @@ import QueryString from "qs";
 
 import { API_URL } from "@/constants";
 import { OrderProps } from "@/types/order.types";
+import { MetaProps } from "@/types/meta.types";
 
 const apiUrl = `${API_URL}/api/orders`;
 
@@ -24,7 +25,7 @@ export const fetchOrders = async (
   page = 1,
   pageSize = 10,
   filterQuery: string = ""
-): Promise<{ orders: OrderProps[]; total: number }> => {
+): Promise<{ orders: OrderProps[]; total: number, meta: MetaProps }> => {
   if (!token) throw new Error("Authentication token is missing");
 
   const query = QueryString.stringify(
@@ -56,6 +57,7 @@ export const fetchOrders = async (
 
   return {
     orders: data.data,
+    meta: data.meta,
     total: data.meta?.pagination?.total ?? 0,
   };
 };

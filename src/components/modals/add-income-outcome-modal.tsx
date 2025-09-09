@@ -257,7 +257,6 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {settings?.outcome_categories
-                                                    .filter(item => roleId !== 1 || item.title !== SALARY_LABEL)
                                                     .map(item => (
                                                         <SelectItem key={item.id} value={item.title}>
                                                             {item.title}
