@@ -33,7 +33,7 @@ export const demoMasters = [
     phone: "+7 (900) 444-44-44",
     activeOrders: 0,
     totalOrders: 2,
-    eta: "—",
+    eta: "—-",
   },
   {
     id: 5,
