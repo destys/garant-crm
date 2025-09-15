@@ -18,7 +18,8 @@ import "yet-another-react-lightbox/styles.css";
 import { buildAccountingColumns } from "./accounting-columns";
 
 export const AccountingContent = () => {
-  // Загружаем по 4 страницы из Strapi (ограничение 250 → всего 1000)
+  const { updateIncome, deleteIncome } = useIncomes(1, 1);
+  const { updateOutcome, deleteOutcome } = useOutcomes(1, 1);
   const inc1 = useIncomes(1, 250);
   const inc2 = useIncomes(2, 250);
   const inc3 = useIncomes(3, 250);
@@ -61,8 +62,10 @@ export const AccountingContent = () => {
         roleId,
         users,
         updateUser,
-        useIncomes,
-        useOutcomes,
+        updateIncome,
+        deleteIncome,
+        updateOutcome,
+        deleteOutcome,
         setLightboxImages,
         setLightboxIndex,
       }),

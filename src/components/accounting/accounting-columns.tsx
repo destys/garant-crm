@@ -22,8 +22,10 @@ interface BuildColumnsProps {
   roleId: number | null;
   users: any[];
   updateUser: (args: any) => void;
-  useIncomes: any;
-  useOutcomes: any;
+  updateIncome: any;
+  updateOutcome: any;
+  deleteIncome: any;
+  deleteOutcome: any;
   setLightboxImages: (images: { src: string }[]) => void;
   setLightboxIndex: (index: number) => void;
 }
@@ -32,16 +34,13 @@ export const buildAccountingColumns = ({
   roleId,
   users,
   updateUser,
-  useIncomes,
-  useOutcomes,
+  updateIncome,
+  updateOutcome,
+  deleteIncome,
+  deleteOutcome,
   setLightboxImages,
   setLightboxIndex,
 }: BuildColumnsProps): ColumnDef<IncomeOutcomeProps>[] => {
-  const { updateIncome, updateOutcome, deleteIncome, deleteOutcome } = {
-    ...useIncomes,
-    ...useOutcomes,
-  };
-
   return [
     {
       accessorKey: "date",
