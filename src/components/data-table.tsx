@@ -68,7 +68,7 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
-        pageSize: 12, // 🔹 по умолчанию 20 строк
+        pageSize: 36, // 🔹 по умолчанию 20 строк
       },
     },
   });

@@ -1,206 +1,73 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
-import {
-  CheckCheckIcon,
-  CheckIcon,
-  ImageIcon,
-  Link2Icon,
-  PlusIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useEffect } from "react";
 import Lightbox from "yet-another-react-lightbox";
 
 import { DataTable } from "@/components/data-table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useIncomes } from "@/hooks/use-incomes";
 import { useOutcomes } from "@/hooks/use-outcomes";
-import { IncomeOutcomeProps } from "@/types/income-outcome.types";
 import { useUsers } from "@/hooks/use-users";
-import { cn, formatDate, formatName } from "@/lib/utils";
 import { useModal } from "@/providers/modal-provider";
-import { API_URL } from "@/constants";
 import { useAuth } from "@/providers/auth-provider";
 
 import "filepond/dist/filepond.min.css";
 import "yet-another-react-lightbox/styles.css";
+import { buildAccountingColumns } from "./accounting-columns";
 
 export const AccountingContent = () => {
-  const { incomes, deleteIncome, updateIncome } = useIncomes(1, 500);
-  const { outcomes, deleteOutcome, updateOutcome } = useOutcomes(1, 500);
+  // Загружаем по 4 страницы из Strapi (ограничение 250 → всего 1000)
+  const inc1 = useIncomes(1, 250);
+  const inc2 = useIncomes(2, 250);
+  const inc3 = useIncomes(3, 250);
+  const inc4 = useIncomes(4, 250);
+
+  const out1 = useOutcomes(1, 250);
+  const out2 = useOutcomes(2, 250);
+  const out3 = useOutcomes(3, 250);
+  const out4 = useOutcomes(4, 250);
+
+  const incomes = useMemo(
+    () => [
+      ...(inc1?.incomes ?? []),
+      ...(inc2?.incomes ?? []),
+      ...(inc3?.incomes ?? []),
+      ...(inc4?.incomes ?? []),
+    ],
+    [inc1?.incomes, inc2?.incomes, inc3?.incomes, inc4?.incomes]
+  );
+
+  const outcomes = useMemo(
+    () => [
+      ...(out1?.outcomes ?? []),
+      ...(out2?.outcomes ?? []),
+      ...(out3?.outcomes ?? []),
+      ...(out4?.outcomes ?? []),
+    ],
+    [out1?.outcomes, out2?.outcomes, out3?.outcomes, out4?.outcomes]
+  );
+
   const { users, updateUser } = useUsers(1, 100);
   const { openModal } = useModal();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [lightboxImages, setLightboxImages] = useState<{ src: string }[]>([]);
   const { roleId } = useAuth();
 
-  const columns: ColumnDef<IncomeOutcomeProps>[] = [
-    {
-      accessorKey: "date",
-      header: "Дата",
-      cell: ({ row }) => formatDate(row.original.createdAt, "dd.MM.yy HH:mm"),
-    },
-    {
-      accessorKey: "type",
-      header: "Тип",
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.type === "income" ? "default" : "destructive"}
-          className={
-            row.original.type === "income" ? "bg-green-500" : "bg-red-500"
-          }
-        >
-          {row.original.type === "income" ? "Приход" : "Расход"}
-        </Badge>
-      ),
-    },
-    {
-      id: "orderNum",
-      header: "Номер заказа",
-      cell: ({ row }) =>
-        row.original.order ? (
-          <Badge>{row.original.order.title}</Badge>
-        ) : (
-          <div>-</div>
-        ),
-    },
-    {
-      accessorKey: "description",
-      header: "Описание",
-      cell: ({ row }) => row.original.note,
-    },
-
-    {
-      accessorKey: "masterId",
-      header: "Сотрудник",
-      cell: ({ row }) => {
-        const master = users.find((m) => m.id === row.original.user?.id);
-        return master ? master.name : "—";
-      },
-    },
-    {
-      accessorKey: "amount",
-      header: "Сумма",
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.type === "income" ? "default" : "destructive"}
-          className={
-            row.original.type === "income" ? "bg-green-500" : "bg-red-500"
-          }
-        >
-          {row.original.type === "expense" ? "-" : ""}
-          {row.original.count.toLocaleString()} ₽
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: "author",
-      header: "Менеджер",
-      cell: ({ row }) => (
-        <Badge>{formatName(row.original.author) || "Не указан"}</Badge>
-      ),
-    },
-    {
-      accessorKey: "orderId",
-      header: "",
-      cell: ({ row }) => (
-        <div className="space-x-2">
-          {roleId === 3 && (
-            <>
-              {row.original.isApproved ? (
-                <Button disabled>
-                  <CheckCheckIcon />
-                </Button>
-              ) : (
-                <Button
-                  variant="default"
-                  className="bg-green-500"
-                  onClick={() => {
-                    if (row.original.type === "expense") {
-                      updateOutcome({
-                        documentId: row.original.documentId,
-                        updatedData: {
-                          isApproved: true,
-                        },
-                      });
-
-                      if (
-                        row.original.user.id &&
-                        row.original.outcome_category === "Зарплата сотрудников"
-                      ) {
-                        updateUser({
-                          userId: row.original.user.id,
-                          updatedData: {
-                            balance:
-                              (row.original.user.balance || 0) +
-                              row.original.count,
-                          },
-                        });
-                      }
-                    }
-                    if (row.original.type === "income") {
-                      updateIncome({
-                        documentId: row.original.documentId,
-                        updatedData: {
-                          isApproved: true,
-                        },
-                      });
-                    }
-                  }}
-                >
-                  <CheckIcon />
-                </Button>
-              )}
-            </>
-          )}
-          <Button
-            disabled={!row.original.photo}
-            variant="default"
-            onClick={() => {
-              setLightboxImages([
-                { src: `${API_URL}${row.original.photo.url}` },
-              ]);
-              setLightboxIndex(0);
-            }}
-          >
-            <ImageIcon />
-          </Button>
-          <Button
-            variant={"secondary"}
-            disabled={!!!row.original.order}
-            asChild
-          >
-            <Link
-              href={`/orders/${row.original.order?.documentId}`}
-              className={cn(
-                !!!row.original.order && "pointer-events-none opacity-50"
-              )}
-            >
-              <Link2Icon />
-            </Link>
-          </Button>
-          {roleId === 3 && (
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (row.original.type === "income") {
-                  deleteIncome(row.original.documentId);
-                }
-                if (row.original.type === "expense") {
-                  deleteOutcome(row.original.documentId);
-                }
-              }}
-            >
-              <Trash2Icon />
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildAccountingColumns({
+        roleId,
+        users,
+        updateUser,
+        useIncomes,
+        useOutcomes,
+        setLightboxImages,
+        setLightboxIndex,
+      }),
+    [roleId, users, updateUser, useIncomes, useOutcomes]
+  );
 
   const allRows = useMemo(() => {
     return [
@@ -211,6 +78,25 @@ export const AccountingContent = () => {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [incomes, outcomes]);
+
+  // Простая клиентская пагинация
+  const PER_PAGE = 36; // можно поменять при желании
+  const [page, setPage] = useState(1);
+
+  const total = allRows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+
+  // Если после догрузки страниц номер страницы вышел за пределы — откатим
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [totalPages, page]);
+
+  const start = (page - 1) * PER_PAGE;
+  const end = Math.min(start + PER_PAGE, total);
+  const pageRows = useMemo(
+    () => allRows.slice(start, end),
+    [allRows, start, end]
+  );
 
   return (
     <div>
@@ -247,7 +133,66 @@ export const AccountingContent = () => {
           <span>Добавить расход</span>
         </Button>
       </div>
-      <DataTable data={allRows} columns={columns} />
+      <DataTable data={pageRows} columns={columns} />
+
+      {/* Простая пагинация */}
+      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="text-sm text-muted-foreground">
+          Показано{" "}
+          <strong>
+            {end} из {total}
+          </strong>{" "}
+          записей (стр. {page} / {totalPages})
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            className="px-2 h-9 border rounded-md disabled:opacity-50"
+            disabled={page <= 1}
+            onClick={() => setPage(1)}
+          >
+            «
+          </button>
+          <button
+            className="px-2 h-9 border rounded-md disabled:opacity-50"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            ‹
+          </button>
+          {/* Короткий диапазон номеров */}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            // центрируем вокруг текущей страницы
+            const offset = Math.max(1, Math.min(page - 2, totalPages - 4));
+            const num = offset + i;
+            if (num > totalPages) return null;
+            return (
+              <button
+                key={num}
+                className={`px-3 h-9 border rounded-md ${
+                  num === page ? "bg-primary text-primary-foreground" : ""
+                }`}
+                onClick={() => setPage(num)}
+              >
+                {num}
+              </button>
+            );
+          })}
+          <button
+            className="px-2 h-9 border rounded-md disabled:opacity-50"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            ›
+          </button>
+          <button
+            className="px-2 h-9 border rounded-md disabled:opacity-50"
+            disabled={page >= totalPages}
+            onClick={() => setPage(totalPages)}
+          >
+            »
+          </button>
+        </div>
+      </div>
 
       {lightboxIndex !== null && (
         <Lightbox

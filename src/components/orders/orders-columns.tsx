@@ -60,7 +60,7 @@ export const ordersColumns = (
       <div className="uppercase text-center">
         {linkWrapper(row, row.original.title)}
         <div className="text-[8px] text-center">
-          {format(row.original.createdAt, "dd.MM.yy hh:mm")}
+          {format(row.original.createdAt, "dd.MM.yy HH:mm")}
         </div>
       </div>
     ),
