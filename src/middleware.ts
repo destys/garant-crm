@@ -26,8 +26,8 @@ const ROLE_ACCESS: Record<number, (string | RegExp)[]> = {
   4: [
     "/",
     "/orders",
-    "/accounting",
     "/account",
+    "/cashbox",
     /^\/orders(\/.*)?$/,
     "/clients",
     "/reports",
