@@ -194,7 +194,7 @@ export const SIDEBAR_MENU = [
     to: "/accounting",
     title: "Бухгалтерия",
     icon: DollarSignIcon,
-    adminOnly: true,
+    managerOnly: true,
   },
   {
     to: "/cashbox",
