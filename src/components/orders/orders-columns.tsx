@@ -4,12 +4,10 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { format, differenceInDays } from "date-fns";
-import { EyeIcon, PhoneIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -20,6 +18,8 @@ import {
 import { cn, formatName } from "@/lib/utils";
 import { OrderProps } from "@/types/order.types";
 import { UserProps } from "@/types/user.types";
+
+import { ActionsCell } from "./order-action-cell";
 
 const statusColorMap: Record<string, string> = {
   Новая: "bg-blue-300 hover:bg-blue-400",
@@ -56,76 +56,86 @@ export const ordersColumns = (
   {
     accessorKey: "order_number",
     header: "№ Заказа",
-    cell: ({ row }) => (
-      <div className="uppercase text-center">
-        {linkWrapper(row, row.original.title)}
-        <div className="text-[8px] text-center">
-          {format(row.original.createdAt, "dd.MM.yy HH:mm")}
-        </div>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "orderStatus",
-    header: "Статус",
     cell: ({ row }) => {
       const status = row.original.orderStatus;
       const colorClasses = statusColorMap[status] ?? "bg-white";
 
-      return linkWrapper(
-        row,
-        <Badge
-          variant="outline"
-          className={cn("text-muted-foreground", colorClasses)}
-        >
-          {status}
-        </Badge>
+      return (
+        <div className="flex flex-col items-center gap-1 text-center">
+          {/* номер заказа */}
+          {linkWrapper(
+            row,
+            <span className="uppercase">{row.original.title}</span>
+          )}
+
+          {/* статус под номером */}
+          {linkWrapper(
+            row,
+            <Badge
+              variant="outline"
+              className={cn("text-muted-foreground", colorClasses, "w-fit")}
+            >
+              {status}
+            </Badge>
+          )}
+
+          {/* дата создания */}
+          <div className="text-[8px] text-muted-foreground">
+            {format(row.original.createdAt, "dd.MM.yy HH:mm")}
+          </div>
+        </div>
       );
     },
   },
   {
-    accessorKey: "visit_date",
-    header: "Дата выезда",
-    cell: ({ row }) => (
-      <div className="text-xs">
-        {row.original.visit_date
-          ? linkWrapper(
-              row,
-              format(new Date(row.original.visit_date), "dd.MM.yyyy HH:mm")
-            )
-          : "-"}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "deadline",
-    header: "Дедлайн",
+    id: "visit_deadline",
+    header: "Визит / Дедлайн",
     cell: ({ row }) => {
-      if (!row.original.deadline)
-        return <div className="text-xs">Не назначен</div>;
-      const deadline = new Date(row.original.deadline);
-      const today = new Date();
-      const diff = differenceInDays(deadline, today);
+      // Визит
+      const visitText = row.original.visit_date
+        ? format(new Date(row.original.visit_date), "dd.MM в HH:mm")
+        : "—";
 
-      let color = "default";
-      let text = format(deadline, "dd.MM.yyyy");
+      // Дедлайн
+      let deadlineNode: React.ReactNode = (
+        <span className="text-xs">Не назначен</span>
+      );
+      if (row.original.deadline) {
+        const deadline = new Date(row.original.deadline);
+        const today = new Date();
+        const diff = differenceInDays(deadline, today);
 
-      if (diff < 0) {
-        color = "destructive";
-        text = `Просрочено на ${Math.abs(diff)} дн.`;
-      } else if (diff <= 2) {
-        color = "warning";
-        text = `Остался ${diff} дн.`;
+        let variant: "destructive" | "outline" = "outline";
+        let extraClass = "";
+        let text = format(deadline, "dd.MM.yyyy");
+
+        if (diff < 0) {
+          variant = "destructive";
+          text = `⚠️ на ${Math.abs(diff)} дн.`;
+        } else if (diff <= 2) {
+          extraClass = "bg-yellow-200 text-yellow-900";
+          text = `Осталось ${diff} дн.`;
+        }
+
+        deadlineNode = (
+          <Badge variant={variant} className={extraClass}>
+            {text}
+          </Badge>
+        );
       }
 
       return linkWrapper(
         row,
-        <Badge
-          variant={color === "destructive" ? "destructive" : "outline"}
-          className={color === "warning" ? "bg-yellow-200 text-yellow-900" : ""}
-        >
-          {text}
-        </Badge>
+        <div className="flex flex-col gap-1 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">Выезд:</span>
+            <span className="font-medium">{visitText}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">Дедлайн:</span>
+            {deadlineNode}
+          </div>
+        </div>
       );
     },
   },
@@ -200,7 +210,7 @@ export const ordersColumns = (
           <SelectContent>
             {users.map((user) => (
               <SelectItem key={user.id} value={user.id.toString()}>
-                {user.name}
+                {formatName(user.name)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -223,35 +233,14 @@ export const ordersColumns = (
   {
     accessorKey: "actions",
     header: "",
-    cell: ({ row }) => (
-      <div className="flex gap-2 justify-end">
-        <Button size="icon" variant="outline" title="Посмотреть" asChild>
-          <Link href={`/orders/${row.original.documentId}`}>
-            <EyeIcon className="size-4" />
-          </Link>
-        </Button>
-        <Button size="icon" variant="outline" title="Позвонить" asChild>
-          <Link href={`tel:${row.original.client?.phone}`}>
-            <PhoneIcon className="size-4" />
-          </Link>
-        </Button>
-        {roleId === 3 && (
-          <Button
-            size="icon"
-            variant="destructive"
-            title="Удалить"
-            onClick={() => {
-              deleteOrder(row.original.documentId);
-              if (refetch) {
-                refetch();
-              }
-              toast.success("Заказ удален");
-            }}
-          >
-            <TrashIcon className="size-4" />
-          </Button>
-        )}
-      </div>
+    cell: (ctx) => (
+      <ActionsCell
+        row={ctx.row}
+        roleId={roleId}
+        updateOrder={updateOrder}
+        deleteOrder={deleteOrder}
+        refetch={refetch}
+      />
     ),
   },
 ];

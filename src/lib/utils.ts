@@ -49,3 +49,10 @@ export const formatName = (fullName?: string) => {
   const initials = rest.map((p) => p.charAt(0).toUpperCase() + ".").join(" ");
   return `${lastName} ${initials}`;
 };
+
+const KIND_PREFIX: Record<string, string> = {
+  Выездной: "zov",
+  UMedia: "u",
+};
+export const getPrefixByKind = (kind?: string) =>
+  KIND_PREFIX[kind ?? ""] ?? "vz";

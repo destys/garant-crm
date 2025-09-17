@@ -32,7 +32,10 @@ export const useOrders = (
   const queryKey = ["clients", page, pageSize, query];
 
   // ✅ Получение заказов (чистый массив + `total`)
-  const ordersQuery = useQuery<{ orders: OrderProps[]; total: number, meta: MetaProps }, Error>({
+  const ordersQuery = useQuery<
+    { orders: OrderProps[]; total: number; meta: MetaProps },
+    Error
+  >({
     queryKey: ["orders", page, pageSize, query],
     queryFn: () => fetchOrders(authToken, page, pageSize, queryString),
     enabled: !!token,
@@ -43,10 +46,17 @@ export const useOrders = (
     mutationFn: async (order: Partial<CreateOrderDto>) => {
       const created = await createOrder(authToken, order); // должен вернуть заказ с id
       const orderId = created.id;
+      const orderKind = created.kind_of_repair;
 
-      // Обновляем title: vz-{id}
+      let prefix = "vz";
+      if (orderKind === "Выездной") {
+        prefix = "zov";
+      } else if (orderKind === "UMedia") {
+        prefix = "u";
+      }
+
       await updateOrder(authToken, created.documentId, {
-        title: `vz-${orderId}`,
+        title: `${prefix}-${orderId}`,
       });
 
       return created;
@@ -107,9 +117,9 @@ export const useOrders = (
     isLoading: ordersQuery.isLoading,
     isError: ordersQuery.isError,
     error: ordersQuery.error,
-    refetch: ordersQuery.refetch, // <-- пробрасываем refetch
+    refetch: ordersQuery.refetch,
     createOrder: createOrderMutation.mutateAsync,
     updateOrder: updateOrderMutation.mutateAsync,
-    deleteOrder: deleteOrderMutation.mutate,
+    deleteOrder: deleteOrderMutation.mutateAsync,
   };
 };

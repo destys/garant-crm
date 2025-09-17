@@ -1,5 +1,12 @@
 import { IconCirclePlusFilled } from "@tabler/icons-react";
-import { FilePieChart, MoveLeftIcon, SettingsIcon } from "lucide-react";
+import {
+  CircleDollarSignIcon,
+  DollarSignIcon,
+  FilePieChart,
+  MoveLeftIcon,
+  SettingsIcon,
+  Users2Icon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -34,6 +41,25 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
+        <Button variant={"link"} asChild>
+          <Link href={"/clients"}>
+            <Users2Icon />
+            <span className="max-lg:hidden">Клиенты</span>
+          </Link>
+        </Button>
+        <Button variant={"link"} asChild>
+          <Link href={"/accounting"}>
+            <DollarSignIcon />
+            <span className="max-lg:hidden">Бухгалтерия</span>
+          </Link>
+        </Button>
+        <Button variant={"link"} asChild>
+          <Link href={"/cashbox"}>
+            <CircleDollarSignIcon />
+            <span className="max-lg:hidden">Касса</span>
+          </Link>
+        </Button>
+
         <div className="ml-auto flex items-center gap-2">
           {roleId !== 1 && (
             <div>

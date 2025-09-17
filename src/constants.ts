@@ -3,11 +3,9 @@ import {
   Archive,
   Calculator,
   Check,
-  CircleDollarSignIcon,
   ClipboardList,
   Clock2Icon,
   DollarSign,
-  DollarSignIcon,
   FileText,
   ListChecks,
   Mail,
@@ -16,7 +14,7 @@ import {
   Settings2,
   ShoppingCart,
   Truck,
-  Users,
+  Undo2Icon,
   Wrench,
 } from "lucide-react";
 
@@ -104,6 +102,14 @@ export const SIDEBAR_MENU = [
     icon: AlertCircle,
     filters: { orderStatus: { $eq: "Проблемные" } },
   },
+  {
+    to: "/orders",
+    title: "UMedia",
+    icon: Undo2Icon,
+    filters: {
+      kind_of_repair: { $eq: "UMedia" },
+    },
+  },
   { separator: true },
   {
     to: "/orders",
@@ -142,7 +148,6 @@ export const SIDEBAR_MENU = [
     },
   },
   { separator: true },
-
   {
     to: "/orders",
     title: "Проверить",
@@ -188,20 +193,6 @@ export const SIDEBAR_MENU = [
       ],
     },
   },
-  { to: "/clients", title: "Клиенты", icon: Users, adminOnly: true },
-  { to: "/masters", title: "Сотрудники", icon: Users, adminOnly: true },
-  {
-    to: "/accounting",
-    title: "Бухгалтерия",
-    icon: DollarSignIcon,
-    adminOnly: true,
-  },
-  {
-    to: "/cashbox",
-    title: "Касса",
-    icon: CircleDollarSignIcon,
-    managerOnly: true,
-  },
 ];
 
 export const ORDER_STATUSES = [
@@ -234,7 +225,7 @@ export const ORDER_SOURCES = [
 
 export type OrderSource = (typeof ORDER_STATUSES)[number];
 
-export const REPAIR_KIND = ["Выездной", "Стационарный"] as const;
+export const REPAIR_KIND = ["Выездной", "Стационарный", "UMedia"] as const;
 
 export type RepairKind = (typeof REPAIR_KIND)[number];
 

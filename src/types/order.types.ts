@@ -35,6 +35,7 @@ export interface OrderProps {
   is_approve: boolean;
   add_address: string;
   add_phone: string;
+  isNeedReceipt: boolean;
   chat: {
     user: { id: number; name: string };
     datetime: string;

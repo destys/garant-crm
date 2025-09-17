@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { cn, getPrefixByKind } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Command,
@@ -291,14 +291,31 @@ export function RepairOrderForm({
         toast.error("Ошибка при создании заказа");
       }
     } else {
+      // не отправляем эти поля на апдейт
       delete (payload as any).master;
       delete (payload as any).client;
 
-      updateOrder({
+      // вычисляем ожидаемый title из kind_of_repair
+      // берём числовой id из data.id, если его нет — вытягиваем хвостовые цифры из текущего title
+      const numericId =
+        (data as any)?.id ??
+        Number((data?.title ?? "").match(/\d+$/)?.[0]) ??
+        undefined;
+
+      const prefix = getPrefixByKind(payload.kind_of_repair);
+      const expectedTitle = numericId ? `${prefix}-${numericId}` : undefined;
+
+      // если можем собрать корректный title и он отличается — положим в payload
+      if (expectedTitle && data?.title !== expectedTitle) {
+        (payload as any).title = expectedTitle;
+      }
+
+      await updateOrder({
         documentId: data!.documentId,
         updatedData: payload,
       });
-      toast.success("Заказ обновлен");
+
+      toast.success("Заказ обновлён");
     }
   };
 
