@@ -4,6 +4,7 @@ import {
   DollarSignIcon,
   FilePieChart,
   MoveLeftIcon,
+  PersonStandingIcon,
   SettingsIcon,
   Users2Icon,
 } from "lucide-react";
@@ -57,6 +58,12 @@ export function SiteHeader() {
           <Link href={"/cashbox"}>
             <CircleDollarSignIcon />
             <span className="max-lg:hidden">Касса</span>
+          </Link>
+        </Button>
+        <Button variant={"link"} asChild>
+          <Link href={"/masters"}>
+            <PersonStandingIcon />
+            <span className="max-lg:hidden">Сотрудники</span>
           </Link>
         </Button>
 
