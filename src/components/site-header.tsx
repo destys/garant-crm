@@ -16,11 +16,13 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/providers/auth-provider";
 import { useCashbox } from "@/hooks/use-cashbox";
+import { useModal } from "@/providers/modal-provider";
 
 export function SiteHeader() {
   const { user, roleId } = useAuth();
   const { cashbox } = useCashbox();
   const router = useRouter();
+  const { openModal } = useModal();
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
@@ -42,30 +44,34 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <Button variant={"link"} asChild>
-          <Link href={"/clients"}>
-            <Users2Icon />
-            <span className="max-lg:hidden">Клиенты</span>
-          </Link>
-        </Button>
-        <Button variant={"link"} asChild>
-          <Link href={"/accounting"}>
-            <DollarSignIcon />
-            <span className="max-lg:hidden">Бухгалтерия</span>
-          </Link>
-        </Button>
-        <Button variant={"link"} asChild>
-          <Link href={"/cashbox"}>
-            <CircleDollarSignIcon />
-            <span className="max-lg:hidden">Касса</span>
-          </Link>
-        </Button>
-        <Button variant={"link"} asChild>
-          <Link href={"/masters"}>
-            <PersonStandingIcon />
-            <span className="max-lg:hidden">Сотрудники</span>
-          </Link>
-        </Button>
+        {roleId !== 1 && (
+          <>
+            <Button variant={"link"} asChild>
+              <Link href={"/accounting"}>
+                <DollarSignIcon />
+                <span className="max-lg:hidden">Бухгалтерия</span>
+              </Link>
+            </Button>
+            <Button variant={"link"} asChild>
+              <Link href={"/clients"}>
+                <Users2Icon />
+                <span className="max-lg:hidden">Клиенты</span>
+              </Link>
+            </Button>
+            <Button variant={"link"} asChild>
+              <Link href={"/cashbox"}>
+                <CircleDollarSignIcon />
+                <span className="max-lg:hidden">Касса</span>
+              </Link>
+            </Button>
+            <Button variant={"link"} asChild>
+              <Link href={"/masters"}>
+                <PersonStandingIcon />
+                <span className="max-lg:hidden">Сотрудники</span>
+              </Link>
+            </Button>
+          </>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           {roleId !== 1 && (
@@ -84,6 +90,20 @@ export function SiteHeader() {
               </span>
             </div>
           )}
+          {roleId !== 3 && (
+            <Button
+              title="Добавить оплату за смену"
+              variant={"positive"}
+              onClick={() => {
+                openModal("shiftBalance", {
+                  title: "Добавить зарплату за смену",
+                });
+              }}
+            >
+              <CircleDollarSignIcon />+ за смену
+            </Button>
+          )}
+
           <Button variant="default" size="sm" asChild>
             <Link href={"/orders/new-order"}>
               <IconCirclePlusFilled />

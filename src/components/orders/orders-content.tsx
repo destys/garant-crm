@@ -133,7 +133,8 @@ export const OrdersContent = () => {
   }, [JSON.stringify(finalFilters), JSON.stringify(sortString)]);
 
   const handleDownloadPdf = () => {
-    if (!period.from || !period.to || !data.length) return;
+    if (((!period.from || !period.to) && !baseFilters.master) || !data.length)
+      return;
     generateOrdersReportPdf(data, activeTitle, period);
   };
 
@@ -158,7 +159,10 @@ export const OrdersContent = () => {
           <SearchBlock onChange={setSearchFilter} />
           <Button
             onClick={handleDownloadPdf}
-            disabled={!period.from || !period.to || !data.length}
+            disabled={
+              ((!period.from || !period.to) && !baseFilters.master) ||
+              !data.length
+            }
           >
             Скачать отчет в PDF
           </Button>

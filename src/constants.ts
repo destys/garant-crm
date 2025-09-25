@@ -9,6 +9,7 @@ import {
   FileText,
   ListChecks,
   Mail,
+  ReceiptIcon,
   Scale,
   Send,
   Settings2,
@@ -109,6 +110,12 @@ export const SIDEBAR_MENU = [
     filters: {
       kind_of_repair: { $eq: "UMedia" },
     },
+  },
+  {
+    to: "/orders",
+    title: "Пробить чек",
+    icon: ReceiptIcon,
+    filters: { isNeedReceipt: { $eq: true } },
   },
   { separator: true },
   {

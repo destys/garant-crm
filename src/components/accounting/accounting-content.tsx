@@ -12,9 +12,12 @@ import { useOutcomes } from "@/hooks/use-outcomes";
 import { useUsers } from "@/hooks/use-users";
 import { useModal } from "@/providers/modal-provider";
 import { useAuth } from "@/providers/auth-provider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import "filepond/dist/filepond.min.css";
 import "yet-another-react-lightbox/styles.css";
+import { MastersContent } from "../masters/masters-content";
+
 import { buildAccountingColumns } from "./accounting-columns";
 
 export const AccountingContent = () => {
@@ -136,76 +139,92 @@ export const AccountingContent = () => {
           <span>Добавить расход</span>
         </Button>
       </div>
-      <DataTable data={pageRows} columns={columns} />
+      <Tabs defaultValue="accounting" className="my-6">
+        <TabsList>
+          <TabsTrigger value="accounting">Бухгалтерия</TabsTrigger>
+          <TabsTrigger value="masters">Сотрудники</TabsTrigger>
+        </TabsList>
+        <TabsContent value="accounting">
+          <div>
+            <DataTable data={pageRows} columns={columns} />
 
-      {/* Простая пагинация */}
-      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">
-          Показано{" "}
-          <strong>
-            {end} из {total}
-          </strong>{" "}
-          записей (стр. {page} / {totalPages})
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            className="px-2 h-9 border rounded-md disabled:opacity-50"
-            disabled={page <= 1}
-            onClick={() => setPage(1)}
-          >
-            «
-          </button>
-          <button
-            className="px-2 h-9 border rounded-md disabled:opacity-50"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            ‹
-          </button>
-          {/* Короткий диапазон номеров */}
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            // центрируем вокруг текущей страницы
-            const offset = Math.max(1, Math.min(page - 2, totalPages - 4));
-            const num = offset + i;
-            if (num > totalPages) return null;
-            return (
-              <button
-                key={num}
-                className={`px-3 h-9 border rounded-md ${
-                  num === page ? "bg-primary text-primary-foreground" : ""
-                }`}
-                onClick={() => setPage(num)}
-              >
-                {num}
-              </button>
-            );
-          })}
-          <button
-            className="px-2 h-9 border rounded-md disabled:opacity-50"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          >
-            ›
-          </button>
-          <button
-            className="px-2 h-9 border rounded-md disabled:opacity-50"
-            disabled={page >= totalPages}
-            onClick={() => setPage(totalPages)}
-          >
-            »
-          </button>
-        </div>
-      </div>
+            {/* Простая пагинация */}
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-sm text-muted-foreground">
+                Показано{" "}
+                <strong>
+                  {end} из {total}
+                </strong>{" "}
+                записей (стр. {page} / {totalPages})
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  className="px-2 h-9 border rounded-md disabled:opacity-50"
+                  disabled={page <= 1}
+                  onClick={() => setPage(1)}
+                >
+                  «
+                </button>
+                <button
+                  className="px-2 h-9 border rounded-md disabled:opacity-50"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  ‹
+                </button>
+                {/* Короткий диапазон номеров */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // центрируем вокруг текущей страницы
+                  const offset = Math.max(
+                    1,
+                    Math.min(page - 2, totalPages - 4)
+                  );
+                  const num = offset + i;
+                  if (num > totalPages) return null;
+                  return (
+                    <button
+                      key={num}
+                      className={`px-3 h-9 border rounded-md ${
+                        num === page ? "bg-primary text-primary-foreground" : ""
+                      }`}
+                      onClick={() => setPage(num)}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
+                <button
+                  className="px-2 h-9 border rounded-md disabled:opacity-50"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  ›
+                </button>
+                <button
+                  className="px-2 h-9 border rounded-md disabled:opacity-50"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(totalPages)}
+                >
+                  »
+                </button>
+              </div>
+            </div>
 
-      {lightboxIndex !== null && (
-        <Lightbox
-          open
-          index={lightboxIndex}
-          close={() => setLightboxIndex(null)}
-          slides={lightboxImages}
-          className="relative z-[10000]"
-        />
-      )}
+            {lightboxIndex !== null && (
+              <Lightbox
+                open
+                index={lightboxIndex}
+                close={() => setLightboxIndex(null)}
+                slides={lightboxImages}
+                className="relative z-[10000]"
+              />
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="masters">
+          <MastersContent />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

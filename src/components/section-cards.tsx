@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 import { useAllClients } from "@/hooks/use-all-clients";
 import { useAllIncomes } from "@/hooks/use-all-incomes";
@@ -16,7 +17,6 @@ export function SectionCards() {
 
   // тянем полные наборы по сущностям
   const { items: currOrders } = useAllOrders(current);
-  const { items: prevOrders } = useAllOrders(prev);
 
   const { items: currClients } = useAllClients(current);
   const { items: prevClients } = useAllClients(prev);
@@ -29,21 +29,67 @@ export function SectionCards() {
 
   // метрики
   const currentRevenue = useMemo(() => {
-    const inc = currIncomes.reduce((s: number, i: any) => s + (i.count || 0), 0);
-    const out = currOutcomes.reduce((s: number, o: any) => s + (o.count || 0), 0);
+    const inc = currIncomes.reduce(
+      (s: number, i: any) => s + (i.count || 0),
+      0
+    );
+    const out = currOutcomes.reduce(
+      (s: number, o: any) => s + (o.count || 0),
+      0
+    );
     return inc - out;
   }, [currIncomes, currOutcomes]);
 
   const prevRevenue = useMemo(() => {
-    const inc = prevIncomes.reduce((s: number, i: any) => s + (i.count || 0), 0);
-    const out = prevOutcomes.reduce((s: number, o: any) => s + (o.count || 0), 0);
+    const inc = prevIncomes.reduce(
+      (s: number, i: any) => s + (i.count || 0),
+      0
+    );
+    const out = prevOutcomes.reduce(
+      (s: number, o: any) => s + (o.count || 0),
+      0
+    );
     return inc - out;
   }, [prevIncomes, prevOutcomes]);
 
   const rev = compareValues(currentRevenue, prevRevenue);
   const cust = compareValues(currClients.length, prevClients.length);
-  const act = compareValues(currOrders.length, prevOrders.length);
-  const growth = compareValues(currIncomes.length, prevIncomes.length);
+
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+
+  const adSpendMonth = currOutcomes
+    .filter(
+      (o: any) =>
+        o.outcome_category === "Реклама" &&
+        new Date(o.createdAt) >= monthStart &&
+        new Date(o.createdAt) <= monthEnd
+    )
+    .reduce((sum: number, o: any) => sum + (o.count || 0), 0);
+
+  const directContactsMonth = currClients.filter(
+    (c: any) =>
+      c.source === "Директ" &&
+      new Date(c.createdAt) >= monthStart &&
+      new Date(c.createdAt) <= monthEnd
+  );
+
+  const directLeadsMonth = currOrders.filter(
+    (o: any) =>
+      o.source === "Директ" &&
+      o.status !== "Новая" &&
+      o.status !== "Отказ" &&
+      new Date(o.createdAt) >= monthStart &&
+      new Date(o.createdAt) <= monthEnd
+  );
+
+  const avgCostPerContact =
+    directContactsMonth.length > 0
+      ? adSpendMonth / directContactsMonth.length
+      : 0;
+
+  const avgCostPerLead =
+    directLeadsMonth.length > 0 ? adSpendMonth / directLeadsMonth.length : 0;
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
@@ -62,18 +108,18 @@ export function SectionCards() {
         note="Клиенты за месяц"
       />
       <StatCard
-        label="Активные заявки"
-        value={currOrders.length}
-        percent={act.percent}
-        trend={act.trend}
-        note="Активность за месяц"
+        label="Ср. цена обращения"
+        value={avgCostPerContact.toFixed(0) + " ₽"}
+        percent={0}
+        trend="up"
+        note="За месяц"
       />
       <StatCard
-        label="Число оплат"
-        value={currIncomes.length}
-        percent={growth.percent}
-        trend={growth.trend}
-        note="Динамика за месяц"
+        label="Ср. цена лида"
+        value={avgCostPerLead.toFixed(0) + " ₽"}
+        percent={0}
+        trend="up"
+        note="За месяц"
       />
     </div>
   );

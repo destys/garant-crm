@@ -61,6 +61,8 @@ import { OrderProps } from "@/types/order.types";
 import { useOrders } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
 
+import { Checkbox } from "../ui/checkbox";
+
 const NEED_DEADLINE = new Set(["Согласовать", "Отремонтировать", "Готово"]);
 
 // Схема валидации
@@ -90,6 +92,7 @@ const schema = z
     note: z.string().optional(),
     add_address: z.string(),
     add_phone: z.string(),
+    isNeedReceipt: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.orderStatus === "Отказ") {
@@ -183,6 +186,7 @@ export function RepairOrderForm({
       note: data?.note || "",
       add_address: data?.add_address || "",
       add_phone: data?.add_phone || "",
+      isNeedReceipt: data?.isNeedReceipt || false,
     },
   });
 
@@ -337,7 +341,7 @@ export function RepairOrderForm({
                   )}
                 >
                   {field.value
-                    ? format(field.value, "dd.MM.yyyy")
+                    ? format(field.value.toString(), "dd.MM.yyyy")
                     : "Выберите дату"}
                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
@@ -518,6 +522,23 @@ export function RepairOrderForm({
                       ))}
                     </SelectContent>
                   </Select>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="isNeedReceipt"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="flex gap-4 items-end mb-3">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel className="text-sm font-normal">
+                    Необходимо пробить чек
+                  </FormLabel>
                 </FormItem>
               )}
             />
