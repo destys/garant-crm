@@ -1,5 +1,4 @@
 import { format, differenceInDays } from "date-fns";
-import { LinkIcon, PhoneIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -12,7 +11,6 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { OrderProps } from "@/types/order.types";
 import { cn, formatName } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +24,8 @@ import {
 import { useUsers } from "@/hooks/use-users";
 import { useOrders } from "@/hooks/use-orders";
 import { useAuth } from "@/providers/auth-provider";
+
+import { ActionsCell } from "./order-action-cell";
 
 const statusColorMap: Record<string, string> = {
   Новая: "bg-blue-300 hover:bg-blue-400",
@@ -64,6 +64,12 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
     }
   }
 
+  if (!roleId) return <div>Ошибка</div>;
+
+  const row = {
+    original: data,
+  };
+
   return (
     <Card className="flex flex-col justify-between h-full">
       <CardHeader>
@@ -74,25 +80,12 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
           </div>
         </CardTitle>
         <CardAction className="space-x-2 mt-2">
-          <Button size="icon" variant="default" asChild>
-            <Link href={`tel:${data.add_phone || data.client.phone}`}>
-              <PhoneIcon className="size-4" />
-            </Link>
-          </Button>
-          <Button variant="outline" size="icon" asChild>
-            <Link href={`/orders/${data.documentId}`}>
-              <LinkIcon className="size-4" />
-            </Link>
-          </Button>
-          {roleId === 3 && (
-            <Button
-              size="icon"
-              variant="destructive"
-              onClick={() => deleteOrder(data.documentId)}
-            >
-              <Trash2Icon className="size-4" />
-            </Button>
-          )}
+          <ActionsCell
+            row={row}
+            roleId={roleId}
+            updateOrder={updateOrder}
+            deleteOrder={deleteOrder}
+          />
         </CardAction>
         <CardDescription className="mt-2">
           <Badge className={cn("text-xs text-muted-foreground", statusClass)}>
@@ -154,30 +147,46 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
           {data.add_address || data.client.address || "-"}
         </div>
         <Separator />
-        <div className="flex gap-2 items-center">
-          <span className="font-medium">Сотрудник:</span>{" "}
-          <Select
-            defaultValue={data.master?.id?.toString()}
-            onValueChange={(value) => {
-              updateOrder({
-                documentId: data.documentId,
-                updatedData: { master: { id: +value } },
-              });
+        <div className="flex justify-between gap-2">
+          <div className="flex max-sm:flex-col gap-2 items-center">
+            <span className="font-medium">Сотрудник:</span>{" "}
+            <Select
+              defaultValue={data.master?.id?.toString()}
+              onValueChange={(value) => {
+                updateOrder({
+                  documentId: data.documentId,
+                  updatedData: { master: { id: +value } },
+                });
 
-              toast.success("Сотрудник назначен");
-            }}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Выбрать" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                toast.success("Сотрудник назначен");
+              }}
+            >
+              <SelectTrigger className="">
+                <SelectValue placeholder="Выбрать" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between gap-1">
+              Ст-сть:{" "}
+              <Badge variant={+data.total_cost > 0 ? "success" : "default"}>
+                {data.total_cost || 0} ₽
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between gap-1">
+              Пред-та:{" "}
+              <Badge variant={+data.prepay > 0 ? "success" : "default"}>
+                {data.prepay || 0} ₽
+              </Badge>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

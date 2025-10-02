@@ -26,10 +26,9 @@ const toPngDataURL = async (src?: string) => {
     return drawToCanvasPNG(img);
   }
 
-  const url =
-    src.startsWith("http")
-      ? src
-      : `${window.location.origin}${src.startsWith("/") ? "" : "/"}${src}`;
+  const url = src.startsWith("http")
+    ? src
+    : `${window.location.origin}${src.startsWith("/") ? "" : "/"}${src}`;
 
   const img = await loadHTMLImage(url);
   return drawToCanvasPNG(img);
@@ -81,11 +80,7 @@ function normalizeOrderLike(input: any) {
   const ci = input?.correct_info ?? a?.correct_info ?? {};
   return {
     number:
-      input?.order_number ??
-      a?.order_number ??
-      input?.title ??
-      input?.id ??
-      "",
+      input?.order_number ?? a?.order_number ?? input?.title ?? input?.id ?? "",
     device: input?.device_type ?? ci.device ?? "",
     brand: input?.brand ?? ci.brand ?? "",
     model: input?.model ?? ci.model ?? "",
@@ -129,7 +124,7 @@ export const generateActPdf = async (
     "ООО “Гарант”",
     "ИНН 4705097126",
     "КПП 470501001",
-    "Адрес: г. Санкт-Петербург, ул. Фрунзе д.6",
+    "Адрес: г. Санкт-Петербург, Вознесенский проспект д. 55",
     "Телефон: 8 (812)–220 -70 -70",
     "spbgarant.ru",
   ].forEach((txt, i) => {
@@ -188,12 +183,24 @@ export const generateActPdf = async (
   y += 10;
 
   doc.text("Заказчик:____________________/____________", marginX, y);
-  doc.text("Исполнитель:____________________/____________", pageWidth - marginX, y, { align: "right" });
+  doc.text(
+    "Исполнитель:____________________/____________",
+    pageWidth - marginX,
+    y,
+    { align: "right" }
+  );
 
   // печать + подпись (через safe-конвертацию)
   if (sign) {
     await addImageSafe(doc, stampSrc, pageWidth / 2 - 25, y - 22, 50, 50);
-    await addImageSafe(doc, signatureSrc, pageWidth - marginX - 45, y - 24, 45, 45);
+    await addImageSafe(
+      doc,
+      signatureSrc,
+      pageWidth - marginX - 45,
+      y - 24,
+      45,
+      45
+    );
   }
 
   // ---------- OUTPUT ----------

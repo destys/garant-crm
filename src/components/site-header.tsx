@@ -76,8 +76,8 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           {roleId !== 1 && (
             <div>
-              Касса:{" "}
-              <span className="text-xl font-bold text-green-500">
+              <span className="max-md:text-[0px]">Касса: </span>
+              <span className="text-xl font-bold text-green-500 whitespace-nowrap">
                 {cashbox?.balance || 0} ₽
               </span>
             </div>

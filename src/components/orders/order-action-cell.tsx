@@ -6,14 +6,12 @@ import {
   PhoneIcon,
   TrashIcon,
 } from "lucide-react";
-import type { Row } from "@tanstack/react-table";
 import Link from "next/link";
 import { toast } from "sonner";
 import { MouseEvent, useState } from "react";
 
-import { OrderProps } from "@/types/order.types";
-
 import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
 // отдельный компонент для ячейки с экшенами
 export const ActionsCell = ({
@@ -23,7 +21,7 @@ export const ActionsCell = ({
   deleteOrder,
   refetch,
 }: {
-  row: Row<OrderProps>;
+  row: any;
   roleId?: number;
   updateOrder: (data: {
     documentId: string;
@@ -100,37 +98,45 @@ export const ActionsCell = ({
     <div className="flex gap-2 justify-end">
       {canDecide && (
         <>
-          <Button
-            type="button"
-            size="icon"
-            variant="positive"
-            title="Подтвердить"
-            onClick={handleApprove}
-            disabled={isApproving || isRevising || isDeleting}
-            aria-busy={isApproving}
-          >
-            {isApproving ? (
-              <Loader2Icon className="size-4 animate-spin" />
-            ) : (
-              <CheckIcon className="size-4" />
-            )}
-          </Button>
+          {row.original.is_approve ? (
+            <Badge variant={"secondary"} className="text-sm !h-auto">
+              в архиве
+            </Badge>
+          ) : (
+            <>
+              <Button
+                type="button"
+                size="icon"
+                variant="positive"
+                title="Подтвердить"
+                onClick={handleApprove}
+                disabled={isApproving || isRevising || isDeleting}
+                aria-busy={isApproving}
+              >
+                {isApproving ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <CheckIcon className="size-4" />
+                )}
+              </Button>
 
-          <Button
-            type="button"
-            size="icon"
-            variant="destructive"
-            title="Доработать"
-            onClick={handleRevise}
-            disabled={isApproving || isRevising || isDeleting}
-            aria-busy={isRevising}
-          >
-            {isRevising ? (
-              <Loader2Icon className="size-4 animate-spin" />
-            ) : (
-              <HammerIcon className="size-4" />
-            )}
-          </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="destructive"
+                title="Доработать"
+                onClick={handleRevise}
+                disabled={isApproving || isRevising || isDeleting}
+                aria-busy={isRevising}
+              >
+                {isRevising ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <HammerIcon className="size-4" />
+                )}
+              </Button>
+            </>
+          )}
         </>
       )}
 
