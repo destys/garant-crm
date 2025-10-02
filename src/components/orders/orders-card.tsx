@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { format, differenceInDays } from "date-fns";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -11,8 +14,6 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { OrderProps } from "@/types/order.types";
-import { cn, formatName } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -21,9 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn, formatName } from "@/lib/utils";
 import { useUsers } from "@/hooks/use-users";
 import { useOrders } from "@/hooks/use-orders";
 import { useAuth } from "@/providers/auth-provider";
+import { OrderProps } from "@/types/order.types";
 
 import { ActionsCell } from "./order-action-cell";
 
@@ -43,16 +46,19 @@ const statusColorMap: Record<string, string> = {
 };
 
 export const OrdersCard = ({ data }: { data: OrderProps }) => {
-  const statusClass = statusColorMap[data.orderStatus] ?? "bg-gray-100";
-  const deadline = data.deadline;
-  const today = new Date();
+  const router = useRouter();
   const { users } = useUsers(1, 100);
   const { updateOrder, deleteOrder } = useOrders(1, 100);
   const { roleId } = useAuth();
 
+  if (!roleId) return <div>Ошибка</div>;
+
+  const statusClass = statusColorMap[data.orderStatus] ?? "bg-gray-100";
+  const deadline = data.deadline;
+  const today = new Date();
+
   let deadlineText = deadline ? format(deadline, "dd.MM.yyyy") : "Не указан";
   let deadlineClass = "";
-
   if (deadline) {
     const diff = differenceInDays(deadline, today);
     if (diff < 0) {
@@ -64,22 +70,26 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
     }
   }
 
-  if (!roleId) return <div>Ошибка</div>;
-
-  const row = {
-    original: data,
-  };
+  const row = { original: data };
 
   return (
-    <Card className="flex flex-col justify-between h-full">
+    <Card
+      className="flex flex-col justify-between h-full cursor-pointer hover:shadow-md transition"
+      onClick={() => router.push(`/orders/${data.documentId}`)}
+    >
       <CardHeader>
         <CardTitle className="space-y-2">
           <p className="uppercase">{data.title}</p>
           <div className="text-[10px] text-black/50">
-            {format(data.createdAt, "dd.MM.yy hh:mm")}
+            {format(data.createdAt, "dd.MM.yy HH:mm")}
           </div>
         </CardTitle>
-        <CardAction className="space-x-2 mt-2">
+
+        {/* Действия */}
+        <CardAction
+          className="space-x-2 mt-2"
+          onClick={(e) => e.stopPropagation()} // блокируем переход
+        >
           <ActionsCell
             row={row}
             roleId={roleId}
@@ -87,12 +97,14 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
             deleteOrder={deleteOrder}
           />
         </CardAction>
+
         <CardDescription className="mt-2">
           <Badge className={cn("text-xs text-muted-foreground", statusClass)}>
             {data.orderStatus}
           </Badge>
         </CardDescription>
       </CardHeader>
+
       <CardContent className="text-sm space-y-2">
         <div className="flex gap-4 text-sm text-muted-foreground">
           Дата выезда:{" "}
@@ -111,6 +123,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
         </div>
         <Badge>Создал: {formatName(data.author)}</Badge>
         <Separator />
+
         <div>
           <span className="font-medium">Тип техники:</span>{" "}
           {data.device_type || "-"}
@@ -133,11 +146,13 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
           </div>
         )}
         <Separator />
+
         <div>
           <span className="font-medium">Номер клиента:</span>{" "}
           <Link
             href={`tel:${data.add_phone || data.client.phone}`}
             className="font-medium transition-colors hover:text-blue-500"
+            onClick={(e) => e.stopPropagation()} // не переходит по карточке
           >
             {data.add_phone || data.client.phone || "-"}
           </Link>
@@ -147,8 +162,12 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
           {data.add_address || data.client.address || "-"}
         </div>
         <Separator />
+
         <div className="flex justify-between gap-2">
-          <div className="flex max-sm:flex-col gap-2 items-center">
+          <div
+            className="flex max-sm:flex-col gap-2 items-center"
+            onClick={(e) => e.stopPropagation()} // блокируем переход
+          >
             <span className="font-medium">Сотрудник:</span>{" "}
             <Select
               defaultValue={data.master?.id?.toString()}
@@ -157,11 +176,10 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
                   documentId: data.documentId,
                   updatedData: { master: { id: +value } },
                 });
-
                 toast.success("Сотрудник назначен");
               }}
             >
-              <SelectTrigger className="">
+              <SelectTrigger>
                 <SelectValue placeholder="Выбрать" />
               </SelectTrigger>
               <SelectContent>
@@ -173,6 +191,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between gap-1">
               Ст-сть:{" "}
