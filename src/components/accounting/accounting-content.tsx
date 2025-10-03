@@ -86,16 +86,44 @@ export const AccountingContent = () => {
   }, [incomes, outcomes]);
 
   // Простая клиентская пагинация
-  const PER_PAGE = 36; // можно поменять при желании
+  const PER_PAGE = 36;
   const [page, setPage] = useState(1);
+
+  // читаем page из URL при загрузке
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const p = parseInt(params.get("page") || "1", 10);
+    setPage(Number.isNaN(p) ? 1 : p);
+  }, []);
+
+  // слушаем кнопку Назад/Вперёд
+  useEffect(() => {
+    const handler = () => {
+      const params = new URLSearchParams(window.location.search);
+      const p = parseInt(params.get("page") || "1", 10);
+      setPage(Number.isNaN(p) ? 1 : p);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
 
   const total = allRows.length;
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-  // Если после догрузки страниц номер страницы вышел за пределы — откатим
+  // если номер страницы вышел за пределы — корректируем
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [totalPages, page]);
+
+  const handlePageChange = (p: number) => {
+    const newPage = Math.max(1, Math.min(totalPages, p));
+    setPage(newPage);
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", String(newPage));
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.pushState({ page: newPage }, "", newUrl);
+  };
 
   const start = (page - 1) * PER_PAGE;
   const end = Math.min(start + PER_PAGE, total);
@@ -161,14 +189,14 @@ export const AccountingContent = () => {
                 <button
                   className="px-2 h-9 border rounded-md disabled:opacity-50"
                   disabled={page <= 1}
-                  onClick={() => setPage(1)}
+                  onClick={() => handlePageChange(1)}
                 >
                   «
                 </button>
                 <button
                   className="px-2 h-9 border rounded-md disabled:opacity-50"
                   disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => handlePageChange(page - 1)}
                 >
                   ‹
                 </button>
@@ -187,7 +215,7 @@ export const AccountingContent = () => {
                       className={`px-3 h-9 border rounded-md ${
                         num === page ? "bg-primary text-primary-foreground" : ""
                       }`}
-                      onClick={() => setPage(num)}
+                      onClick={() => handlePageChange(num)}
                     >
                       {num}
                     </button>
@@ -196,14 +224,14 @@ export const AccountingContent = () => {
                 <button
                   className="px-2 h-9 border rounded-md disabled:opacity-50"
                   disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => handlePageChange(page + 1)}
                 >
                   ›
                 </button>
                 <button
                   className="px-2 h-9 border rounded-md disabled:opacity-50"
                   disabled={page >= totalPages}
-                  onClick={() => setPage(totalPages)}
+                  onClick={() => handlePageChange(totalPages)}
                 >
                   »
                 </button>
