@@ -175,6 +175,7 @@ const OrderPage = () => {
         </div>
       )}
       <Tabs
+        id="order-tabs"
         defaultValue="edit"
         value={activeTab}
         onValueChange={(v) => handleTabChange(v as any)}

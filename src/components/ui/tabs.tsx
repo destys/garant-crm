@@ -1,21 +1,48 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
+import * as React from "react";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-function Tabs({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+interface TabsProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
+  id: string; // уникальный id для группы табов
+  defaultValue?: string;
+}
+
+function Tabs({ id, className, defaultValue, ...props }: TabsProps) {
+  const [value, setValue] = React.useState(defaultValue);
+
+  // читаем активный таб из URL при загрузке и при клике назад/вперёд
+  React.useEffect(() => {
+    const readFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlValue = params.get(`tab-${id}`);
+      setValue(urlValue || defaultValue);
+    };
+
+    readFromUrl(); // при загрузке
+    window.addEventListener("popstate", readFromUrl);
+    return () => window.removeEventListener("popstate", readFromUrl);
+  }, [id, defaultValue]);
+
+  // при переключении таба меняем URL и добавляем запись в историю
+  const handleChange = (val: string) => {
+    setValue(val);
+    const params = new URLSearchParams(window.location.search);
+    params.set(`tab-${id}`, val);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.pushState({ [`tab-${id}`]: val }, "", newUrl);
+  };
+
   return (
     <TabsPrimitive.Root
-      data-slot="tabs"
+      value={value}
+      onValueChange={handleChange}
       className={cn("flex flex-col gap-2", className)}
       {...props}
     />
-  )
+  );
 }
 
 function TabsList({
@@ -31,7 +58,7 @@ function TabsList({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TabsTrigger({
@@ -47,7 +74,7 @@ function TabsTrigger({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TabsContent({
@@ -60,7 +87,7 @@ function TabsContent({
       className={cn("flex-1 outline-none", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export { Tabs, TabsList, TabsTrigger, TabsContent };

@@ -139,7 +139,7 @@ export const AccountingContent = () => {
           <span>Добавить расход</span>
         </Button>
       </div>
-      <Tabs defaultValue="accounting" className="my-6">
+      <Tabs id="accounting-tabs" defaultValue="accounting" className="my-6">
         <TabsList>
           <TabsTrigger value="accounting">Бухгалтерия</TabsTrigger>
           <TabsTrigger value="masters">Сотрудники</TabsTrigger>
