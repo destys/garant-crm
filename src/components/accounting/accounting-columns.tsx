@@ -184,11 +184,36 @@ export const buildAccountingColumns = ({
             <Button
               variant="destructive"
               onClick={() => {
-                if (row.original.type === "income") {
-                  deleteIncome?.(row.original.documentId);
+                const {
+                  type,
+                  documentId,
+                  isApproved,
+                  user,
+                  outcome_category,
+                  count,
+                } = row.original;
+
+                if (type === "income") {
+                  deleteIncome?.(documentId);
                 }
-                if (row.original.type === "expense") {
-                  deleteOutcome?.(row.original.documentId);
+
+                if (type === "expense") {
+                  // Если это зарплата и расход был уже подтверждён — списываем с баланса
+                  if (
+                    isApproved &&
+                    user?.id &&
+                    outcome_category === "Зарплата сотрудников"
+                  ) {
+                    updateUser({
+                      userId: user.id,
+                      updatedData: {
+                        balance: (user.balance || 0) - count,
+                      },
+                    });
+                  }
+
+                  // Удаляем сам расход
+                  deleteOutcome?.(documentId);
                 }
               }}
             >

@@ -2,8 +2,9 @@
 "use client";
 
 import Link from "next/link";
-import { Link2Icon } from "lucide-react";
+import { Link2Icon, Trash2Icon } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,9 @@ import { DataTable } from "@/components/data-table";
 import { UserProps } from "@/types/user.types";
 import { IncomeOutcomeProps } from "@/types/income-outcome.types";
 import { ManualIncomeOutcomeProps } from "@/types/manual-io.types";
+import { useManualIncomesOutcomes } from "@/hooks/use-manual-incomes-outcomes";
+import { useUsers } from "@/hooks/use-users";
+import { useAuth } from "@/providers/auth-provider";
 
 // универсальный timestamp
 const toTs = (dateStr?: string | null) => {
@@ -30,6 +34,7 @@ const toTs = (dateStr?: string | null) => {
 
 type Row = {
   id: number | string;
+  documentId: string;
   createdAt: string;
   note: string;
   amountAbs: number;
@@ -38,16 +43,6 @@ type Row = {
   orderDocumentId?: string;
 };
 
-const normalizeIncome = (i: IncomeOutcomeProps): Row => ({
-  id: i.id,
-  createdAt: i.createdAt,
-  note: i.note ?? "",
-  amountAbs: Math.abs(Number(i.count ?? 0)),
-  type: "income",
-  source: "income",
-  orderDocumentId: i.order?.documentId || undefined,
-});
-
 const normalizeOutcome = (o: IncomeOutcomeProps): Row => {
   const raw = Number(o.count ?? 0);
   const isSalary =
@@ -55,6 +50,7 @@ const normalizeOutcome = (o: IncomeOutcomeProps): Row => {
 
   return {
     id: o.id,
+    documentId: o.documentId,
     createdAt: o.createdAt,
     note: o.note ?? "",
     amountAbs: Math.abs(raw),
@@ -74,6 +70,7 @@ const normalizeManual = (m: ManualIncomeOutcomeProps): Row => {
 
   return {
     id: m.id,
+    documentId: m.documentId,
     createdAt: m.createdAt,
     note: m.note ?? "",
     amountAbs: Math.abs(raw),
@@ -83,13 +80,17 @@ const normalizeManual = (m: ManualIncomeOutcomeProps): Row => {
 };
 
 export const MasterAccounting = ({ data }: { data: UserProps }) => {
-  const incomes: IncomeOutcomeProps[] = (data as any).incomes ?? [];
   const outcomes: IncomeOutcomeProps[] = (data as any).outcomes ?? [];
   const manual: ManualIncomeOutcomeProps[] =
     (data as any).manual_income_outcomes ?? [];
 
+  const { deleteManualIO } = useManualIncomesOutcomes(1, 1);
+  const { updateUser } = useUsers(1, 1);
+  const { roleId } = useAuth();
+
+  const queryClient = useQueryClient();
+
   const rows: Row[] = [
-    ...incomes.map(normalizeIncome),
     ...outcomes.map(normalizeOutcome),
     ...manual.map(normalizeManual),
   ].sort((a, b) => toTs(b.createdAt) - toTs(a.createdAt));
@@ -142,16 +143,63 @@ export const MasterAccounting = ({ data }: { data: UserProps }) => {
       ),
     },
     {
-      id: "orderLink",
+      id: "actions",
       header: "",
-      cell: ({ row }) =>
-        row.original.orderDocumentId ? (
-          <Button variant="secondary" asChild>
-            <Link href={`/orders/${row.original.orderDocumentId}`}>
-              <Link2Icon />
-            </Link>
-          </Button>
-        ) : null,
+      cell: ({ row }) => (
+        <div className="flex gap-2 items-center">
+          {row.original.orderDocumentId && (
+            <Button variant="secondary" asChild>
+              <Link href={`/orders/${row.original.orderDocumentId}`}>
+                <Link2Icon />
+              </Link>
+            </Button>
+          )}
+
+          {/* показываем удаление только для role === 3 и ручных операций */}
+          {roleId === 3 && row.original.source === "manual" && (
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={async () => {
+                const confirmDelete = confirm("Удалить эту запись?");
+                if (!confirmDelete) return;
+
+                try {
+                  // 🗑 1. Удаляем запись
+                  await deleteManualIO(String(row.original.documentId));
+
+                  // 💰 2. После успешного удаления — пересчитываем баланс
+                  const delta =
+                    row.original.type === "income"
+                      ? -row.original.amountAbs
+                      : +row.original.amountAbs;
+
+                  if (data.id) {
+                    await updateUser({
+                      userId: data.id,
+                      updatedData: {
+                        balance: (data.balance || 0) + delta,
+                      },
+                    });
+                  }
+
+                  if (data.id) {
+                    await queryClient.invalidateQueries({
+                      queryKey: ["user", data.id],
+                      exact: false,
+                    });
+                  }
+                } catch (error) {
+                  console.error("Ошибка при удалении ручной операции:", error);
+                  alert("Не удалось удалить запись. Попробуйте позже.");
+                }
+              }}
+            >
+              <Trash2Icon />
+            </Button>
+          )}
+        </div>
+      ),
     },
   ];
 

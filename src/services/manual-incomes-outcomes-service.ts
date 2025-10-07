@@ -122,6 +122,10 @@ export const deleteManualIO = async (
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  await handleResponse(response);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Ошибка удаления: ${response.status} ${errorText}`);
+  }
+
   return documentId;
 };
