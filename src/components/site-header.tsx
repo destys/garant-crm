@@ -3,6 +3,7 @@ import {
   CircleDollarSignIcon,
   DollarSignIcon,
   FilePieChart,
+  MenuIcon,
   MoveLeftIcon,
   PersonStandingIcon,
   SettingsIcon,
@@ -17,6 +18,13 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/providers/auth-provider";
 import { useCashbox } from "@/hooks/use-cashbox";
 import { useModal } from "@/providers/modal-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function SiteHeader() {
   const { user, roleId } = useAuth();
@@ -45,7 +53,38 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         {roleId !== 1 && (
-          <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={"default"} size={"sm"}>
+                <MenuIcon />
+                Меню
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href={"/accounting"}>Бухгалтерия</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={"/cashbox"}>Касса</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={"/clients"}>Клиенты</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={"/masters"}>Сотрудники</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={"/reports"}>Отчеты</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={"/settings"}>Настройки</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        {roleId !== 1 && (
+          <div className="hidden lg:flex gap-1">
             <Button variant={"link"} asChild>
               <Link href={"/accounting"}>
                 <DollarSignIcon />
@@ -70,7 +109,7 @@ export function SiteHeader() {
                 <span className="max-lg:hidden">Сотрудники</span>
               </Link>
             </Button>
-          </>
+          </div>
         )}
 
         <div className="ml-auto flex items-center gap-2">
@@ -104,7 +143,7 @@ export function SiteHeader() {
             </Button>
           )}
 
-          <Button variant="default" size="sm" asChild>
+          <Button variant="default" className="max-lg:hidden" size="sm" asChild>
             <Link href={"/orders/new-order"}>
               <IconCirclePlusFilled />
               <span className="hidden sm:block">Создать заявку</span>
@@ -112,7 +151,7 @@ export function SiteHeader() {
           </Button>
           {roleId === 3 && (
             <>
-              <Button asChild variant={"secondary"}>
+              <Button asChild className="max-lg:hidden" variant={"secondary"}>
                 <Link href={"/reports"}>
                   <FilePieChart />
                 </Link>

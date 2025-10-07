@@ -137,7 +137,7 @@ export const AccountingContent = () => {
       <div className="flex justify-between items-center gap-4 mb-8">
         <h1 className="flex-auto">Бухгалтерия: Движения по счету</h1>
       </div>
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         <Button
           size="sm"
           variant="default"

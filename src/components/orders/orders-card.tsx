@@ -163,12 +163,11 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
         </div>
         <Separator />
 
-        <div className="flex justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <div
-            className="flex max-sm:flex-col gap-2 items-center"
+            className="flex flex-col gap-2 items-center"
             onClick={(e) => e.stopPropagation()} // блокируем переход
           >
-            <span className="font-medium">Сотрудник:</span>{" "}
             <Select
               defaultValue={data.master?.id?.toString()}
               onValueChange={(value) => {

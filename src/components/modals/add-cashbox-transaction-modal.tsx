@@ -107,7 +107,7 @@ export const AddCashboxTransactionModal = ({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-2 gap-4"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
         >
           {/* ФИО */}
           <FormField
