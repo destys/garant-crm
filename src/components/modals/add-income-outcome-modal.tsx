@@ -3,7 +3,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckIcon, ChevronsUpDown, Loader2Icon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -71,6 +71,8 @@ interface Props {
     type: "income" | "outcome";
     orderId: string;
     masterId: number;
+    item?: any;
+    isEdit?: boolean;
   };
 }
 
@@ -79,8 +81,8 @@ const SALARY_LABEL = "Зарплата сотрудников";
 export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
-  const { createIncome } = useIncomes(1, 1);
-  const { createOutcome } = useOutcomes(1, 1);
+  const { createIncome, updateIncome } = useIncomes(1, 1);
+  const { createOutcome, updateOutcome } = useOutcomes(1, 1);
   const { users, updateUser } = useUsers(1, 100);
   const { user, roleId, jwt } = useAuth();
   const [photo, setPhoto] = useState<MediaProps | null>(null);
@@ -98,6 +100,29 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
     } as any,
   });
 
+  useEffect(() => {
+    if (props?.isEdit && props.item) {
+      const item = props.item;
+      form.reset({
+        count: String(item.count || 0),
+        note: item.note || "",
+        master: item.user?.id?.toString() || "",
+        income_category: item.income_category || "",
+        outcome_category: item.outcome_category || "",
+      });
+      if (item.photo) {
+        setPhoto({
+          id: item.photo.id,
+          name: item.photo.name,
+          url: item.photo.url.startsWith("http")
+            ? item.photo.url
+            : `${API_URL}${item.photo.url}`,
+          mime: item.photo.mime,
+        });
+      }
+    }
+  }, [props?.isEdit, props?.item]);
+
   const onSubmit = async (values: IncomeValues | OutcomeValues) => {
     try {
       setLoading(true);
@@ -110,38 +135,55 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
         isApproved: roleId === 3,
       };
 
-      if (photo?.id) {
-        payload.photo = photo.id; // в Strapi — одиночное медиа поле "photo"
-      }
+      if (photo?.id) payload.photo = photo.id; // в Strapi — одиночное медиа поле "photo"
 
-      if (isOutcome) {
-        payload.outcome_category = (values as OutcomeValues).outcome_category;
-        await createOutcome(payload);
-
-        if (payload.outcome_category === SALARY_LABEL) {
-          const userObj = users.find((u) => u.id === +payload.user);
-          const currentBalance = userObj?.balance || 0;
-          const countNum = Number(payload.count);
-
-          const newBalance = currentBalance + countNum;
-
-          const updatedData = {
-            balance: roleId === 3 ? newBalance : currentBalance,
-          };
-
-          updateUser({
-            userId: payload.user,
-            updatedData: updatedData,
+      if (props?.isEdit) {
+        // 🔁 Редактирование
+        if (props.type === "outcome") {
+          payload.outcome_category = (values as OutcomeValues).outcome_category;
+          await updateOutcome({
+            documentId: props.item.documentId,
+            updatedData: payload,
           });
-          toast.success("Зарплата добавлена");
+          toast.success("Расход обновлён");
         } else {
-          toast.success("Расход добавлен");
+          payload.income_category = (values as IncomeValues).income_category;
+          await updateIncome({
+            documentId: props.item.documentId,
+            updatedData: payload,
+          });
+          toast.success("Приход обновлён");
         }
-        toast.success("Расход добавлен");
       } else {
-        payload.income_category = (values as IncomeValues).income_category;
-        await createIncome(payload);
-        toast.success("Доход добавлен");
+        if (isOutcome) {
+          payload.outcome_category = (values as OutcomeValues).outcome_category;
+          await createOutcome(payload);
+
+          if (payload.outcome_category === SALARY_LABEL) {
+            const userObj = users.find((u) => u.id === +payload.user);
+            const currentBalance = userObj?.balance || 0;
+            const countNum = Number(payload.count);
+
+            const newBalance = currentBalance + countNum;
+
+            const updatedData = {
+              balance: roleId === 3 ? newBalance : currentBalance,
+            };
+
+            updateUser({
+              userId: payload.user,
+              updatedData: updatedData,
+            });
+            toast.success("Зарплата добавлена");
+          } else {
+            toast.success("Расход добавлен");
+          }
+          toast.success("Расход добавлен");
+        } else {
+          payload.income_category = (values as IncomeValues).income_category;
+          await createIncome(payload);
+          toast.success("Доход добавлен");
+        }
       }
 
       await queryClient.refetchQueries({

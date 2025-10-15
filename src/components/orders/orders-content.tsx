@@ -22,8 +22,8 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
-  PaginationEllipsis,
 } from "@/components/ui/pagination";
+import { LEGAL_STATUSES } from "@/constants";
 
 import { generateOrdersReportPdf } from "../pdfs/generate-orders-pdf";
 
@@ -31,63 +31,30 @@ export const OrdersContent = () => {
   const activeTitle =
     useOrderFilterStore((state) => state.activeTitle) || undefined;
   const filters = useOrderFilterStore((state) => state.filters);
-  const [period, setPeriod] = useState<{ from?: Date; to?: Date }>({});
   const { user, roleId } = useAuth();
 
-  // next/navigation
+  const [period, setPeriod] = useState<{ from?: Date; to?: Date }>({});
+  const [formFilters, setFormFilters] = useState<Record<string, any>>({});
+  const [searchFilter, setSearchFilter] = useState<Record<string, any>>({});
+  const [legalFilter, setLegalFilter] = useState<string | null>(null);
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // локальные фильтры
-  const [formFilters, setFormFilters] = useState<Record<string, any>>({});
-  const [searchFilter, setSearchFilter] = useState<Record<string, any>>({});
-
-  // Вернуть число из searchParams с дефолтом
   const getInt = (v: string | null, def = 1) => {
     const n = Number(v);
     return Number.isFinite(n) && n > 0 ? Math.trunc(n) : def;
   };
 
-  // Построить массив элементов пагинации (числа и "…")
-  const buildPages = (page: number, pageCount: number, delta = 1) => {
-    // Всегда показываем 1, page, page±delta, последнюю; остальное — многоточия
-    const range = new Set<number>([1, pageCount]);
-    for (let d = -delta; d <= delta; d++) {
-      const p = page + d;
-      if (p >= 1 && p <= pageCount) range.add(p);
-    }
-    // Добавим ещё соседей от 1 и от конца, чтобы не было слишком «рвано»
-    range.add(2);
-    range.add(pageCount - 1);
-
-    const sorted = Array.from(range).sort((a, b) => a - b);
-    const items: (number | "...")[] = [];
-    for (let i = 0; i < sorted.length; i++) {
-      const cur = sorted[i];
-      const prev = sorted[i - 1];
-      if (i && cur - prev > 1) items.push("...");
-      items.push(cur);
-    }
-    return items.filter(
-      (x, i, arr) =>
-        // уберём дубликаты и лишние "..." на краях
-        arr.indexOf(x) === i &&
-        !(x === "..." && (i === 0 || i === arr.length - 1))
-    );
-  };
-
-  // пагинация: читаем из URL (?page=)
   const pageFromUrl = getInt(searchParams.get("page"), 1);
   const [page, setPage] = useState<number>(pageFromUrl);
-  const [pageSize] = useState<number>(12); // если захочешь — тоже вынеси в URL (?limit=)
+  const [pageSize] = useState<number>(12);
 
-  // если URL поменялся извне — синхронизируем локальный page
   useEffect(() => {
     setPage(pageFromUrl);
   }, [pageFromUrl]);
 
-  // Переход на страницу: меняем и state, и URL (без прокрутки)
   const pushPage = (next: number) => {
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("page", String(next));
@@ -95,19 +62,35 @@ export const OrdersContent = () => {
     setPage(next);
   };
 
-  // базовые фильтры из стора+локальные
-  const baseFilters = useMemo(
-    () => ({ ...filters, ...formFilters, ...searchFilter }),
-    [filters, formFilters, searchFilter]
-  );
+  const baseFilters = useMemo(() => {
+    let merged = { ...filters, ...formFilters, ...searchFilter };
 
-  // финальные фильтры с принудительным ограничением для мастера
+    // если страница "Все заявки" и введен поиск → убираем фильтры по статусам
+    const hasSearch = !!Object.keys(searchFilter).length;
+    if (activeTitle === "Все заявки" && hasSearch && merged?.$and) {
+      merged = {
+        ...merged,
+        $and: merged.$and.filter((cond: any) => !("orderStatus" in cond)),
+      };
+      if (!merged.$and.length) delete merged.$and;
+    }
+
+    // если страница "Юридический отдел" → добавляем фильтр legal_status (если выбран)
+    if (activeTitle === "Юридический отдел" && legalFilter) {
+      const andArr = Array.isArray(merged.$and) ? [...merged.$and] : [];
+      andArr.push({ legal_status: { $eq: legalFilter } });
+      merged.$and = andArr;
+    }
+
+    return merged;
+  }, [filters, formFilters, searchFilter, activeTitle, legalFilter]);
+
   const finalFilters = useMemo(() => {
     const result: Record<string, any> = { ...baseFilters };
     const andArr: any[] = Array.isArray(result.$and) ? [...result.$and] : [];
     if (roleId === 1 && user?.id) {
       andArr.push({ master: { $eq: user.id } });
-    } else {
+    } else if (result.master) {
       andArr.push({ master: result.master });
     }
     if (andArr.length) result.$and = andArr;
@@ -116,7 +99,6 @@ export const OrdersContent = () => {
   }, [baseFilters, roleId, user?.id]);
 
   const sortString = activeTitle === "Дедлайны" ? ["deadline:asc"] : undefined;
-
   const { data, meta, isLoading, updateOrder, deleteOrder } = useOrders(
     page,
     pageSize,
@@ -125,11 +107,8 @@ export const OrdersContent = () => {
   );
   const { users } = useUsers(1, 100);
 
-  // При изменении фильтров/сортировки — уходим на первую страницу (и в URL)
   useEffect(() => {
-    // ставим только если сейчас не 1
     if (page !== 1) pushPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(finalFilters), JSON.stringify(sortString)]);
 
   const handleDownloadPdf = () => {
@@ -155,6 +134,7 @@ export const OrdersContent = () => {
     <div>
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
         <h1 className="flex-auto">{activeTitle || "Все заявки"}</h1>
+
         <div className="flex flex-col sm:flex-row gap-2">
           <SearchBlock onChange={setSearchFilter} />
           <Button
@@ -168,6 +148,23 @@ export const OrdersContent = () => {
           </Button>
         </div>
       </div>
+
+      {/* 🔹 Фильтры только для страницы Юридический отдел */}
+      {activeTitle === "Юридический отдел" && (
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {LEGAL_STATUSES.map((status) => (
+            <Button
+              key={status}
+              variant={legalFilter === status ? "default" : "outline"}
+              onClick={() =>
+                setLegalFilter((prev) => (prev === status ? null : status))
+              }
+            >
+              {status}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <OrdersFilters
         onChange={(filters: any) => {
@@ -184,6 +181,7 @@ export const OrdersContent = () => {
           const cTo = filters?.createdAt?.$lte
             ? new Date(filters.createdAt.$lte)
             : undefined;
+
           if (vFrom || vTo) setPeriod({ from: vFrom, to: vTo });
           else if (cFrom || cTo) setPeriod({ from: cFrom, to: cTo });
           else setPeriod({});
@@ -203,7 +201,6 @@ export const OrdersContent = () => {
         cardComponent={({ data }) => <OrdersCard data={data} />}
       />
 
-      {/* Пагинация: shadcn/ui + URL */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 mt-10">
         <div className="text-sm text-muted-foreground whitespace-nowrap">
           {isLoading
@@ -233,29 +230,20 @@ export const OrdersContent = () => {
               </Button>
             </PaginationItem>
 
-            {buildPages(page, pageCount).map((it, idx) =>
-              it === "..." ? (
-                <PaginationItem key={`dots-${idx}`}>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              ) : (
-                <PaginationItem key={it}>
-                  <PaginationLink
-                    href={`${pathname}?${new URLSearchParams({
-                      ...Object.fromEntries(searchParams),
-                      page: String(it),
-                    }).toString()}`}
-                    isActive={it === page}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (it !== page && !isLoading) pushPage(it as number);
-                    }}
-                  >
-                    {it}
-                  </PaginationLink>
-                </PaginationItem>
-              )
-            )}
+            {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+              <PaginationItem key={p}>
+                <PaginationLink
+                  href="#"
+                  isActive={p === page}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isLoading && p !== page) pushPage(p);
+                  }}
+                >
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
 
             <PaginationItem>
               <Button asChild>

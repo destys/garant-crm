@@ -48,7 +48,7 @@ export const AddCashboxTransactionModal = ({
     1,
     1
   );
-  const { user } = useAuth();
+  const { user, roleId } = useAuth();
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
 
@@ -145,7 +145,9 @@ export const AddCashboxTransactionModal = ({
                       <SelectValue placeholder="Выбрать" />
                     </SelectTrigger>
                     <SelectContent>
-                      {TRANSACTION_STATUSES.map((status) => (
+                      {TRANSACTION_STATUSES.filter((status) =>
+                        roleId !== 3 ? status === "Приход" : true
+                      ).map((status) => (
                         <SelectItem key={status} value={status}>
                           {status}
                         </SelectItem>

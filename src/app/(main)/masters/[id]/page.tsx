@@ -11,6 +11,7 @@ import { MasterAccounting } from "@/components/masters/master-accounting";
 import { useUser } from "@/hooks/use-user";
 import { useModal } from "@/providers/modal-provider";
 import { useAuth } from "@/providers/auth-provider";
+import { cn } from "@/lib/utils";
 
 const MasterPage = () => {
   const params = useParams();
@@ -31,7 +32,12 @@ const MasterPage = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <p>Баланс:</p>
-            <p className="text-xl font-semibold text-green-500">
+            <p
+              className={cn(
+                "text-xl font-bold text-green-500",
+                data.balance < 0 && "text-red-500"
+              )}
+            >
               {data.balance || 0} ₽
             </p>
           </div>

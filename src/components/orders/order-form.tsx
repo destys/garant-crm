@@ -1,17 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { CalendarIcon, CheckIcon, ChevronDown } from "lucide-react";
+import { CalendarIcon, CheckIcon, ChevronDown, TrashIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { useModal } from "@/providers/modal-provider";
 import { useAuth } from "@/providers/auth-provider";
 import {
   Popover,
@@ -45,7 +44,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
-  ORDER_SOURCES,
+  LEGAL_STATUSES,
   ORDER_STATUSES,
   REPAIR_KIND,
   REPAIR_TYPE,
@@ -60,6 +59,7 @@ import {
 import { OrderProps } from "@/types/order.types";
 import { useOrders } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
+import { useIncomes } from "@/hooks/use-incomes";
 
 import { Checkbox } from "../ui/checkbox";
 
@@ -91,8 +91,10 @@ const schema = z
     completed_work: z.string().optional(),
     note: z.string().optional(),
     add_address: z.string(),
+    legal_status: z.string().optional(),
     add_phone: z.string(),
     isNeedReceipt: z.boolean().optional(),
+    refusal_comment: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.orderStatus === "Отказ") {
@@ -108,6 +110,14 @@ const schema = z
           path: ["device_type"],
           code: z.ZodIssueCode.custom,
           message: "Укажите тип устройства",
+        });
+      }
+      // 🆕 проверка комментария
+      if (!data.refusal_comment?.trim()) {
+        ctx.addIssue({
+          path: ["refusal_comment"],
+          code: z.ZodIssueCode.custom,
+          message: "Укажите комментарий к причине отказа",
         });
       }
     }
@@ -140,8 +150,10 @@ export function RepairOrderForm({
   const isNew = !data;
   const { settings } = useSettings();
   const { updateOrder, createOrder } = useOrders(1, 1);
-  const { openModal } = useModal();
   const { user, roleId } = useAuth();
+  const { createIncome, deleteIncome, incomes } = useIncomes(1, 20, {
+    order: { documentId: data?.documentId },
+  });
 
   const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined;
   const visitTime = visitDate
@@ -187,52 +199,22 @@ export function RepairOrderForm({
       add_address: data?.add_address || "",
       add_phone: data?.add_phone || "",
       isNeedReceipt: data?.isNeedReceipt || false,
+      legal_status: data?.legal_status || "",
     },
   });
-
-  const prepay = form.watch("prepay");
-  const prepayDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastOpenedValueRef = useRef<string>("");
 
   const status = form.watch("orderStatus");
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [defaultCost, setDefaultCost] = useState(0);
+  const [defaultPrepaymnet, setDefaultPrepayment] = useState(0);
 
-  // +++ ДОБАВИТЬ эффект (ниже деклараций хуков)
   useEffect(() => {
-    if (prepayDebounceRef.current) clearTimeout(prepayDebounceRef.current);
-
-    const value = (prepay ?? "").toString().trim();
-    if (!value) return;
-
-    prepayDebounceRef.current = setTimeout(() => {
-      // не триггерим для того же значения повторно
-      if (lastOpenedValueRef.current === value) return;
-
-      const amount = Number(value.replace(/\s/g, ""));
-      if (!Number.isFinite(amount) || amount <= 0) return;
-
-      lastOpenedValueRef.current = value;
-
-      openModal("incomeOutcome", {
-        title: "Добавить приход",
-        props: {
-          type: "income",
-          orderId: data?.documentId, // при создании нового заказа может быть undefined — это ок
-          masterId:
-            roleId === 1
-              ? data?.master?.id ?? (masterId ? Number(masterId) : undefined)
-              : undefined,
-        },
-      });
-    }, 2000);
-
-    return () => {
-      if (prepayDebounceRef.current) clearTimeout(prepayDebounceRef.current);
-    };
-  }, [prepay, roleId, data?.documentId, data?.master?.id, masterId, openModal]);
+    setDefaultCost(Number(data?.total_cost) || 0);
+    setDefaultPrepayment(Number(data?.prepay) || 0);
+  }, [data]);
 
   useEffect(() => {
     if (countdown === 0 && createdId) {
@@ -243,6 +225,53 @@ export function RepairOrderForm({
   useEffect(() => {
     onDirtyChange?.(form.formState.isDirty);
   }, [form.formState.isDirty, onDirtyChange]);
+
+  const handleDelete = async (type: "prepay" | "total") => {
+    try {
+      if (!incomes?.length) {
+        toast.info("Приходы не найдены");
+        return;
+      }
+
+      const isPrepay = type === "prepay";
+      const keyword = isPrepay ? "пред" : "доплата";
+      const targetIncome = incomes.find((item: any) =>
+        item.note?.toLowerCase().includes(keyword)
+      );
+
+      if (!targetIncome) {
+        toast.info(`${isPrepay ? "Предоплата" : "Доплата"} не найдена`);
+        return;
+      }
+
+      // Удаляем приход
+      await deleteIncome(targetIncome.documentId);
+
+      // Очищаем поле в заказе
+      const updateData = isPrepay ? { prepay: "" } : { total_cost: "" };
+
+      await updateOrder({
+        documentId: data!.documentId,
+        updatedData: updateData,
+      });
+
+      // Обновляем форму и локальные значения
+      if (isPrepay) {
+        form.setValue("prepay", "");
+        setDefaultPrepayment(0);
+      } else {
+        form.setValue("total_cost", "");
+        setDefaultCost(0);
+      }
+
+      toast.success(
+        `${isPrepay ? "Предоплата" : "Доплата"} удалена и заказ сохранён`
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error("Ошибка при удалении прихода");
+    }
+  };
 
   const onSubmit = async (value: FormData) => {
     let visitDateTime: string | undefined = undefined;
@@ -261,6 +290,7 @@ export function RepairOrderForm({
       diagnostic_date: toStrapiDate(value.diagnostic_date),
       date_of_issue: toStrapiDate(value.date_of_issue),
       deadline: toStrapiDate(value.deadline),
+      is_approve: roleId === 3 ? true : data?.is_approve,
     };
 
     delete payload.visit_time;
@@ -318,6 +348,38 @@ export function RepairOrderForm({
         documentId: data!.documentId,
         updatedData: payload,
       });
+
+      // 💰 Создание предоплаты и доплаты
+      const prepayNum = Number(value.prepay || 0);
+      const totalNum = Number(value.total_cost || 0);
+
+      // 1️⃣ Создаём предоплату, если введена и больше 0
+      if (prepayNum > 0) {
+        await createIncome({
+          count: prepayNum,
+          income_category: "Оплата за ремонт",
+          note: "Автосоздание (предоплата)",
+          order: data!.documentId,
+          user: user?.id,
+          author: user?.name,
+          isApproved: roleId === 3,
+        });
+      }
+
+      // 2️⃣ После предоплаты — создаём доплату, если есть разница
+      const diff = totalNum - prepayNum;
+
+      if (diff > 0) {
+        await createIncome({
+          count: diff,
+          income_category: "Оплата за ремонт",
+          note: "Автосоздание (доплата)",
+          order: data!.documentId,
+          user: user?.id,
+          author: user?.name,
+          isApproved: roleId === 3,
+        });
+      }
 
       toast.success("Заказ обновлён");
     }
@@ -421,6 +483,36 @@ export function RepairOrderForm({
                 </FormItem>
               )}
             />
+            {/* ⚖️ Статус юридического дела */}
+            {status === "Юридический отдел" && (
+              <FormField
+                name="legal_status"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Статус юр. дела</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(val) =>
+                        form.setValue("legal_status", val)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Выберите статус дела" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LEGAL_STATUSES.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               name="warranty"
               control={form.control}
@@ -444,9 +536,9 @@ export function RepairOrderForm({
                       <SelectValue placeholder="Выберите источник" />
                     </SelectTrigger>
                     <SelectContent>
-                      {ORDER_SOURCES.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
+                      {settings?.orderSources.map((item) => (
+                        <SelectItem key={item.id} value={item.title}>
+                          {item.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -455,28 +547,50 @@ export function RepairOrderForm({
               )}
             />
             {status === "Отказ" && (
-              <FormField
-                name="reason_for_refusal"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Причина отказа</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Выберите причину отказа" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {settings?.reasons_for_refusal.map((item) => (
-                          <SelectItem key={item.id} value={item.title}>
-                            {item.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <>
+                <FormField
+                  name="reason_for_refusal"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Причина отказа</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Выберите причину отказа" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {settings?.reasons_for_refusal.map((item) => (
+                            <SelectItem key={item.id} value={item.title}>
+                              {item.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="refusal_comment"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Комментарий к причине отказа</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={2}
+                          placeholder="Например: клиент отказался из-за высокой стоимости ремонта"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
           </div>
 
@@ -723,11 +837,22 @@ export function RepairOrderForm({
               name="total_cost"
               control={form.control}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="relative">
                   <FormLabel>Общая стоимость</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} disabled={!!defaultCost} />
                   </FormControl>
+                  {!!defaultCost && (
+                    <Button
+                      type="button"
+                      variant={"destructive"}
+                      size={"sm"}
+                      className="absolute bottom-1.5 right-2 size-6"
+                      onClick={() => handleDelete("total")}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  )}
                 </FormItem>
               )}
             />
@@ -735,11 +860,22 @@ export function RepairOrderForm({
               name="prepay"
               control={form.control}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="relative">
                   <FormLabel>Предоплата</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} disabled={!!defaultPrepaymnet} />
                   </FormControl>
+                  {!!defaultPrepaymnet && (
+                    <Button
+                      type="button"
+                      variant={"destructive"}
+                      size={"sm"}
+                      className="absolute bottom-1.5 right-2 size-6"
+                      onClick={() => handleDelete("prepay")}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  )}
                 </FormItem>
               )}
             />

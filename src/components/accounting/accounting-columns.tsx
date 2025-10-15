@@ -9,6 +9,7 @@ import {
   CheckIcon,
   ImageIcon,
   Link2Icon,
+  PencilIcon,
   Trash2Icon,
 } from "lucide-react";
 
@@ -28,6 +29,7 @@ interface BuildColumnsProps {
   deleteOutcome: any;
   setLightboxImages: (images: { src: string }[]) => void;
   setLightboxIndex: (index: number) => void;
+  openModal: (a: string, b: any) => void;
 }
 
 export const buildAccountingColumns = ({
@@ -40,6 +42,7 @@ export const buildAccountingColumns = ({
   deleteOutcome,
   setLightboxImages,
   setLightboxIndex,
+  openModal,
 }: BuildColumnsProps): ColumnDef<IncomeOutcomeProps>[] => {
   return [
     {
@@ -74,14 +77,16 @@ export const buildAccountingColumns = ({
     {
       accessorKey: "description",
       header: "Описание",
-      cell: ({ row }) => row.original.note,
+      cell: ({ row }) => (
+        <div className="max-w-xs whitespace-normal">{row.original.note}</div>
+      ),
     },
     {
       accessorKey: "masterId",
       header: "Сотрудник",
       cell: ({ row }) => {
         const master = users.find((m) => m.id === row.original.user?.id);
-        return master ? master.name : "—";
+        return master ? formatName(master.name) : "—";
       },
     },
     {
@@ -111,6 +116,26 @@ export const buildAccountingColumns = ({
       header: "",
       cell: ({ row }) => (
         <div className="space-x-2">
+          {roleId === 3 && (
+            <Button
+              variant="outline"
+              onClick={() =>
+                openModal("incomeOutcome", {
+                  title:
+                    row.original.type === "income"
+                      ? "Редактировать приход"
+                      : "Редактировать расход",
+                  props: {
+                    type: row.original.type,
+                    item: row.original,
+                    isEdit: true,
+                  },
+                })
+              }
+            >
+              <PencilIcon />
+            </Button>
+          )}
           {roleId === 3 && (
             <>
               {row.original.isApproved ? (

@@ -1,3 +1,5 @@
+"use client";
+
 import { IconCirclePlusFilled } from "@tabler/icons-react";
 import {
   CircleDollarSignIcon,
@@ -25,12 +27,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useIncomes } from "@/hooks/use-incomes";
+import { useOutcomes } from "@/hooks/use-outcomes";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const { user, roleId } = useAuth();
   const { cashbox } = useCashbox();
   const router = useRouter();
   const { openModal } = useModal();
+  const { total: totalIncomes } = useIncomes(1, 100, { isApproved: false });
+  const { total: totalOutcomes } = useOutcomes(1, 100, { isApproved: false });
+
+  if (!user) return null;
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
@@ -54,7 +63,7 @@ export function SiteHeader() {
         />
         {roleId !== 1 && (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger className="lg:hidden" asChild>
               <Button variant={"default"} size={"sm"}>
                 <MenuIcon />
                 Меню
@@ -63,7 +72,9 @@ export function SiteHeader() {
             <DropdownMenuContent>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={"/accounting"}>Бухгалтерия</Link>
+                <Link href={"/accounting"}>
+                  Бухгалтерия ({totalIncomes + totalOutcomes})
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={"/cashbox"}>Касса</Link>
@@ -88,7 +99,9 @@ export function SiteHeader() {
             <Button variant={"link"} asChild>
               <Link href={"/accounting"}>
                 <DollarSignIcon />
-                <span className="max-lg:hidden">Бухгалтерия</span>
+                <span className="max-lg:hidden">
+                  Бухгалтерия ({totalIncomes + totalOutcomes})
+                </span>
               </Link>
             </Button>
             <Button variant={"link"} asChild>
@@ -114,7 +127,7 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           {roleId !== 1 && (
-            <div>
+            <div className="max-md:hidden">
               <span className="max-md:text-[0px]">Касса: </span>
               <span className="text-xl font-bold text-green-500 whitespace-nowrap">
                 {cashbox?.balance || 0} ₽
@@ -122,9 +135,14 @@ export function SiteHeader() {
             </div>
           )}
           {roleId !== 3 && (
-            <div>
+            <div className="text-sm md:text-base">
               Баланс:{" "}
-              <span className="text-xl font-bold text-green-500">
+              <span
+                className={cn(
+                  "text-sm md:text-xl font-bold text-green-500",
+                  user?.balance < 0 && "text-red-500"
+                )}
+              >
                 {user?.balance || 0} ₽
               </span>
             </div>
@@ -139,7 +157,8 @@ export function SiteHeader() {
                 });
               }}
             >
-              <CircleDollarSignIcon />+ за смену
+              <CircleDollarSignIcon />
+              <span className="max-md:hidden">+ за смену</span>
             </Button>
           )}
 

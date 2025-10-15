@@ -25,7 +25,7 @@ export const fetchOrders = async (
   page = 1,
   pageSize = 10,
   filterQuery: string = ""
-): Promise<{ orders: OrderProps[]; total: number, meta: MetaProps }> => {
+): Promise<{ orders: OrderProps[]; total: number; meta: MetaProps }> => {
   if (!token) throw new Error("Authentication token is missing");
 
   const query = QueryString.stringify(
@@ -78,7 +78,9 @@ export const fetchOrderById = async (
         outcomes: { populate: "*" },
         master: { populate: "*" },
         order_docs: { populate: "*" },
+        order_receipts: { populate: "*" },
         device_photos: { populate: "*" },
+        device_photos_site: { populate: "*" },
         client: { populate: "*" },
         chat: { populate: "*" },
       },

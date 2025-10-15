@@ -27,7 +27,10 @@ export const SIDEBAR_MENU = [
     title: "Все заявки",
     icon: FileText,
     filters: {
-      $and: [{ orderStatus: { $ne: "Выдан" } }],
+      $and: [
+        { orderStatus: { $ne: "Выдан" } },
+        { orderStatus: { $ne: "Отказ" } },
+      ],
     },
   },
   {
@@ -246,3 +249,5 @@ export const REPAIR_TYPE = [
 export type RepairType = (typeof REPAIR_TYPE)[number];
 
 export const TRANSACTION_STATUSES = ["Приход", "Расход", "Корректировка"];
+
+export const LEGAL_STATUSES = ["В работе", "Выиграно", "Проиграно"] as const;

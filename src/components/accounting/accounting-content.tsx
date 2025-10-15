@@ -1,12 +1,12 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useEffect } from "react";
+import { PlusIcon, SearchIcon } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
 import Lightbox from "yet-another-react-lightbox";
 
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useIncomes } from "@/hooks/use-incomes";
 import { useOutcomes } from "@/hooks/use-outcomes";
 import { useUsers } from "@/hooks/use-users";
@@ -21,37 +21,33 @@ import { MastersContent } from "../masters/masters-content";
 import { buildAccountingColumns } from "./accounting-columns";
 
 export const AccountingContent = () => {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  // 🔍 Формируем фильтры для Strapi
+  const searchFilter = useMemo(() => {
+    if (!search.trim()) return {};
+
+    const q = search.trim();
+
+    return {
+      $or: [
+        { note: { $containsi: q } },
+        { user: { name: { $containsi: q } } },
+        { order: { title: { $containsi: q } } },
+      ],
+    };
+  }, [search]);
+
+  // Получаем данные с фильтром
   const { updateIncome, deleteIncome } = useIncomes(1, 1);
   const { updateOutcome, deleteOutcome } = useOutcomes(1, 1);
-  const inc1 = useIncomes(1, 250);
-  const inc2 = useIncomes(2, 250);
-  const inc3 = useIncomes(3, 250);
-  const inc4 = useIncomes(4, 250);
 
-  const out1 = useOutcomes(1, 250);
-  const out2 = useOutcomes(2, 250);
-  const out3 = useOutcomes(3, 250);
-  const out4 = useOutcomes(4, 250);
+  const inc = useIncomes(page, 250, searchFilter);
+  const out = useOutcomes(page, 250, searchFilter);
 
-  const incomes = useMemo(
-    () => [
-      ...(inc1?.incomes ?? []),
-      ...(inc2?.incomes ?? []),
-      ...(inc3?.incomes ?? []),
-      ...(inc4?.incomes ?? []),
-    ],
-    [inc1?.incomes, inc2?.incomes, inc3?.incomes, inc4?.incomes]
-  );
-
-  const outcomes = useMemo(
-    () => [
-      ...(out1?.outcomes ?? []),
-      ...(out2?.outcomes ?? []),
-      ...(out3?.outcomes ?? []),
-      ...(out4?.outcomes ?? []),
-    ],
-    [out1?.outcomes, out2?.outcomes, out3?.outcomes, out4?.outcomes]
-  );
+  const incomes = inc?.incomes ?? [];
+  const outcomes = out?.outcomes ?? [];
 
   const { users, updateUser } = useUsers(1, 100);
   const { openModal } = useModal();
@@ -71,8 +67,9 @@ export const AccountingContent = () => {
         deleteOutcome,
         setLightboxImages,
         setLightboxIndex,
+        openModal,
       }),
-    [roleId, users, updateUser, useIncomes, useOutcomes]
+    [roleId, users, updateUser, updateIncome, updateOutcome]
   );
 
   const allRows = useMemo(() => {
@@ -85,32 +82,11 @@ export const AccountingContent = () => {
     );
   }, [incomes, outcomes]);
 
-  // Простая клиентская пагинация
+  // Клиентская пагинация (по API Strapi можно будет сделать позже)
   const PER_PAGE = 36;
-  const [page, setPage] = useState(1);
-
-  // читаем page из URL при загрузке
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const p = parseInt(params.get("page") || "1", 10);
-    setPage(Number.isNaN(p) ? 1 : p);
-  }, []);
-
-  // слушаем кнопку Назад/Вперёд
-  useEffect(() => {
-    const handler = () => {
-      const params = new URLSearchParams(window.location.search);
-      const p = parseInt(params.get("page") || "1", 10);
-      setPage(Number.isNaN(p) ? 1 : p);
-    };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
-  }, []);
-
   const total = allRows.length;
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-  // если номер страницы вышел за пределы — корректируем
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [totalPages, page]);
@@ -118,11 +94,6 @@ export const AccountingContent = () => {
   const handlePageChange = (p: number) => {
     const newPage = Math.max(1, Math.min(totalPages, p));
     setPage(newPage);
-
-    const params = new URLSearchParams(window.location.search);
-    params.set("page", String(newPage));
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.pushState({ page: newPage }, "", newUrl);
   };
 
   const start = (page - 1) * PER_PAGE;
@@ -134,9 +105,23 @@ export const AccountingContent = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center gap-4 mb-8">
+      <div className="flex justify-between items-center gap-4 mb-8 flex-wrap">
         <h1 className="flex-auto">Бухгалтерия: Движения по счету</h1>
+
+        <div className="relative w-full sm:w-64">
+          <SearchIcon className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по заказу, сотруднику, комментарию"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="pl-8"
+          />
+        </div>
       </div>
+
       <div className="flex flex-col lg:flex-row gap-4">
         <Button
           size="sm"
@@ -167,11 +152,13 @@ export const AccountingContent = () => {
           <span>Добавить расход</span>
         </Button>
       </div>
+
       <Tabs id="accounting-tabs" defaultValue="accounting" className="my-6">
         <TabsList>
           <TabsTrigger value="accounting">Бухгалтерия</TabsTrigger>
           <TabsTrigger value="masters">Сотрудники</TabsTrigger>
         </TabsList>
+
         <TabsContent value="accounting">
           <div>
             <DataTable data={pageRows} columns={columns} />
@@ -189,20 +176,11 @@ export const AccountingContent = () => {
                 <button
                   className="px-2 h-9 border rounded-md disabled:opacity-50"
                   disabled={page <= 1}
-                  onClick={() => handlePageChange(1)}
-                >
-                  «
-                </button>
-                <button
-                  className="px-2 h-9 border rounded-md disabled:opacity-50"
-                  disabled={page <= 1}
                   onClick={() => handlePageChange(page - 1)}
                 >
                   ‹
                 </button>
-                {/* Короткий диапазон номеров */}
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  // центрируем вокруг текущей страницы
                   const offset = Math.max(
                     1,
                     Math.min(page - 2, totalPages - 4)
@@ -228,13 +206,6 @@ export const AccountingContent = () => {
                 >
                   ›
                 </button>
-                <button
-                  className="px-2 h-9 border rounded-md disabled:opacity-50"
-                  disabled={page >= totalPages}
-                  onClick={() => handlePageChange(totalPages)}
-                >
-                  »
-                </button>
               </div>
             </div>
 
@@ -249,6 +220,7 @@ export const AccountingContent = () => {
             )}
           </div>
         </TabsContent>
+
         <TabsContent value="masters">
           <MastersContent />
         </TabsContent>

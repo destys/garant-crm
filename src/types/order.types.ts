@@ -35,6 +35,8 @@ export interface OrderProps {
   is_approve: boolean;
   add_address: string;
   add_phone: string;
+  legal_status: string;
+  refusal_comment: string;
   isNeedReceipt: boolean;
   chat: {
     user: { id: number; name: string };
@@ -43,6 +45,7 @@ export interface OrderProps {
   }[];
   client: Partial<ClientProps>;
   order_docs: MediaProps[];
+  order_receipts: MediaProps[];
   device_photos: MediaProps[];
   device_photos_site: MediaProps[];
   incomes: IncomeOutcomeProps[];

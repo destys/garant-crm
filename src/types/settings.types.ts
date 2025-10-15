@@ -15,4 +15,8 @@ export interface SettingsProps {
     id?: number;
     title: string;
   }[];
+  orderSources: {
+    id?: number;
+    title: string;
+  }[];
 }
