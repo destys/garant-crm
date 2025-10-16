@@ -37,6 +37,7 @@ export interface OrderProps {
   add_phone: string;
   legal_status: string;
   refusal_comment: string;
+  totalCostNoAccounting: string;
   isNeedReceipt: boolean;
   chat: {
     user: { id: number; name: string };

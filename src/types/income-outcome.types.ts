@@ -16,6 +16,7 @@ export interface IncomeOutcomeProps {
   author: string;
   isApproved: boolean;
   photo: MediaProps;
+  createdDate: string;
 }
 
 export type UpdateIncomeOutcomeDto = Omit<IncomeOutcomeProps, "user, order"> & {

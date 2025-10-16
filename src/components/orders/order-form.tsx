@@ -95,6 +95,7 @@ const schema = z
     add_phone: z.string(),
     isNeedReceipt: z.boolean().optional(),
     refusal_comment: z.string().optional(),
+    totalCostNoAccounting: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.orderStatus === "Отказ") {
@@ -200,6 +201,7 @@ export function RepairOrderForm({
       add_phone: data?.add_phone || "",
       isNeedReceipt: data?.isNeedReceipt || false,
       legal_status: data?.legal_status || "",
+      totalCostNoAccounting: data?.totalCostNoAccounting || "",
     },
   });
 
@@ -876,6 +878,18 @@ export function RepairOrderForm({
                       <TrashIcon />
                     </Button>
                   )}
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="totalCostNoAccounting"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="relative">
+                  <FormLabel>Общая стоимость (без доб. в расчеты)</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                 </FormItem>
               )}
             />
