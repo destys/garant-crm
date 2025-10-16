@@ -351,36 +351,48 @@ export function RepairOrderForm({
         updatedData: payload,
       });
 
-      // 💰 Создание предоплаты и доплаты
+      // 💰 Создание / обновление предоплаты и доплаты
       const prepayNum = Number(value.prepay || 0);
       const totalNum = Number(value.total_cost || 0);
-
-      // 1️⃣ Создаём предоплату, если введена и больше 0
-      if (prepayNum > 0) {
-        await createIncome({
-          count: prepayNum,
-          income_category: "Оплата за ремонт",
-          note: "Автосоздание (предоплата)",
-          order: data!.documentId,
-          user: user?.id,
-          author: user?.name,
-          isApproved: roleId === 3,
-        });
-      }
-
-      // 2️⃣ После предоплаты — создаём доплату, если есть разница
       const diff = totalNum - prepayNum;
 
+      // Найдём существующие приходы по заказу
+      const prepayIncome = incomes?.find(
+        (i: any) => i.note?.toLowerCase().includes("пред") // "Автосоздание (предоплата)"
+      );
+      const extraIncome = incomes?.find((i: any) =>
+        i.note?.toLowerCase().includes("доплата")
+      );
+
+      // 1️⃣ Предоплата
+      if (prepayNum > 0) {
+        if (!prepayIncome) {
+          // если не было — создаём
+          await createIncome({
+            count: prepayNum,
+            income_category: "Оплата за ремонт",
+            note: "Автосоздание (предоплата)",
+            order: data!.documentId,
+            user: user?.id,
+            author: user?.name,
+            isApproved: roleId === 3,
+          });
+        }
+      }
+
+      // 2️⃣ Доплата
       if (diff > 0) {
-        await createIncome({
-          count: diff,
-          income_category: "Оплата за ремонт",
-          note: "Автосоздание (доплата)",
-          order: data!.documentId,
-          user: user?.id,
-          author: user?.name,
-          isApproved: roleId === 3,
-        });
+        if (!extraIncome) {
+          await createIncome({
+            count: diff,
+            income_category: "Оплата за ремонт",
+            note: "Автосоздание (доплата)",
+            order: data!.documentId,
+            user: user?.id,
+            author: user?.name,
+            isApproved: roleId === 3,
+          });
+        }
       }
 
       toast.success("Заказ обновлён");
