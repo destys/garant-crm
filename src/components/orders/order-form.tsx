@@ -277,6 +277,7 @@ export function RepairOrderForm({
             return prev - 1;
           });
         }, 1000);
+        form.reset(form.getValues());
         return;
       }
 
@@ -301,12 +302,11 @@ export function RepairOrderForm({
         updatedData: payload,
       });
 
-      // 💰 Синхронизация приходов
+      // 💰 Синхронизация приходов — всегда создаём или обновляем оба, с сохранением удаления
       const prepayNum = Number(value.prepay || 0);
       const totalNum = Number(value.total_cost || 0);
       const diff = totalNum - prepayNum;
 
-      // ищем по нижнему регистру, чтобы не зависеть от регистра
       const prepayIncome = incomes?.find((i: any) =>
         i.note?.toLowerCase().includes("предоплата")
       );
@@ -317,18 +317,14 @@ export function RepairOrderForm({
       // === 🟢 ПРЕДОПЛАТА ===
       if (prepayNum > 0) {
         if (prepayIncome) {
-          // обновляем, если изменилась сумма
-          if (Number(prepayIncome.count) !== prepayNum) {
-            await updateIncome({
-              documentId: prepayIncome.documentId,
-              updatedData: {
-                count: prepayNum,
-                isApproved: roleId === 3,
-              },
-            });
-          }
+          await updateIncome({
+            documentId: prepayIncome.documentId,
+            updatedData: {
+              count: prepayNum,
+              isApproved: roleId === 3,
+            },
+          });
         } else {
-          // создаём, если не было
           await createIncome({
             count: prepayNum,
             income_category: "Оплата за ремонт",
@@ -340,22 +336,20 @@ export function RepairOrderForm({
           });
         }
       } else if (prepayIncome) {
-        // если поле пустое или 0 — удаляем
         await deleteIncome(prepayIncome.documentId);
       }
 
       // === 🟢 ДОПЛАТА ===
-      if (diff > 0) {
+      if (diff >= 0) {
+        // даже если diff = 0 — создаём или обновляем
         if (extraIncome) {
-          if (Number(extraIncome.count) !== diff) {
-            await updateIncome({
-              documentId: extraIncome.documentId,
-              updatedData: {
-                count: diff,
-                isApproved: roleId === 3,
-              },
-            });
-          }
+          await updateIncome({
+            documentId: extraIncome.documentId,
+            updatedData: {
+              count: diff,
+              isApproved: roleId === 3,
+            },
+          });
         } else {
           await createIncome({
             count: diff,
@@ -368,9 +362,11 @@ export function RepairOrderForm({
           });
         }
       } else if (extraIncome) {
+        // отрицательная разница — удаляем
         await deleteIncome(extraIncome.documentId);
       }
 
+      form.reset(form.getValues());
       toast.success("Заказ и приходы обновлены");
     } catch (error) {
       console.error(error);
