@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { CalendarIcon, CheckIcon, ChevronDown, TrashIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CheckIcon,
+  ChevronDown,
+  Loader2Icon,
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,6 +15,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/providers/auth-provider";
 import {
@@ -152,9 +158,14 @@ export function RepairOrderForm({
   const { settings } = useSettings();
   const { updateOrder, createOrder } = useOrders(1, 1);
   const { user, roleId } = useAuth();
-  const { createIncome, deleteIncome, incomes } = useIncomes(1, 20, {
-    order: { documentId: data?.documentId },
-  });
+  const { createIncome, deleteIncome, updateIncome, incomes } = useIncomes(
+    1,
+    20,
+    {
+      order: { documentId: data?.documentId },
+    }
+  );
+  const queryClient = useQueryClient();
 
   const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined;
   const visitTime = visitDate
@@ -210,13 +221,6 @@ export function RepairOrderForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [createdId, setCreatedId] = useState<string | null>(null);
-  const [defaultCost, setDefaultCost] = useState(0);
-  const [defaultPrepaymnet, setDefaultPrepayment] = useState(0);
-
-  useEffect(() => {
-    setDefaultCost(Number(data?.total_cost) || 0);
-    setDefaultPrepayment(Number(data?.prepay) || 0);
-  }, [data]);
 
   useEffect(() => {
     if (countdown === 0 && createdId) {
@@ -228,54 +232,8 @@ export function RepairOrderForm({
     onDirtyChange?.(form.formState.isDirty);
   }, [form.formState.isDirty, onDirtyChange]);
 
-  const handleDelete = async (type: "prepay" | "total") => {
-    try {
-      if (!incomes?.length) {
-        toast.info("Приходы не найдены");
-        return;
-      }
-
-      const isPrepay = type === "prepay";
-      const keyword = isPrepay ? "пред" : "доплата";
-      const targetIncome = incomes.find((item: any) =>
-        item.note?.toLowerCase().includes(keyword)
-      );
-
-      if (!targetIncome) {
-        toast.info(`${isPrepay ? "Предоплата" : "Доплата"} не найдена`);
-        return;
-      }
-
-      // Удаляем приход
-      await deleteIncome(targetIncome.documentId);
-
-      // Очищаем поле в заказе
-      const updateData = isPrepay ? { prepay: "" } : { total_cost: "" };
-
-      await updateOrder({
-        documentId: data!.documentId,
-        updatedData: updateData,
-      });
-
-      // Обновляем форму и локальные значения
-      if (isPrepay) {
-        form.setValue("prepay", "");
-        setDefaultPrepayment(0);
-      } else {
-        form.setValue("total_cost", "");
-        setDefaultCost(0);
-      }
-
-      toast.success(
-        `${isPrepay ? "Предоплата" : "Доплата"} удалена и заказ сохранён`
-      );
-    } catch (err) {
-      console.error(err);
-      toast.error("Ошибка при удалении прихода");
-    }
-  };
-
   const onSubmit = async (value: FormData) => {
+    setIsSubmitting(true);
     let visitDateTime: string | undefined = undefined;
     if (value.visit_date) {
       const date = new Date(value.visit_date);
@@ -297,16 +255,15 @@ export function RepairOrderForm({
 
     delete payload.visit_time;
 
-    if (isNew) {
-      if (isNew) setIsSubmitting(true);
-      const isNewPayload = {
-        ...payload,
-        client: clientDocumentId ? clientDocumentId : undefined,
-        master: masterId ? +masterId : undefined,
-        author: user?.name,
-      };
-      try {
-        const created = await createOrder(isNewPayload);
+    try {
+      if (isNew) {
+        setIsSubmitting(true);
+        const created = await createOrder({
+          ...payload,
+          client: clientDocumentId ? clientDocumentId : undefined,
+          master: masterId ? +masterId : undefined,
+          author: user?.name,
+        });
         setCreatedId(created.documentId);
         toast("Заказ создан", {
           action: {
@@ -316,23 +273,17 @@ export function RepairOrderForm({
         });
         const timer = setInterval(() => {
           setCountdown((prev) => {
-            if (prev === 1) {
-              clearInterval(timer);
-            }
+            if (prev === 1) clearInterval(timer);
             return prev - 1;
           });
         }, 1000);
-      } catch (error) {
-        console.error(error);
-        toast.error("Ошибка при создании заказа");
+        return;
       }
-    } else {
-      // не отправляем эти поля на апдейт
+
+      // 🔹 Апдейт существующего заказа
       delete (payload as any).master;
       delete (payload as any).client;
 
-      // вычисляем ожидаемый title из kind_of_repair
-      // берём числовой id из data.id, если его нет — вытягиваем хвостовые цифры из текущего title
       const numericId =
         (data as any)?.id ??
         Number((data?.title ?? "").match(/\d+$/)?.[0]) ??
@@ -341,7 +292,6 @@ export function RepairOrderForm({
       const prefix = getPrefixByKind(payload.kind_of_repair);
       const expectedTitle = numericId ? `${prefix}-${numericId}` : undefined;
 
-      // если можем собрать корректный title и он отличается — положим в payload
       if (expectedTitle && data?.title !== expectedTitle) {
         (payload as any).title = expectedTitle;
       }
@@ -351,23 +301,34 @@ export function RepairOrderForm({
         updatedData: payload,
       });
 
-      // 💰 Создание / обновление предоплаты и доплаты
+      // 💰 Синхронизация приходов
       const prepayNum = Number(value.prepay || 0);
       const totalNum = Number(value.total_cost || 0);
       const diff = totalNum - prepayNum;
 
-      // Найдём существующие приходы по заказу
-      const prepayIncome = incomes?.find(
-        (i: any) => i.note?.toLowerCase().includes("пред") // "Автосоздание (предоплата)"
+      // ищем по нижнему регистру, чтобы не зависеть от регистра
+      const prepayIncome = incomes?.find((i: any) =>
+        i.note?.toLowerCase().includes("предоплата")
       );
       const extraIncome = incomes?.find((i: any) =>
         i.note?.toLowerCase().includes("доплата")
       );
 
-      // 1️⃣ Предоплата
+      // === 🟢 ПРЕДОПЛАТА ===
       if (prepayNum > 0) {
-        if (!prepayIncome) {
-          // если не было — создаём
+        if (prepayIncome) {
+          // обновляем, если изменилась сумма
+          if (Number(prepayIncome.count) !== prepayNum) {
+            await updateIncome({
+              documentId: prepayIncome.documentId,
+              updatedData: {
+                count: prepayNum,
+                isApproved: roleId === 3,
+              },
+            });
+          }
+        } else {
+          // создаём, если не было
           await createIncome({
             count: prepayNum,
             income_category: "Оплата за ремонт",
@@ -378,11 +339,24 @@ export function RepairOrderForm({
             isApproved: roleId === 3,
           });
         }
+      } else if (prepayIncome) {
+        // если поле пустое или 0 — удаляем
+        await deleteIncome(prepayIncome.documentId);
       }
 
-      // 2️⃣ Доплата
+      // === 🟢 ДОПЛАТА ===
       if (diff > 0) {
-        if (!extraIncome) {
+        if (extraIncome) {
+          if (Number(extraIncome.count) !== diff) {
+            await updateIncome({
+              documentId: extraIncome.documentId,
+              updatedData: {
+                count: diff,
+                isApproved: roleId === 3,
+              },
+            });
+          }
+        } else {
           await createIncome({
             count: diff,
             income_category: "Оплата за ремонт",
@@ -393,9 +367,23 @@ export function RepairOrderForm({
             isApproved: roleId === 3,
           });
         }
+      } else if (extraIncome) {
+        await deleteIncome(extraIncome.documentId);
       }
 
-      toast.success("Заказ обновлён");
+      toast.success("Заказ и приходы обновлены");
+    } catch (error) {
+      console.error(error);
+      toast.error("Ошибка при сохранении");
+    } finally {
+      setIsSubmitting(false);
+
+      setTimeout(() => {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) && query.queryKey[0] === "order",
+        });
+      }, 1000);
     }
   };
 
@@ -854,19 +842,8 @@ export function RepairOrderForm({
                 <FormItem className="relative">
                   <FormLabel>Общая стоимость</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={!!defaultCost} />
+                    <Input {...field} />
                   </FormControl>
-                  {!!defaultCost && (
-                    <Button
-                      type="button"
-                      variant={"destructive"}
-                      size={"sm"}
-                      className="absolute bottom-1.5 right-2 size-6"
-                      onClick={() => handleDelete("total")}
-                    >
-                      <TrashIcon />
-                    </Button>
-                  )}
                 </FormItem>
               )}
             />
@@ -877,19 +854,8 @@ export function RepairOrderForm({
                 <FormItem className="relative">
                   <FormLabel>Предоплата</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={!!defaultPrepaymnet} />
+                    <Input {...field} />
                   </FormControl>
-                  {!!defaultPrepaymnet && (
-                    <Button
-                      type="button"
-                      variant={"destructive"}
-                      size={"sm"}
-                      className="absolute bottom-1.5 right-2 size-6"
-                      onClick={() => handleDelete("prepay")}
-                    >
-                      <TrashIcon />
-                    </Button>
-                  )}
                 </FormItem>
               )}
             />
@@ -926,7 +892,11 @@ export function RepairOrderForm({
 
           <div className="flex items-center gap-4">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Сохраняем..." : "Сохранить"}
+              {isSubmitting ? (
+                <Loader2Icon className="animate-spin" />
+              ) : (
+                "Сохранить"
+              )}
             </Button>
             {isSubmitting && createdId && (
               <>

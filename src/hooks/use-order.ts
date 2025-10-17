@@ -49,7 +49,7 @@ export const useOrder = (documentId: string) => {
     isError: orderQuery.isError,
     error: orderQuery.error,
     refetch: orderQuery.refetch, // можно вызвать для обновления данных
-    updateOrder: updateOrderMutation.mutate,
-    deleteOrder: deleteOrderMutation.mutate,
+    updateOrder: updateOrderMutation.mutateAsync,
+    deleteOrder: deleteOrderMutation.mutateAsync,
   };
 };
