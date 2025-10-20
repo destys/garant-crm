@@ -557,7 +557,7 @@ export function RepairOrderForm({
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Выберите причину отказа" />
+                          <SelectValue placeholder="Выберите причину отказа " />
                         </SelectTrigger>
                         <SelectContent>
                           {settings?.reasons_for_refusal.map((item) => (
