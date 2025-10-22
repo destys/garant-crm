@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 "use client";
 
 import {
@@ -87,9 +88,9 @@ const ActDocument = ({
           <Row label="Аппарат:" value={order.device_type} />
           <Row
             label="Производитель/модель:"
-            value={`${order.brand || ""} ${order.model || ""}`}
+            value={`${order.brand || ""} / ${order.model || ""}`}
           />
-          <Row label="Выполненные работы:" value={order.note} />
+          <Row label="Выполненные работы:" value={order.completed_work} />
           <Row label="Общая стоимость:" value={`${order.total_cost || 0} ₽`} />
           <Row
             label="Дата выдачи:"

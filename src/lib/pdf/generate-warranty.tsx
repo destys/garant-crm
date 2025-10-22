@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 "use client";
 
 import {
@@ -91,7 +92,7 @@ const WarrantyDocument = ({
           />
           <Row
             label="Срок гарантийной поддержки:"
-            value={order.warranty || "45 календарных дней"}
+            value={order.warranty || "180 календарных дней"}
             isLast
           />
         </View>
