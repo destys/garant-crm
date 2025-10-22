@@ -115,7 +115,7 @@ export const buildAccountingColumns = ({
       accessorKey: "orderId",
       header: "",
       cell: ({ row }) => (
-        <div className="space-x-2">
+        <div className="flex justify-end gap-2">
           {roleId === 3 && (
             <Button
               variant="outline"

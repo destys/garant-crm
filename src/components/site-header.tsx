@@ -116,12 +116,14 @@ export function SiteHeader() {
                 <span className="max-lg:hidden">Касса</span>
               </Link>
             </Button>
-            <Button variant={"link"} asChild>
-              <Link href={"/masters"}>
-                <PersonStandingIcon />
-                <span className="max-lg:hidden">Сотрудники</span>
-              </Link>
-            </Button>
+            {roleId === 3 && (
+              <Button variant={"link"} asChild>
+                <Link href={"/masters"}>
+                  <PersonStandingIcon />
+                  <span className="max-lg:hidden">Сотрудники</span>
+                </Link>
+              </Button>
+            )}
           </div>
         )}
 

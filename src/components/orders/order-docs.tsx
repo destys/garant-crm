@@ -2,163 +2,137 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { DownloadIcon, EyeIcon, MailIcon, PhoneCallIcon, PrinterIcon } from "lucide-react";
+import {
+  DownloadIcon,
+  EyeIcon,
+  PhoneCallIcon,
+  PrinterIcon,
+  PenLineIcon,
+} from "lucide-react";
 import { IconBrandTelegram, IconBrandWhatsapp } from "@tabler/icons-react";
+import { pdf } from "@react-pdf/renderer";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { OrderProps } from "@/types/order.types";
-import { generateTechnicalConclusionPdf } from "@/components/pdfs/generate-technical-conclusion-pdf";
-import { generateWarrantyPdf } from "@/components/pdfs/generate-warranty-pdf";
-
-import { generateActPdf } from "../pdfs/generate-act-pdf";
-import { generateContractPdf } from "../pdfs/generate-contract-pdf";
+import { GenerateContractPdf } from "@/lib/pdf/generate-contract";
 
 type Mode = "download" | "preview";
 
 export const OrderDocs = ({ data }: { data: OrderProps }) => {
-    const [signDoc, setSignDoc] = useState<boolean>(false);
+  const [signDoc, setSignDoc] = useState<boolean>(false);
 
-    // Унифицированный вызов генератора
-    const handleGenerate = async (
-        type: "contract" | "act" | "warranty" | "technical",
-        mode: Mode
-    ) => {
-        // ⚠️ Предполагаем, что генераторы поддерживают опции { sign, mode }.
-        // Если сейчас они просто сразу скачивают файл, добавь в них второй аргумент options
-        // и учти:
-        // - mode: "download" | "preview"
-        // - sign: boolean
-        switch (type) {
-            case "act":
-                await generateActPdf(data, {
-                    sign: signDoc,
-                    signatureSrc: "/sign.png",
-                    stampSrc: "/stamp.png",
-                    mode,
-                });
-                break;
-            case "warranty":
-                await generateWarrantyPdf(data, {
-                    sign: signDoc,
-                    signatureSrc: "/sign.png",
-                    stampSrc: "/stamp.png",
-                    mode,
-                });
-                break;
-            case "technical":
-                await generateTechnicalConclusionPdf(data, {
-                    sign: signDoc,
-                    signatureSrc: "/sign.png",
-                    stampSrc: "/stamp.png",
-                    mode,
-                });
-                break;
-            case "contract":
-                await generateContractPdf(data, {
-                    sign: signDoc,
-                    signatureSrc: "/sign.png",
-                    stampSrc: "/stamp.png",
-                    mode,
-                });
-                break;
-        }
-    };
+  const handleGenerateContract = async (mode: Mode) => {
+    const blob = await pdf(
+      <GenerateContractPdf order={data} sign={signDoc} />
+    ).toBlob();
 
-    return (
-        <div className="flex gap-2">
-            <Button asChild>
-                <Link href={`tel:${data.client.phone}`}>
-                    <PhoneCallIcon />
-                </Link>
-            </Button>
+    const fileName = `Договор_${data.title || "без-номера"}.pdf`;
+    const url = URL.createObjectURL(blob);
 
-            <Button asChild className="bg-[#2cb742]">
-                <Link href={`https://wa.me/${data.client.phone}`} target="_blank">
-                    <IconBrandWhatsapp />
-                </Link>
-            </Button>
-            <Button asChild className="bg-[#27a7e7]">
-                <Link href={`https://t.me/${data.client.phone}`} target="_blank">
-                    <IconBrandTelegram />
-                </Link>
-            </Button>
+    if (mode === "download") {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
-            <Button disabled asChild>
-                <Link href={`tel:${data.client.phone ?? ""}`}>
-                    <MailIcon />
-                </Link>
-            </Button>
+  const handleSendToSign = async () => {
+    // 🔐 Интеграция с Podpislon API (позже)
+    console.warn("📤 Отправка договора на подпись...");
+  };
 
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button title="Печать / PDF">
-                        <PrinterIcon />
-                    </Button>
-                </PopoverTrigger>
+  return (
+    <div className="flex gap-2">
+      {/* Звонок */}
+      <Button asChild>
+        <Link href={`tel:${data.client?.phone}`}>
+          <PhoneCallIcon />
+        </Link>
+      </Button>
 
-                <PopoverContent className="w-[320px] space-y-4">
-                    {/* Опция: Подписать документ */}
-                    <div className="flex items-center gap-2">
-                        <Checkbox id="sign-doc" checked={signDoc} onCheckedChange={(v) => setSignDoc(Boolean(v))} />
-                        <Label htmlFor="sign-doc">Подписать документ</Label>
-                    </div>
+      {/* WhatsApp */}
+      <Button asChild className="bg-[#2cb742] hover:bg-[#2ca83c]">
+        <Link
+          href={`https://wa.me/${data.client?.phone?.replace(/\D/g, "")}`}
+          target="_blank"
+        >
+          <IconBrandWhatsapp />
+        </Link>
+      </Button>
 
-                    {/* Договор */}
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm">Договор</span>
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => handleGenerate("contract", "download")}>
-                                <DownloadIcon />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleGenerate("contract", "preview")}>
-                                <EyeIcon />
-                            </Button>
-                        </div>
-                    </div>
+      {/* Telegram */}
+      <Button asChild className="bg-[#27a7e7] hover:bg-[#1b95d1]">
+        <Link
+          href={`https://t.me/${data.client?.phone?.replace(/\D/g, "")}`}
+          target="_blank"
+        >
+          <IconBrandTelegram />
+        </Link>
+      </Button>
 
-                    {/* Акт */}
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm">Акт</span>
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => handleGenerate("act", "download")}>
-                                <DownloadIcon />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleGenerate("act", "preview")}>
-                                <EyeIcon />
-                            </Button>
-                        </div>
-                    </div>
+      {/* PDF / Печать */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button title="Печать / PDF">
+            <PrinterIcon />
+          </Button>
+        </PopoverTrigger>
 
-                    {/* Гарантия */}
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm">Гарантия</span>
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => handleGenerate("warranty", "download")}>
-                                <DownloadIcon />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleGenerate("warranty", "preview")}>
-                                <EyeIcon />
-                            </Button>
-                        </div>
-                    </div>
+        <PopoverContent className="w-[340px] space-y-4">
+          {/* Подпись */}
+          <div className="hidden items-center gap-2">
+            <Checkbox
+              id="sign-doc"
+              checked={signDoc}
+              onCheckedChange={(v) => setSignDoc(Boolean(v))}
+            />
+            <Label htmlFor="sign-doc">Подписать документ</Label>
+          </div>
 
-                    {/* Техническое заключение */}
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm">Техническое заключение</span>
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => handleGenerate("technical", "download")}>
-                                <DownloadIcon />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleGenerate("technical", "preview")}>
-                                <EyeIcon />
-                            </Button>
-                        </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
-        </div>
-    );
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium">Договор</span>
+            <div className="flex gap-2">
+              {/* Скачать */}
+              <Button
+                size="sm"
+                onClick={() => handleGenerateContract("download")}
+              >
+                <DownloadIcon className="size-4" />
+              </Button>
+
+              {/* Просмотр */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleGenerateContract("preview")}
+              >
+                <EyeIcon className="size-4" />
+              </Button>
+
+              {/* На подпись */}
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-amber-500 hover:bg-amber-600"
+                onClick={handleSendToSign}
+              >
+                <PenLineIcon className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
 };

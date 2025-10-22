@@ -19,14 +19,15 @@ export const useIncomes = (
   page: number,
   pageSize: number,
   query?: unknown,
-  sort?: unknown
+  sort?: unknown,
+  pagination?: unknown
 ) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
   const queryString = QueryString.stringify(
-    { filters: query, sort: sort },
+    { filters: query, sort: sort, pagination: pagination },
     { encodeValuesOnly: true }
   );
 
@@ -39,11 +40,13 @@ export const useIncomes = (
     enabled: !!token,
   });
 
+  // 🔹 Мутации с инвалидацией всех связанных запросов
   const createMutation = useMutation({
     mutationFn: (data: Partial<UpdateIncomeOutcomeDto>) =>
       createIncome(authToken, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
+      queryClient.invalidateQueries({ queryKey: ["incomes-all"] });
     },
   });
 
@@ -57,6 +60,7 @@ export const useIncomes = (
     }) => updateIncome(authToken, documentId, updatedData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
+      queryClient.invalidateQueries({ queryKey: ["incomes-all"] });
     },
   });
 
@@ -76,10 +80,14 @@ export const useIncomes = (
         };
       });
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
+      queryClient.invalidateQueries({ queryKey: ["incomes-all"] });
     },
-
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["incomes"], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["incomes-all"],
+        exact: false,
+      });
     },
   });
 
@@ -93,4 +101,33 @@ export const useIncomes = (
     updateIncome: updateMutation.mutate,
     deleteIncome: deleteMutation.mutate,
   };
+};
+
+// 🔹 Версия, которая получает до 3000 записей и ревалидируется
+export const useIncomesAll = (query?: unknown) => {
+  const { jwt } = useAuth();
+  const authToken = jwt ?? "";
+  const pageSize = 100;
+  const maxPages = 30;
+  const sort = ["createdAt:desc"];
+
+  const queryString = QueryString.stringify(
+    { filters: query, sort },
+    { encodeValuesOnly: true }
+  );
+
+  return useQuery({
+    queryKey: ["incomes-all", query],
+    enabled: !!jwt,
+    queryFn: async () => {
+      const requests = Array.from({ length: maxPages }, (_, i) =>
+        fetchIncomes(authToken, i + 1, pageSize, queryString)
+      );
+      const results = await Promise.all(requests);
+      const allIncomes = results.flatMap((r) => r.incomes);
+      return allIncomes;
+    },
+    staleTime: 0, // сразу будет инвалидироваться после мутаций
+    gcTime: 1000 * 60 * 10,
+  });
 };

@@ -1,14 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { PlusIcon, SearchIcon } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
 
-import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useIncomes } from "@/hooks/use-incomes";
-import { useOutcomes } from "@/hooks/use-outcomes";
+import { useIncomes, useIncomesAll } from "@/hooks/use-incomes";
+import { useOutcomes, useOutcomesAll } from "@/hooks/use-outcomes";
 import { useUsers } from "@/hooks/use-users";
 import { useModal } from "@/providers/modal-provider";
 import { useAuth } from "@/providers/auth-provider";
@@ -19,10 +19,10 @@ import "yet-another-react-lightbox/styles.css";
 import { MastersContent } from "../masters/masters-content";
 
 import { buildAccountingColumns } from "./accounting-columns";
+import { AccountingTable } from "./accounting-table";
 
 export const AccountingContent = () => {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
 
   // 🔍 Формируем фильтры для Strapi
   const searchFilter = useMemo(() => {
@@ -43,11 +43,11 @@ export const AccountingContent = () => {
   const { updateIncome, deleteIncome } = useIncomes(1, 1);
   const { updateOutcome, deleteOutcome } = useOutcomes(1, 1);
 
-  const inc = useIncomes(page, 250, searchFilter);
-  const out = useOutcomes(page, 250, searchFilter);
+  const inc = useIncomesAll(searchFilter);
+  const out = useOutcomesAll(searchFilter);
 
-  const incomes = inc?.incomes ?? [];
-  const outcomes = out?.outcomes ?? [];
+  const incomes = inc.data ?? [];
+  const outcomes = out?.data ?? [];
 
   const { users, updateUser } = useUsers(1, 100);
   const { openModal } = useModal();
@@ -82,27 +82,6 @@ export const AccountingContent = () => {
     );
   }, [incomes, outcomes]);
 
-  // Клиентская пагинация (по API Strapi можно будет сделать позже)
-  const PER_PAGE = 36;
-  const total = allRows.length;
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [totalPages, page]);
-
-  const handlePageChange = (p: number) => {
-    const newPage = Math.max(1, Math.min(totalPages, p));
-    setPage(newPage);
-  };
-
-  const start = (page - 1) * PER_PAGE;
-  const end = Math.min(start + PER_PAGE, total);
-  const pageRows = useMemo(
-    () => allRows.slice(start, end),
-    [allRows, start, end]
-  );
-
   return (
     <div>
       <div className="flex justify-between items-center gap-4 mb-8 flex-wrap">
@@ -115,7 +94,6 @@ export const AccountingContent = () => {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPage(1);
             }}
             className="pl-8"
           />
@@ -161,53 +139,7 @@ export const AccountingContent = () => {
 
         <TabsContent value="accounting">
           <div>
-            <DataTable data={pageRows} columns={columns} />
-
-            {/* Простая пагинация */}
-            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-sm text-muted-foreground">
-                Показано{" "}
-                <strong>
-                  {end} из {total}
-                </strong>{" "}
-                записей (стр. {page} / {totalPages})
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  className="px-2 h-9 border rounded-md disabled:opacity-50"
-                  disabled={page <= 1}
-                  onClick={() => handlePageChange(page - 1)}
-                >
-                  ‹
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const offset = Math.max(
-                    1,
-                    Math.min(page - 2, totalPages - 4)
-                  );
-                  const num = offset + i;
-                  if (num > totalPages) return null;
-                  return (
-                    <button
-                      key={num}
-                      className={`px-3 h-9 border rounded-md ${
-                        num === page ? "bg-primary text-primary-foreground" : ""
-                      }`}
-                      onClick={() => handlePageChange(num)}
-                    >
-                      {num}
-                    </button>
-                  );
-                })}
-                <button
-                  className="px-2 h-9 border rounded-md disabled:opacity-50"
-                  disabled={page >= totalPages}
-                  onClick={() => handlePageChange(page + 1)}
-                >
-                  ›
-                </button>
-              </div>
-            </div>
+            <AccountingTable data={allRows} columns={columns} />
 
             {lightboxIndex !== null && (
               <Lightbox

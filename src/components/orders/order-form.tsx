@@ -91,8 +91,22 @@ const schema = z
     reason_for_refusal: z.string().optional(),
     defect: z.string().optional(),
     conclusion: z.string().optional(),
-    total_cost: z.string().optional(),
-    prepay: z.string().optional(),
+    total_cost: z
+      .string()
+      .refine((v) => /^\d+(\.\d+)?$/.test(v), {
+        message: "Введите только число",
+      })
+      .refine((v) => Number(v) >= 0, {
+        message: "Сумма не может быть отрицательной",
+      }),
+    prepay: z
+      .string()
+      .refine((v) => /^\d+(\.\d+)?$/.test(v), {
+        message: "Введите только число",
+      })
+      .refine((v) => Number(v) >= 0, {
+        message: "Сумма не может быть отрицательной",
+      }),
     equipment: z.string().optional(),
     completed_work: z.string().optional(),
     note: z.string().optional(),
@@ -136,6 +150,31 @@ const schema = z
         message: "Укажите дедлайн",
       });
     }
+
+    // Проверка что оба поля заполнены
+    if (!data.total_cost || !data.prepay) {
+      ctx.addIssue({
+        path: ["total_cost"],
+        code: z.ZodIssueCode.custom,
+        message: "Укажите общую сумму и предоплату",
+      });
+      ctx.addIssue({
+        path: ["prepay"],
+        code: z.ZodIssueCode.custom,
+        message: "Укажите общую сумму и предоплату",
+      });
+    }
+
+    // Проверка что общая сумма >= предоплаты
+    const total = Number(data.total_cost || 0);
+    const prepay = Number(data.prepay || 0);
+    if (total < prepay) {
+      ctx.addIssue({
+        path: ["total_cost"],
+        code: z.ZodIssueCode.custom,
+        message: "Общая сумма не может быть меньше предоплаты",
+      });
+    }
   });
 
 type FormData = z.infer<typeof schema>;
@@ -158,13 +197,9 @@ export function RepairOrderForm({
   const { settings } = useSettings();
   const { updateOrder, createOrder } = useOrders(1, 1);
   const { user, roleId } = useAuth();
-  const { createIncome, deleteIncome, updateIncome, incomes } = useIncomes(
-    1,
-    20,
-    {
-      order: { documentId: data?.documentId },
-    }
-  );
+  const { createIncome, updateIncome, incomes } = useIncomes(1, 20, {
+    order: { documentId: data?.documentId },
+  });
   const queryClient = useQueryClient();
 
   const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined;
@@ -203,8 +238,8 @@ export function RepairOrderForm({
       reason_for_refusal: data?.reason_for_refusal || "",
       defect: data?.defect || "",
       conclusion: data?.conclusion || "",
-      total_cost: data?.total_cost || "",
-      prepay: data?.prepay || "",
+      total_cost: data?.total_cost || "0",
+      prepay: data?.prepay || "0",
       equipment: data?.equipment || "",
       completed_work: data?.completed_work || "",
       note: data?.note || "",
@@ -302,7 +337,7 @@ export function RepairOrderForm({
         updatedData: payload,
       });
 
-      // 💰 Синхронизация приходов — всегда создаём или обновляем оба, с сохранением удаления
+      // 💰 Синхронизация приходов — создаем или обновляем оба, даже если 0
       const prepayNum = Number(value.prepay || 0);
       const totalNum = Number(value.total_cost || 0);
       const diff = totalNum - prepayNum;
@@ -315,55 +350,45 @@ export function RepairOrderForm({
       );
 
       // === 🟢 ПРЕДОПЛАТА ===
-      if (prepayNum > 0) {
-        if (prepayIncome) {
-          await updateIncome({
-            documentId: prepayIncome.documentId,
-            updatedData: {
-              count: prepayNum,
-              isApproved: roleId === 3,
-            },
-          });
-        } else {
-          await createIncome({
+      if (prepayIncome) {
+        await updateIncome({
+          documentId: prepayIncome.documentId,
+          updatedData: {
             count: prepayNum,
-            income_category: "Оплата за ремонт",
-            note: "Автосоздание (предоплата)",
-            order: data!.documentId,
-            user: user?.id,
-            author: user?.name,
             isApproved: roleId === 3,
-          });
-        }
-      } else if (prepayIncome) {
-        await deleteIncome(prepayIncome.documentId);
+          },
+        });
+      } else {
+        await createIncome({
+          count: prepayNum,
+          income_category: "Оплата за ремонт",
+          note: "Автосоздание (предоплата)",
+          order: data!.documentId,
+          user: user?.id,
+          author: user?.name,
+          isApproved: roleId === 3,
+        });
       }
 
       // === 🟢 ДОПЛАТА ===
-      if (diff >= 0) {
-        // даже если diff = 0 — создаём или обновляем
-        if (extraIncome) {
-          await updateIncome({
-            documentId: extraIncome.documentId,
-            updatedData: {
-              count: diff,
-              isApproved: roleId === 3,
-            },
-          });
-        } else {
-          await createIncome({
+      if (extraIncome) {
+        await updateIncome({
+          documentId: extraIncome.documentId,
+          updatedData: {
             count: diff,
-            income_category: "Оплата за ремонт",
-            note: "Автосоздание (доплата)",
-            order: data!.documentId,
-            user: user?.id,
-            author: user?.name,
             isApproved: roleId === 3,
-          });
-        }
-      } else if (extraIncome) {
-        // отрицательная разница — удаляем
-        await deleteIncome(extraIncome.documentId);
+          },
+        });
+      } else {
+        await createIncome({
+          count: diff,
+          income_category: "Оплата за ремонт",
+          note: "Автосоздание (доплата)",
+          order: data!.documentId,
+          user: user?.id,
+          author: user?.name,
+          isApproved: roleId === 3,
+        });
       }
 
       form.reset(form.getValues());

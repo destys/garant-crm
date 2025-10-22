@@ -1,5 +1,3 @@
-"use strict";
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import QueryString from "qs";
 
@@ -44,6 +42,7 @@ export const useOutcomes = (
       createExpense(authToken, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["outcomes"] });
+      queryClient.invalidateQueries({ queryKey: ["outcomes-all"] });
     },
   });
 
@@ -57,6 +56,7 @@ export const useOutcomes = (
     }) => updateExpense(authToken, documentId, updatedData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["outcomes"] });
+      queryClient.invalidateQueries({ queryKey: ["outcomes-all"] });
     },
   });
 
@@ -76,9 +76,11 @@ export const useOutcomes = (
         };
       });
       queryClient.invalidateQueries({ queryKey: ["outcomes"] });
+      queryClient.invalidateQueries({ queryKey: ["outcomes-all"] });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["outcomes"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["outcomes-all"] });
     },
   });
 
@@ -92,4 +94,33 @@ export const useOutcomes = (
     updateOutcome: updateMutation.mutate,
     deleteOutcome: deleteMutation.mutate,
   };
+};
+
+// Получить до 1000 outcomes параллельными запросами по 100 штук
+export const useOutcomesAll = (query?: unknown) => {
+  const { jwt } = useAuth();
+  const authToken = jwt ?? "";
+
+  const resultsQuery = useQuery<IncomeOutcomeProps[], unknown>({
+    queryKey: ["outcomes-all", query],
+    enabled: !!jwt,
+    queryFn: async () => {
+      const pageSize = 100;
+      const maxPages = 30;
+      const sort = ["createdAt:desc"];
+      const queryString = QueryString.stringify(
+        { filters: query, sort },
+        { encodeValuesOnly: true }
+      );
+      const requests = Array.from({ length: maxPages }, (_, idx) => {
+        const page = idx + 1;
+        return fetchOutcomes(authToken, page, pageSize, queryString);
+      });
+      const results = await Promise.all(requests);
+      const allOutcomes = results.flatMap((r) => r.outcomes);
+      return allOutcomes;
+    },
+  });
+
+  return resultsQuery;
 };
