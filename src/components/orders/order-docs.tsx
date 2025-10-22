@@ -22,12 +22,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { OrderProps } from "@/types/order.types";
 import { GenerateContractPdf } from "@/lib/pdf/generate-contract";
+import { generateActPdf } from "@/lib/pdf/generate-act";
+import { generateTechnicalConclusionPdf } from "@/lib/pdf/generate-technical-conclusion";
+import { generateWarrantyPdf } from "@/lib/pdf/generate-warranty";
 
 type Mode = "download" | "preview";
 
 export const OrderDocs = ({ data }: { data: OrderProps }) => {
   const [signDoc, setSignDoc] = useState<boolean>(false);
 
+  // ---------- Договор ----------
   const handleGenerateContract = async (mode: Mode) => {
     const blob = await pdf(
       <GenerateContractPdf order={data} sign={signDoc} />
@@ -47,9 +51,21 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
     }
   };
 
-  const handleSendToSign = async () => {
-    // 🔐 Интеграция с Podpislon API (позже)
-    console.warn("📤 Отправка договора на подпись...");
+  // ---------- Акт ----------
+  const handleGenerateAct = async (mode: Mode) => {
+    await generateActPdf(data, {
+      sign: signDoc,
+      signatureSrc: "/sign.png",
+      stampSrc: "/stamp.png",
+      mode,
+    });
+  };
+
+  const handleSendToSign = async (
+    type: "contract" | "act" | "technical" | "warranty"
+  ) => {
+    // 🔐 Подключим Podpislon позже
+    console.warn(`📤 Отправка на подпись документа: ${type}`);
   };
 
   return (
@@ -91,7 +107,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
 
         <PopoverContent className="w-[340px] space-y-4">
           {/* Подпись */}
-          <div className="hidden items-center gap-2">
+          <div className="flex items-center gap-2">
             <Checkbox
               id="sign-doc"
               checked={signDoc}
@@ -100,10 +116,10 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
             <Label htmlFor="sign-doc">Подписать документ</Label>
           </div>
 
+          {/* ---------- ДОГОВОР ---------- */}
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium">Договор</span>
             <div className="flex gap-2">
-              {/* Скачать */}
               <Button
                 size="sm"
                 onClick={() => handleGenerateContract("download")}
@@ -111,7 +127,6 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
                 <DownloadIcon className="size-4" />
               </Button>
 
-              {/* Просмотр */}
               <Button
                 size="sm"
                 variant="outline"
@@ -120,12 +135,127 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
                 <EyeIcon className="size-4" />
               </Button>
 
-              {/* На подпись */}
               <Button
                 size="sm"
                 variant="default"
                 className="bg-amber-500 hover:bg-amber-600"
-                onClick={handleSendToSign}
+                onClick={() => handleSendToSign("contract")}
+              >
+                <PenLineIcon className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* ---------- АКТ ВЫПОЛНЕННЫХ РАБОТ ---------- */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium">Акт выполненных работ</span>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => handleGenerateAct("download")}>
+                <DownloadIcon className="size-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleGenerateAct("preview")}
+              >
+                <EyeIcon className="size-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-amber-500 hover:bg-amber-600"
+                onClick={() => handleSendToSign("act")}
+              >
+                <PenLineIcon className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* ---------- ТЕХНИЧЕСКОЕ ЗАКЛЮЧЕНИЕ ---------- */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium">
+              Акт технического заключения
+            </span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() =>
+                  generateTechnicalConclusionPdf(data, {
+                    sign: signDoc,
+                    signatureSrc: "/sign.png",
+                    stampSrc: "/stamp.png",
+                    mode: "download",
+                  })
+                }
+              >
+                <DownloadIcon className="size-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  generateTechnicalConclusionPdf(data, {
+                    sign: signDoc,
+                    signatureSrc: "/sign.png",
+                    stampSrc: "/stamp.png",
+                    mode: "preview",
+                  })
+                }
+              >
+                <EyeIcon className="size-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-amber-500 hover:bg-amber-600"
+                onClick={() => handleSendToSign("technical")}
+              >
+                <PenLineIcon className="size-4" />
+              </Button>
+            </div>
+          </div>
+          {/* ---------- ГАРАНТИЙНЫЙ ТАЛОН ---------- */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium">Гарантийный талон</span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() =>
+                  generateWarrantyPdf(data, {
+                    sign: signDoc,
+                    signatureSrc: "/sign.png",
+                    stampSrc: "/stamp.png",
+                    mode: "download",
+                  })
+                }
+              >
+                <DownloadIcon className="size-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  generateWarrantyPdf(data, {
+                    sign: signDoc,
+                    signatureSrc: "/sign.png",
+                    stampSrc: "/stamp.png",
+                    mode: "preview",
+                  })
+                }
+              >
+                <EyeIcon className="size-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-amber-500 hover:bg-amber-600"
+                onClick={() => handleSendToSign("warranty")}
               >
                 <PenLineIcon className="size-4" />
               </Button>

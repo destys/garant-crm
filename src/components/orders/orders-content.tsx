@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -42,6 +43,7 @@ export const OrdersContent = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // ⭐ извлекаем page из URL
   const getInt = (v: string | null, def = 1) => {
     const n = Number(v);
     return Number.isFinite(n) && n > 0 ? Math.trunc(n) : def;
@@ -51,21 +53,26 @@ export const OrdersContent = () => {
   const [page, setPage] = useState<number>(pageFromUrl);
   const [pageSize] = useState<number>(12);
 
+  // ⭐ при изменении адреса (напрямую) обновляем состояние страницы
   useEffect(() => {
     setPage(pageFromUrl);
   }, [pageFromUrl]);
 
+  // ⭐ функция смены страницы
   const pushPage = (next: number) => {
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("page", String(next));
-    router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
     setPage(next);
   };
 
+  // ----------------------------
+  // фильтры
+  // ----------------------------
   const baseFilters = useMemo(() => {
     let merged = { ...filters, ...formFilters, ...searchFilter };
 
-    // если страница "Все заявки" и введен поиск → убираем фильтры по статусам
+    // если поиск → убираем статус
     const hasSearch = !!Object.keys(searchFilter).length;
     if (activeTitle === "Все заявки" && hasSearch && merged?.$and) {
       merged = {
@@ -75,7 +82,7 @@ export const OrdersContent = () => {
       if (!merged.$and.length) delete merged.$and;
     }
 
-    // если страница "Юридический отдел" → добавляем фильтр legal_status (если выбран)
+    // юридический отдел → добавляем фильтр
     if (activeTitle === "Юридический отдел" && legalFilter) {
       const andArr = Array.isArray(merged.$and) ? [...merged.$and] : [];
       andArr.push({ legal_status: { $eq: legalFilter } });
@@ -107,15 +114,10 @@ export const OrdersContent = () => {
   );
   const { users } = useUsers(1, 100);
 
+  // ⭐ при изменении фильтров, поиска и сортировки — сбрасываем страницу в 1
   useEffect(() => {
-    if (page !== 1) pushPage(1);
+    pushPage(1);
   }, [JSON.stringify(finalFilters), JSON.stringify(sortString)]);
-
-  /*   const handleDownloadPdf = () => {
-    if (((!period.from || !period.to) && !baseFilters.master) || !data.length)
-      return;
-    generateOrdersReportPdf(data, activeTitle, period);
-  }; */
 
   const handleDownloadPdf = async () => {
     if (!data?.length) return;
@@ -164,7 +166,7 @@ export const OrdersContent = () => {
         </div>
       </div>
 
-      {/* 🔹 Фильтры только для страницы Юридический отдел */}
+      {/* 🔹 Юридический отдел */}
       {activeTitle === "Юридический отдел" && (
         <div className="flex gap-2 mb-6 flex-wrap">
           {LEGAL_STATUSES.map((status) => (
