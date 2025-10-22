@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2Icon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { pdf } from "@react-pdf/renderer";
 
 import { SearchBlock } from "@/components/search-block";
 import { useOrders } from "@/hooks/use-orders";
@@ -24,8 +25,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { LEGAL_STATUSES } from "@/constants";
-
-import { generateOrdersReportPdf } from "../pdfs/generate-orders-pdf";
+import { GenerateOrdersReport } from "@/lib/pdf/generate-orders-report";
 
 export const OrdersContent = () => {
   const activeTitle =
@@ -111,10 +111,25 @@ export const OrdersContent = () => {
     if (page !== 1) pushPage(1);
   }, [JSON.stringify(finalFilters), JSON.stringify(sortString)]);
 
-  const handleDownloadPdf = () => {
+  /*   const handleDownloadPdf = () => {
     if (((!period.from || !period.to) && !baseFilters.master) || !data.length)
       return;
     generateOrdersReportPdf(data, activeTitle, period);
+  }; */
+
+  const handleDownloadPdf = async () => {
+    if (!data?.length) return;
+
+    const blob = await pdf(
+      <GenerateOrdersReport title={activeTitle} orders={data} period={period} />
+    ).toBlob();
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Отчет_${activeTitle || "заявки"}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (!user || !roleId) {
