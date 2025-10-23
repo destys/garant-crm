@@ -40,7 +40,7 @@ export const CashboxContent = () => {
         }
       >
         <PlusCircleIcon />
-        Добавить
+        Добавить операцию
       </Button>
       <CashboxTable
         data={items}
