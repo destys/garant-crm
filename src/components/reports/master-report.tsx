@@ -27,20 +27,25 @@ import { useIncomes } from "@/hooks/use-incomes";
 import { useAuth } from "@/providers/auth-provider";
 import { fetchOrders } from "@/services/orders-service";
 import { fetchIncomes } from "@/services/incomes-service";
+import { generateMasterReportPdf } from "@/lib/pdf/generate-master-report";
+import { OrderProps } from "@/types/order.types";
+import { UserProps } from "@/types/user.types";
+import { IncomeOutcomeProps } from "@/types/income-outcome.types";
 
-type Props = {
-  range: DateRange | undefined;
-};
+interface Props {
+  range?: DateRange;
+}
 
 const PAGE_SIZE = 100;
 
 export const MasterReport = ({ range }: Props) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const [selected, setSelected] = useState<string | null>(null);
 
   const { users } = useUsers(1, 50);
   const { jwt: token } = useAuth();
 
+  // ---------- Filters ----------
   const orderFilters = useMemo(() => {
     if (!range?.from || !range?.to || !selected) return undefined;
     return {
@@ -63,7 +68,7 @@ export const MasterReport = ({ range }: Props) => {
     };
   }, [range, selected]);
 
-  // 1) Первая страница через ваши хуки
+  // ---------- Data ----------
   const {
     data: firstOrders = [],
     total: ordersTotal = 0,
@@ -79,7 +84,6 @@ export const MasterReport = ({ range }: Props) => {
   const ordersPageCount = Math.ceil(ordersTotal / PAGE_SIZE);
   const incomesPageCount = Math.ceil(incomesTotal / PAGE_SIZE);
 
-  // Те же строки запроса, что внутри хуков
   const ordersQueryString = useMemo(
     () =>
       qs.stringify(
@@ -95,7 +99,7 @@ export const MasterReport = ({ range }: Props) => {
     [accountingFilters]
   );
 
-  // 2) Остальные страницы 2..N — через useQueries + сервисы
+  // ---------- Pagination ----------
   const otherOrdersQueries = useQueries({
     queries:
       selected && ordersPageCount > 1
@@ -129,13 +133,13 @@ export const MasterReport = ({ range }: Props) => {
         : [],
   });
 
-  // 3) Собираем полный массив
-  const allOrders = useMemo(() => {
+  // ---------- Combine ----------
+  const allOrders: OrderProps[] = useMemo(() => {
     const rest = otherOrdersQueries.flatMap((q) => q.data?.orders ?? []);
     return [...firstOrders, ...rest];
   }, [firstOrders, otherOrdersQueries]);
 
-  const allIncomes = useMemo(() => {
+  const allIncomes: IncomeOutcomeProps[] = useMemo(() => {
     const rest = otherIncomesQueries.flatMap((q) => q.data?.incomes ?? []);
     return [...firstIncomes, ...rest];
   }, [firstIncomes, otherIncomesQueries]);
@@ -146,7 +150,7 @@ export const MasterReport = ({ range }: Props) => {
     otherOrdersQueries.some((q) => q.isLoading) ||
     otherIncomesQueries.some((q) => q.isLoading);
 
-  // 4) Статистика по полному набору
+  // ---------- Statistics ----------
   const openCount = allOrders.filter((o) =>
     [
       "Новая",
@@ -165,18 +169,23 @@ export const MasterReport = ({ range }: Props) => {
     (o) => o.orderStatus === "Отказ" && o.is_approve === true
   ).length;
 
-  const totalIncome = allIncomes.reduce(
+  const totalIncome = allIncomes.reduce<number>(
     (acc, curr) => acc + (curr.count || 0),
     0
   );
 
-  const statCards = [
+  const statCards: { title: string; value: string | number }[] = [
     { title: "Открытые", value: openCount },
     { title: "Завершено", value: completedCount },
     { title: "Отказов", value: rejectedCount },
     { title: "Доход", value: `${totalIncome} ₽` },
   ];
 
+  const selectedUser: UserProps | undefined = users.find(
+    (m) => m.id.toString() === selected
+  );
+
+  // ---------- Render ----------
   return (
     <Card>
       <CardHeader>
@@ -184,6 +193,7 @@ export const MasterReport = ({ range }: Props) => {
       </CardHeader>
       <CardContent className="space-y-8">
         <div className="grid grid-cols-3 gap-4">
+          {/* Выбор сотрудника */}
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -192,9 +202,7 @@ export const MasterReport = ({ range }: Props) => {
                 aria-expanded={open}
                 className="w-full justify-between"
               >
-                {selected
-                  ? users.find((m) => m.id.toString() === selected)?.name
-                  : "Выберите сотрудника"}
+                {selectedUser ? selectedUser.name : "Выберите сотрудника"}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -230,12 +238,25 @@ export const MasterReport = ({ range }: Props) => {
 
           <div />
 
-          <Button disabled={!selected || !range?.from || isLoading}>
+          {/* Кнопка */}
+          <Button
+            disabled={!selected || !range?.from || isLoading}
+            onClick={() =>
+              generateMasterReportPdf(
+                allOrders,
+                range?.from,
+                range?.to,
+                selectedUser?.name || "Имя не заполнено",
+                { mode: "download" }
+              )
+            }
+          >
             <PrinterCheckIcon className="mr-2 h-4 w-4" />
-            Скачать отчет в pdf
+            Скачать отчет в PDF
           </Button>
         </div>
 
+        {/* Карточки */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {statCards.map((stat, i) => (
             <Card key={i} className="flex flex-col">
