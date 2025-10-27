@@ -1,25 +1,20 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import {
-  IconInnerShadowTop,
-} from "@tabler/icons-react"
-import Link from "next/link"
+import * as React from "react";
+import { IconInnerShadowTop } from "@tabler/icons-react";
+import Link from "next/link";
 
-import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { OrdersSidebarMenu } from "@/components/orders-sidebar-menu"
+} from "@/components/ui/sidebar";
+import { OrdersSidebarMenu } from "@/components/orders-sidebar-menu";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -31,7 +26,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">ООО &quot;Гарант&quot;</span>
+                <span className="text-base font-semibold">
+                  ООО &quot;Гарант&quot;
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -42,9 +39,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser />
-      </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

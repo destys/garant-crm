@@ -28,6 +28,8 @@ export function SectionCards() {
   const { items: prevOutcomes } = useAllOutcomes(prev);
 
   // метрики
+  const currentTurnover = currIncomes.reduce((s, i) => s + (i.count || 0), 0);
+
   const currentRevenue = useMemo(() => {
     const inc = currIncomes.reduce(
       (s: number, i: any) => s + (i.count || 0),
@@ -92,13 +94,13 @@ export function SectionCards() {
     directLeadsMonth.length > 0 ? adSpendMonth / directLeadsMonth.length : 0;
 
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <StatCard
         label="Прибыль за месяц"
-        value={`${currentRevenue.toLocaleString()} ₽`}
+        value={`${currentTurnover.toLocaleString()} ₽`}
         percent={rev.percent}
         trend={rev.trend}
-        note="Доход за месяц"
+        note="Оборот (приходы)"
       />
       <StatCard
         label="Новые клиенты"

@@ -4,7 +4,6 @@ import { IconCirclePlusFilled } from "@tabler/icons-react";
 import {
   CircleDollarSignIcon,
   DollarSignIcon,
-  FilePieChart,
   MenuIcon,
   MoveLeftIcon,
   PersonStandingIcon,
@@ -30,6 +29,8 @@ import {
 import { useIncomes } from "@/hooks/use-incomes";
 import { useOutcomes } from "@/hooks/use-outcomes";
 import { cn } from "@/lib/utils";
+
+import { NavUser } from "./nav-user";
 
 export function SiteHeader() {
   const { user, roleId } = useAuth();
@@ -76,7 +77,7 @@ export function SiteHeader() {
                   Бухгалтерия ({totalIncomes + totalOutcomes})
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="ml-auto">
                 <Link href={"/cashbox"}>Касса</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -171,19 +172,13 @@ export function SiteHeader() {
             </Link>
           </Button>
           {roleId === 3 && (
-            <>
-              <Button asChild className="max-lg:hidden" variant={"secondary"}>
-                <Link href={"/reports"}>
-                  <FilePieChart />
-                </Link>
-              </Button>
-              <Button asChild variant={"secondary"}>
-                <Link href={"/settings"}>
-                  <SettingsIcon />
-                </Link>
-              </Button>
-            </>
+            <Button asChild variant={"secondary"}>
+              <Link href={"/settings"}>
+                <SettingsIcon />
+              </Link>
+            </Button>
           )}
+          <NavUser />
         </div>
       </div>
     </header>

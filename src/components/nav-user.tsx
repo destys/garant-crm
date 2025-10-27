@@ -1,18 +1,15 @@
-"use client"
+"use client";
 
 import {
   IconCreditCard,
-  IconDotsVertical,
   IconLogout,
   IconNotification,
   IconUserCircle,
-} from "@tabler/icons-react"
-import Link from "next/link"
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { UserIcon } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,17 +18,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
-import { useAuth } from "@/providers/auth-provider"
+} from "@/components/ui/dropdown-menu";
+import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useAuth } from "@/providers/auth-provider";
+
+import { Button } from "./ui/button";
 
 export function NavUser() {
-  const { isMobile } = useSidebar();
   const { logout } = useAuth();
 
   const { user } = useAuth();
@@ -39,31 +32,18 @@ export function NavUser() {
   if (!user) return null;
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="w-fit">
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
-              </div>
-              <IconDotsVertical className="ml-auto size-4" />
-            </SidebarMenuButton>
+            <Button className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              <UserIcon />
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
+            side={"bottom"}
+            align="center"
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
@@ -83,13 +63,13 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href={'/account'}>
+                <Link href={"/account"}>
                   <IconUserCircle />
                   Профиль
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={'/account#accounting'}>
+                <Link href={"/account#accounting"}>
                   <IconCreditCard />
                   Платежи
                 </Link>
@@ -108,5 +88,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
