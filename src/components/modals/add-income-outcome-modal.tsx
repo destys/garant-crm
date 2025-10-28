@@ -50,6 +50,8 @@ import { useAuth } from "@/providers/auth-provider";
 import { MediaProps } from "@/types/media.types";
 import { useSettings } from "@/hooks/use-settings";
 
+import "filepond/dist/filepond.min.css";
+
 const incomeSchema = z.object({
   count: z.string(),
   note: z.string().optional(),

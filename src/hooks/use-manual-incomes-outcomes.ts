@@ -1,4 +1,3 @@
-// hooks/use-manual-incomes-outcomes.ts
 import qs from "qs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -25,7 +24,7 @@ export const useManualIncomesOutcomes = (
   const authToken = token ?? "";
 
   const queryString = qs.stringify(
-    { filters: query, sort: sort ? sort : ["date:desc"] },
+    { filters: query, sort: sort ? sort : ["createdAt:desc"] },
     { encodeValuesOnly: true }
   );
 
