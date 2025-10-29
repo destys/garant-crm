@@ -51,6 +51,8 @@ export const AccountingContent = () => {
       filters.isApproved = { $eq: false };
     }
 
+    filters.count = { $ne: 0 };
+
     return filters;
   }, [searchFilter, filterType]);
 
