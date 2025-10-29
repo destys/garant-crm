@@ -187,13 +187,13 @@ export const StatsTiles = ({ range }: Props) => {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {stats.map((stat, i) => (
-        <Card key={i} className="flex flex-col">
-          <CardHeader>
+        <Card key={i} className="flex flex-col max-sm:py-3">
+          <CardHeader className="max-sm:px-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {stat.title}
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-2xl font-bold">
+          <CardContent className="text-lg sm:text-2xl font-bold max-sm:px-3">
             {isLoading ? "…" : stat.value}
           </CardContent>
         </Card>

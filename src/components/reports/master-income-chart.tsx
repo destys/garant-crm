@@ -8,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from "recharts";
 import { DateRange } from "react-day-picker";
 import { useMemo } from "react";
@@ -18,7 +17,8 @@ import qs from "qs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIncomes } from "@/hooks/use-incomes";
 import { useAuth } from "@/providers/auth-provider";
-import { fetchIncomes } from "@/services/incomes-service"; // <-- тот же сервис, что использует хук
+import { fetchIncomes } from "@/services/incomes-service";
+import { ChartLegend } from "@/components/ui/chart";
 
 type Props = {
   range: DateRange | undefined;
@@ -108,7 +108,7 @@ export const MasterIncomeChart = ({ range }: Props) => {
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Legend />
+            <ChartLegend />
             <Bar dataKey="income" name="Доход" />
           </BarChart>
         </ResponsiveContainer>

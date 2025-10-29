@@ -22,7 +22,11 @@ export const metadata: Metadata = {
       { url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicons/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-      { url: "/favicons/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      {
+        url: "/favicons/favicon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
       { url: "/favicons/favicon.ico", type: "image/x-icon" },
     ],
     apple: [
@@ -49,8 +53,8 @@ export const metadata: Metadata = {
 
   robots: {
     index: false,
-    follow: false
-  }
+    follow: false,
+  },
 };
 
 export default function RootLayout({
@@ -64,7 +68,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <div className="flex flex-col">
+          <div className="flex flex-col overflow-hidden">
             <main className="flex-auto p-4 pt-0">
               <div className="flex flex-1 flex-col max-w-[1600px] mx-auto">
                 <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6 w-full">

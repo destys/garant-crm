@@ -143,7 +143,7 @@ export const IncomeExpenseChart = ({ range }: Props) => {
           <CardTitle>Доходы</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={groupedIncomes}
@@ -173,7 +173,7 @@ export const IncomeExpenseChart = ({ range }: Props) => {
           <CardTitle>Расходы</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={groupedOutcomes}

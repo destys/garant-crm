@@ -192,7 +192,7 @@ export const MasterReport = ({ range }: Props) => {
         <CardTitle>Статистика по сотруднику</CardTitle>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4">
           {/* Выбор сотрудника */}
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -236,7 +236,7 @@ export const MasterReport = ({ range }: Props) => {
             </PopoverContent>
           </Popover>
 
-          <div />
+          <div className="max-lg:hidden" />
 
           {/* Кнопка */}
           <Button
@@ -259,13 +259,13 @@ export const MasterReport = ({ range }: Props) => {
         {/* Карточки */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {statCards.map((stat, i) => (
-            <Card key={i} className="flex flex-col">
-              <CardHeader>
+            <Card key={i} className="flex flex-col max-sm:py-3">
+              <CardHeader className="max-sm:px-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-2xl font-bold">
+              <CardContent className="text-lg sm:text-2xl font-bold max-sm:px-3">
                 {!selected ? "—" : isLoading ? "…" : stat.value}
               </CardContent>
             </Card>

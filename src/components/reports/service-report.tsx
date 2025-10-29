@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useQueries } from "@tanstack/react-query";
 import qs from "qs";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, PrinterCheckIcon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrders } from "@/hooks/use-orders";
@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { generateMasterReportPdf } from "@/lib/pdf/generate-master-report";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   range?: DateRange;
@@ -32,7 +34,6 @@ const PAGE_SIZE = 100;
 
 export const ServiceReport = ({ range }: Props) => {
   const [service, setService] = useState("all");
-
   const { jwt: token } = useAuth();
 
   // ---------- Filters ----------
@@ -47,16 +48,7 @@ export const ServiceReport = ({ range }: Props) => {
     };
   }, [range, service]);
 
-  const accountingFilters = useMemo(() => {
-    if (!range?.from || !range?.to) return undefined;
-    return {
-      $and: [
-        { createdAt: { $gte: range.from } },
-        { createdAt: { $lte: range.to } },
-        ...(service !== "all" ? [{ kind_of_repair: service }] : []),
-      ],
-    };
-  }, [range, service]);
+  const accountingFilters = useMemo(() => orderFilters, [orderFilters]);
 
   // ---------- Data ----------
   const {
@@ -164,12 +156,24 @@ export const ServiceReport = ({ range }: Props) => {
     0
   );
 
-  const statCards: { title: string; value: string | number }[] = [
+  const statCards = [
     { title: "Открытые", value: openCount },
     { title: "Завершено", value: completedCount },
     { title: "Отказов", value: rejectedCount },
     { title: "Доход", value: `${totalIncome} ₽` },
   ];
+
+  // ---------- Handlers ----------
+  const handleDownloadPdf = async () => {
+    if (!range?.from || !range?.to) return;
+    await generateMasterReportPdf(
+      allOrders,
+      range.from,
+      range.to,
+      service !== "all" ? service : "Все сервисы",
+      { mode: "download" }
+    );
+  };
 
   // ---------- Render ----------
   return (
@@ -178,13 +182,13 @@ export const ServiceReport = ({ range }: Props) => {
         <CardTitle>Статистика по сервису</CardTitle>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid grid-cols-3 gap-4">
-          {/* Выбор сотрудника */}
-          <Select onValueChange={(e) => setService(e)}>
-            <SelectTrigger>
+        <div className="grid grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4">
+          {/* Выбор сервиса */}
+          <Select value={service} onValueChange={setService}>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Выберите сервис" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-full">
               <SelectGroup>
                 <SelectLabel>Сервисы</SelectLabel>
                 <SelectItem value="all">Все сервисы</SelectItem>
@@ -194,20 +198,27 @@ export const ServiceReport = ({ range }: Props) => {
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          <div />
+          <div className="max-lg:hidden" />
+          {/* Кнопка */}
+          <Button
+            disabled={!range?.from || isLoading}
+            onClick={handleDownloadPdf}
+          >
+            <PrinterCheckIcon className="mr-2 h-4 w-4" />
+            {isLoading ? "Подготовка..." : "Скачать отчет в PDF"}
+          </Button>
         </div>
 
         {/* Карточки */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {statCards.map((stat, i) => (
-            <Card key={i} className="flex flex-col">
-              <CardHeader>
+            <Card key={i} className="flex flex-col max-sm:py-3">
+              <CardHeader className="max-sm:px-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-2xl font-bold">
+              <CardContent className="text-lg sm:text-2xl font-bold max-sm:px-3">
                 {isLoading ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
