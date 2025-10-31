@@ -108,5 +108,7 @@ export function middleware(request: NextRequest) {
  * Исключаем ассеты/системные пути/API
  */
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|public|api).*)"],
+  matcher: [
+    "/((?!_next|api|favicon.ico|robots.txt|sitemap.xml|fonts|images|uploads|public|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js|map|woff2?|ttf|eot)$).*)",
+  ],
 };
