@@ -23,7 +23,7 @@ const PAGE_SIZE = 100; // грузим по 100 шт.
 export const StatsTiles = ({ range }: Props) => {
   const { jwt: token } = useAuth();
 
-  const filters = useMemo(() => {
+  const filtersIncomeOutcome = useMemo(() => {
     if (!range?.from || !range?.to) return undefined;
     return {
       $and: [
@@ -33,24 +33,34 @@ export const StatsTiles = ({ range }: Props) => {
     };
   }, [range]);
 
+  const filtersLeads = useMemo(() => {
+    if (!range?.from || !range?.to) return undefined;
+    return {
+      $and: [
+        { createdAt: { $gte: range.from } },
+        { createdAt: { $lte: range.to } },
+      ],
+    };
+  }, [range]);
+
   // 1) Первая страница (через ваши хуки — не меняем их)
   const {
     data: firstOrders = [],
     total: ordersTotal = 0,
     isLoading: ordersLoading,
-  } = useOrders(1, PAGE_SIZE, filters);
+  } = useOrders(1, PAGE_SIZE, filtersLeads);
 
   const {
     incomes: firstIncomes = [],
     total: incomesTotal = 0,
     isLoading: incomesLoading,
-  } = useIncomes(1, PAGE_SIZE, filters);
+  } = useIncomes(1, PAGE_SIZE, filtersIncomeOutcome);
 
   const {
     outcomes: firstOutcomes = [],
     total: outcomesTotal = 0,
     isLoading: outcomesLoading,
-  } = useOutcomes(1, PAGE_SIZE, filters);
+  } = useOutcomes(1, PAGE_SIZE, filtersIncomeOutcome);
 
   const ordersPageCount = Math.ceil(ordersTotal / PAGE_SIZE);
   const incomesPageCount = Math.ceil(incomesTotal / PAGE_SIZE);
@@ -60,20 +70,20 @@ export const StatsTiles = ({ range }: Props) => {
   const ordersQueryString = useMemo(
     () =>
       qs.stringify(
-        { filters, sort: ["createdAt:desc"] },
+        { filtersLeads, sort: ["createdAt:desc"] },
         { encodeValuesOnly: true }
       ),
-    [filters]
+    [filtersLeads]
   );
 
   const incomesQueryString = useMemo(
-    () => qs.stringify({ filters }, { encodeValuesOnly: true }),
-    [filters]
+    () => qs.stringify({ filtersIncomeOutcome }, { encodeValuesOnly: true }),
+    [filtersIncomeOutcome]
   );
 
   const outcomesQueryString = useMemo(
-    () => qs.stringify({ filters }, { encodeValuesOnly: true }),
-    [filters]
+    () => qs.stringify({ filtersIncomeOutcome }, { encodeValuesOnly: true }),
+    [filtersIncomeOutcome]
   );
 
   // 2) Остальные страницы → грузим параллельно прямо из сервисов
@@ -83,7 +93,7 @@ export const StatsTiles = ({ range }: Props) => {
         ? Array.from({ length: ordersPageCount - 1 }, (_, idx) => {
             const page = idx + 2; // страницы 2..N
             return {
-              queryKey: ["orders", page, PAGE_SIZE, filters],
+              queryKey: ["orders", page, PAGE_SIZE, filtersLeads],
               queryFn: () =>
                 fetchOrders(token ?? "", page, PAGE_SIZE, ordersQueryString),
               enabled: !!token && ordersTotal > PAGE_SIZE,
@@ -99,7 +109,7 @@ export const StatsTiles = ({ range }: Props) => {
         ? Array.from({ length: incomesPageCount - 1 }, (_, idx) => {
             const page = idx + 2;
             return {
-              queryKey: ["incomes", page, PAGE_SIZE, filters],
+              queryKey: ["incomes", page, PAGE_SIZE, filtersIncomeOutcome],
               queryFn: () =>
                 fetchIncomes(token ?? "", page, PAGE_SIZE, incomesQueryString),
               enabled: !!token && incomesTotal > PAGE_SIZE,
@@ -115,7 +125,7 @@ export const StatsTiles = ({ range }: Props) => {
         ? Array.from({ length: outcomesPageCount - 1 }, (_, idx) => {
             const page = idx + 2;
             return {
-              queryKey: ["outcomes", page, PAGE_SIZE, filters],
+              queryKey: ["outcomes", page, PAGE_SIZE, filtersIncomeOutcome],
               queryFn: () =>
                 fetchOutcomes(
                   token ?? "",
