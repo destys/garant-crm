@@ -79,7 +79,7 @@ export const OrderAccounting = ({ data }: Props) => {
             items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  {formatDate(item.createdAt, "dd.MM.yy HH:mm")}
+                  {formatDate(item.createdDate, "dd.MM.yy HH:mm")}
                 </TableCell>
                 <TableCell>{item.note}</TableCell>
                 <TableCell>{item.user?.name || "—"}</TableCell>

@@ -64,8 +64,8 @@ export function SectionCards() {
     .filter(
       (o: any) =>
         o.outcome_category === "Реклама" &&
-        new Date(o.createdAt) >= monthStart &&
-        new Date(o.createdAt) <= monthEnd
+        new Date(o.createdDate) >= monthStart &&
+        new Date(o.createdDate) <= monthEnd
     )
     .reduce((sum: number, o: any) => sum + (o.count || 0), 0);
 

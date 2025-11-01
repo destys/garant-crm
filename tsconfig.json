@@ -38,7 +38,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/components/pdfs/generate-act-pdf.tsч"
-  ],
+, "src/lib/fix-created-date.tsч"  ],
   "exclude": [
     "node_modules"
   ]

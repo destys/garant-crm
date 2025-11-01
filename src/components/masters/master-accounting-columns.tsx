@@ -40,7 +40,7 @@ export const buildMasterAccountingColumns = ({
     {
       accessorKey: "date",
       header: "Дата",
-      cell: ({ row }) => formatDate(row.original.createdAt, "dd.MM.yy HH:mm"),
+      cell: ({ row }) => formatDate(row.original.createdDate, "dd.MM.yy HH:mm"),
     },
     {
       accessorKey: "type",

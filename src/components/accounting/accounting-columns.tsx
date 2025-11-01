@@ -48,7 +48,7 @@ export const buildAccountingColumns = ({
     {
       accessorKey: "date",
       header: "Дата",
-      cell: ({ row }) => formatDate(row.original.createdAt, "dd.MM.yy HH:mm"),
+      cell: ({ row }) => formatDate(row.original.createdDate, "dd.MM.yy HH:mm"),
     },
     {
       accessorKey: "type",
@@ -99,7 +99,7 @@ export const buildAccountingColumns = ({
             row.original.type === "income" ? "bg-green-500" : "bg-red-500"
           }
         >
-          {row.original.type === "expense" ? "-" : ""}
+          {row.original.type === "outcome" ? "-" : ""}
           {row.original.count.toLocaleString()} ₽
         </Badge>
       ),
@@ -147,7 +147,7 @@ export const buildAccountingColumns = ({
                   variant="default"
                   className="bg-green-500"
                   onClick={() => {
-                    if (row.original.type === "expense") {
+                    if (row.original.type === "outcome") {
                       updateOutcome?.({
                         documentId: row.original.documentId,
                         updatedData: { isApproved: true },
@@ -222,7 +222,7 @@ export const buildAccountingColumns = ({
                   deleteIncome?.(documentId);
                 }
 
-                if (type === "expense") {
+                if (type === "outcome") {
                   // Если это зарплата и расход был уже подтверждён — списываем с баланса
                   if (
                     isApproved &&

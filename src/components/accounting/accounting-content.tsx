@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import "filepond/dist/filepond.min.css";
 import "yet-another-react-lightbox/styles.css";
+
 import { MastersContent } from "../masters/masters-content";
 
 import { buildAccountingColumns } from "./accounting-columns";
@@ -92,10 +93,10 @@ export const AccountingContent = () => {
   const allRows = useMemo(() => {
     return [
       ...incomes.map((i) => ({ ...i, type: "income" as const })),
-      ...outcomes.map((o) => ({ ...o, type: "expense" as const })),
+      ...outcomes.map((o) => ({ ...o, type: "outcome" as const })),
     ].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
     );
   }, [incomes, outcomes]);
 
@@ -114,7 +115,6 @@ export const AccountingContent = () => {
           />
         </div>
       </div>
-
       <Tabs id="accounting-tabs" defaultValue="accounting" className="my-6">
         <TabsList>
           <TabsTrigger value="accounting">Бухгалтерия</TabsTrigger>

@@ -112,7 +112,7 @@ export const MasterIncomeChart = ({ range }: Props) => {
       const masterName = income.user?.name?.trim();
       if (!masterName || masterName === "Без сотрудника") continue;
       const amount = income.count || 0;
-      const d = format(new Date(income.createdAt), "yyyy-MM-dd");
+      const d = format(new Date(income.createdDate), "yyyy-MM-dd");
       if (!days[d]) continue;
       days[d][masterName] += amount;
     }

@@ -82,7 +82,7 @@ export const MasterAccounting = ({ data }: Props) => {
       })),
     ].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
     );
   }, [outcomes, manualIO]);
 

@@ -39,18 +39,20 @@ export default function Page() {
 
       {roleId === 3 && <ReportsContent />}
 
-      <DataTable
-        data={data}
-        columns={ordersColumns(
-          users,
-          updateOrder,
-          deleteOrder,
-          undefined,
-          roleId,
-          user
-        )}
-        cardComponent={({ data }) => <OrdersCard data={data} />}
-      />
+      {roleId === 1 && (
+        <DataTable
+          data={data}
+          columns={ordersColumns(
+            users,
+            updateOrder,
+            deleteOrder,
+            undefined,
+            roleId,
+            user
+          )}
+          cardComponent={({ data }) => <OrdersCard data={data} />}
+        />
+      )}
     </div>
   );
 }

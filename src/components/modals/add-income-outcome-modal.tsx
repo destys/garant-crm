@@ -1,15 +1,16 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { CheckIcon, ChevronsUpDown, Loader2Icon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 import { FilePond } from "react-filepond";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 import { useIncomes } from "@/hooks/use-incomes";
 import { useOutcomes } from "@/hooks/use-outcomes";
@@ -49,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { MediaProps } from "@/types/media.types";
 import { useSettings } from "@/hooks/use-settings";
+import { Calendar } from "@/components/ui/calendar";
 
 import "filepond/dist/filepond.min.css";
 
@@ -57,6 +59,8 @@ const incomeSchema = z.object({
   note: z.string().optional(),
   master: z.string(),
   income_category: z.string().min(1, "Выберите статью расходов"),
+  createdDateDate: z.string().optional(),
+  createdDateTime: z.string().optional(),
 });
 type IncomeValues = z.infer<typeof incomeSchema>;
 
@@ -65,6 +69,8 @@ const outcomeSchema = z.object({
   master: z.string(),
   note: z.string().optional(),
   outcome_category: z.string().min(1, "Выберите статью расходов"),
+  createdDateDate: z.string().optional(),
+  createdDateTime: z.string().optional(),
 });
 type OutcomeValues = z.infer<typeof outcomeSchema>;
 
@@ -91,29 +97,41 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
   const [photo, setPhoto] = useState<MediaProps | null>(null);
   const { settings } = useSettings();
 
-  // Определим форму и схему в зависимости от типа
+  // Проверка, что все необходимые данные загружены
+  const isDataLoading = !settings || !users || !props || !props.type;
+
+  // Формируем defaultValues синхронно
+  let defaultValues: any = {};
   const isOutcome = props?.type === "outcome";
+  const now = new Date();
+  const defaultDate = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const defaultTime = now.toTimeString().slice(0, 5); // HH:MM
 
-  const form = useForm<IncomeValues | OutcomeValues>({
-    resolver: zodResolver(isOutcome ? outcomeSchema : incomeSchema),
-    defaultValues: {
-      count: "0",
-      note: "",
-      outcome_category: "", // безопасно, даже если не используется
-    } as any,
-  });
-
-  useEffect(() => {
+  if (!isDataLoading) {
+    // Если редактирование, заполняем из item
     if (props?.isEdit && props.item) {
       const item = props.item;
-      form.reset({
+      let dateObj;
+      if (item.createdDate) {
+        dateObj = new Date(item.createdDate);
+      } else if (item.createdAt) {
+        dateObj = new Date(item.createdAt);
+      } else {
+        dateObj = new Date();
+      }
+      const dateStr = dateObj.toISOString().slice(0, 10);
+      const timeStr = dateObj.toTimeString().slice(0, 5);
+      defaultValues = {
         count: String(item.count || 0),
         note: item.note || "",
         master: item.user?.id?.toString() || "",
         income_category: item.income_category || "",
         outcome_category: item.outcome_category || "",
-      });
-      if (item.photo) {
+        createdDateDate: dateStr,
+        createdDateTime: timeStr,
+      };
+      // Фото
+      if (item.photo && !photo) {
         setPhoto({
           id: item.photo.id,
           name: item.photo.name,
@@ -123,12 +141,45 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
           mime: item.photo.mime,
         });
       }
+    } else {
+      // Новый документ: текущая дата/время, первая категория если есть
+      defaultValues = {
+        count: "0",
+        note: "",
+        master: props?.masterId ? props.masterId.toString() : "",
+        income_category: "",
+        outcome_category: "",
+        createdDateDate: defaultDate,
+        createdDateTime: defaultTime,
+      };
+      // Категория по умолчанию
+      if (!isOutcome && settings?.income_categories?.length > 0) {
+        defaultValues.income_category = settings.income_categories[0].title;
+      }
+      if (isOutcome && settings?.outcome_categories?.length > 0) {
+        defaultValues.outcome_category = settings.outcome_categories[0].title;
+      }
     }
-  }, [props?.isEdit, props?.item]);
+  }
+
+  const form = useForm<IncomeValues | OutcomeValues>({
+    resolver: zodResolver(isOutcome ? outcomeSchema : incomeSchema),
+    defaultValues,
+  });
 
   const onSubmit = async (values: IncomeValues | OutcomeValues) => {
     try {
       setLoading(true);
+      // Собираем дату и время в ISO строку
+      let createdDate = "";
+      if (values.createdDateDate && values.createdDateTime) {
+        // Соберём строку "YYYY-MM-DDTHH:mm"
+        createdDate = `${values.createdDateDate}T${values.createdDateTime}:00`;
+      } else if (values.createdDateDate) {
+        createdDate = `${values.createdDateDate}T00:00:00`;
+      } else {
+        createdDate = new Date().toISOString();
+      }
       const payload: Record<string, any> = {
         count: +values.count,
         note: values.note,
@@ -136,6 +187,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
         user: props?.masterId ? props?.masterId : values.master,
         author: user?.name,
         isApproved: roleId === 3,
+        createdDate: new Date(createdDate).toISOString(),
       };
 
       if (photo?.id) payload.photo = photo.id; // в Strapi — одиночное медиа поле "photo"
@@ -202,6 +254,15 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
       setLoading(false);
     }
   };
+
+  if (isDataLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] p-8">
+        <Loader2Icon className="animate-spin mb-2 w-8 h-8 text-muted-foreground" />
+        <span className="text-muted-foreground text-lg">Загрузка...</span>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -288,22 +349,28 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                   <FormLabel>Статья расходов</FormLabel>
                   <FormControl>
                     <Select
-                      value={field.value}
+                      key={`${isOutcome ? "outcome" : "income"}-${
+                        settings ? "ready" : "loading"
+                      }`}
+                      value={field.value || ""}
                       onValueChange={(value) => {
                         field.onChange(value);
-
                         // Если note пустой — запишем туда выбранную категорию
                         const note = form.getValues("note");
                         if (!note?.trim()) {
                           form.setValue("note", value);
                         }
                       }}
+                      disabled={
+                        !settings?.outcome_categories ||
+                        settings.outcome_categories.length === 0
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Выберите статью" />
                       </SelectTrigger>
                       <SelectContent>
-                        {settings?.outcome_categories.map((item) => (
+                        {settings?.outcome_categories?.map((item) => (
                           <SelectItem key={item.id} value={item.title}>
                             {item.title}
                           </SelectItem>
@@ -327,22 +394,28 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
                   <FormLabel>Статья доходов</FormLabel>
                   <FormControl>
                     <Select
-                      value={field.value}
+                      key={`${isOutcome ? "outcome" : "income"}-${
+                        settings ? "ready" : "loading"
+                      }`}
+                      value={field.value || ""}
                       onValueChange={(value) => {
                         field.onChange(value);
-
                         // Если note пустой — запишем туда выбранную категорию
                         const note = form.getValues("note");
                         if (!note?.trim()) {
                           form.setValue("note", value);
                         }
                       }}
+                      disabled={
+                        !settings?.income_categories ||
+                        settings.income_categories.length === 0
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Выберите статью" />
                       </SelectTrigger>
                       <SelectContent>
-                        {settings?.income_categories.map((item) => (
+                        {settings?.income_categories?.map((item) => (
                           <SelectItem key={item.id} value={item.title}>
                             {item.title}
                           </SelectItem>
@@ -355,6 +428,71 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
               )}
             />
           )}
+
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="createdDateDate"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Дата</FormLabel>
+                  <FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value
+                            ? format(new Date(field.value), "dd.MM.yyyy", {
+                                locale: ru,
+                              })
+                            : "Выберите дату"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            field.value ? new Date(field.value) : undefined
+                          }
+                          onSelect={(date) => {
+                            if (date) {
+                              // date is Date object, set as YYYY-MM-DD
+                              field.onChange(date.toISOString().slice(0, 10));
+                            }
+                          }}
+                          showOutsideDays
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="createdDateTime"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Время</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="time"
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <div className="space-y-2">
             <FormLabel>Фото (опционально)</FormLabel>

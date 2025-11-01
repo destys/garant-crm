@@ -27,8 +27,8 @@ export const StatsTiles = ({ range }: Props) => {
     if (!range?.from || !range?.to) return undefined;
     return {
       $and: [
-        { createdAt: { $gte: range.from } },
-        { createdAt: { $lte: range.to } },
+        { createdDate: { $gte: range.from } },
+        { createdDate: { $lte: range.to } },
       ],
     };
   }, [range]);
