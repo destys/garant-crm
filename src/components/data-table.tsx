@@ -120,60 +120,106 @@ export function DataTable<TData, TValue>({
       </div>
 
       {isTableView ? (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
+        <>
+          <div className="hidden md:table rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
                     ))}
                   </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      {isLoading ? (
+                        <div className="flex justify-center">
+                          <Loader2Icon className="animate-spin" />
+                        </div>
+                      ) : (
+                        "Нет данных."
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          {!CardComponent && (
+            <div className="block md:hidden">
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <div
+                    key={row.id}
+                    className="border rounded-md mb-4 overflow-hidden"
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const columnHeader = cell.column.columnDef.header;
+                      const headerContext = table
+                        .getHeaderGroups()[0]
+                        .headers.find((h) => h.column.id === cell.column.id)
+                        ?.getContext();
+                      const headerContent = headerContext
+                        ? flexRender(columnHeader, headerContext)
+                        : null;
+                      const cellValue = flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      );
+
+                      return (
+                        <div key={cell.id} className="p-2 border-b">
+                          {headerContent && headerContent !== "" ? (
+                            <>
+                              <strong>{headerContent}</strong>
+                              {cellValue && <span> {cellValue}</span>}
+                            </>
+                          ) : (
+                            cellValue
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    {isLoading ? (
-                      <div className="flex justify-center">
-                        <Loader2Icon className="animate-spin" />
-                      </div>
-                    ) : (
-                      "Нет данных."
-                    )}
-                  </TableCell>
-                </TableRow>
+                <div className="text-center text-muted-foreground py-8">
+                  Нет данных.
+                </div>
               )}
-            </TableBody>
-          </Table>
-        </div>
+            </div>
+          )}
+        </>
       ) : CardComponent ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {table.getRowModel().rows.length ? (

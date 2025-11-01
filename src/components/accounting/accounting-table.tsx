@@ -130,8 +130,8 @@ export function AccountingTable<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="overflow-hidden rounded-md border">
-        <Table>
+      <div className="overflow-x-auto rounded-md border">
+        <Table className="hidden md:table">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -179,6 +179,62 @@ export function AccountingTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+        {/* Mobile cards view */}
+        <div className="block md:hidden">
+          {table.getRowModel().rows?.length ? (
+            <div className="flex flex-col space-y-4">
+              {table.getRowModel().rows.map((row) => (
+                <div
+                  key={row.id}
+                  className="border rounded-md p-4 space-y-2 bg-white shadow"
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const header = table
+                      .getHeaderGroups()
+                      .flatMap((hg) => hg.headers)
+                      .find((h) => h.id === cell.column.id);
+                    const headerName = header
+                      ? typeof header.column.columnDef.header === "function"
+                        ? header.column.columnDef.header(header.getContext())
+                        : header.column.columnDef.header
+                      : cell.column.id;
+                    return (
+                      <div
+                        key={cell.id}
+                        className="p-2 border-b last:border-b-0"
+                      >
+                        {headerName && headerName !== "" ? (
+                          <>
+                            <strong className="inline-block w-28">
+                              {headerName}
+                            </strong>
+                            <span>
+                              {" "}
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </span>
+                          </>
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center h-24 flex items-center justify-center">
+              No results.
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
