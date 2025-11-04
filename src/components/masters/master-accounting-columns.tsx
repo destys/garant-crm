@@ -195,14 +195,14 @@ export const buildMasterAccountingColumns = ({
                           },
                         });
                       }
-                    } else if (item.type === "expense") {
+                    } else if (item.type === "income") {
                       // ✅ удаляем обычный расход
                       if (
                         item.isApproved &&
                         item.user?.id &&
                         item.outcome_category === "Зарплата сотрудников"
                       ) {
-                        updateUser({
+                        await updateUser({
                           userId: item.user.id,
                           updatedData: {
                             balance: (item.user.balance || 0) - item.count,
