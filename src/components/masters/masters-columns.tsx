@@ -35,15 +35,6 @@ export const mastersColumns = (
     cell: ({ row }) => row.original.phone,
   },
   {
-    accessorKey: "activeOrders",
-    header: "В работе",
-    cell: ({ row }) => (
-      <div className="bg-accent rounded-full flex justify-center items-center aspect-square size-8">
-        {row.original.orders.length}
-      </div>
-    ),
-  },
-  {
     accessorKey: "totalOrders",
     header: "Всего",
     cell: ({ row }) => (
