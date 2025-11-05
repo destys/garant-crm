@@ -34,7 +34,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
   // ---------- Договор ----------
   const handleGenerateContract = async (mode: Mode) => {
     const blob = await pdf(
-      <GenerateContractPdf order={data} sign={signDoc} />
+      <GenerateContractPdf order={data} sign={!signDoc} />
     ).toBlob();
 
     const fileName = `Договор_${data.title || "без-номера"}.pdf`;
@@ -54,7 +54,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
   // ---------- Акт ----------
   const handleGenerateAct = async (mode: Mode) => {
     await generateActPdf(data, {
-      sign: signDoc,
+      sign: !signDoc,
       signatureSrc: "/sign.png",
       stampSrc: "/stamp.png",
       mode,
@@ -113,7 +113,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
               checked={signDoc}
               onCheckedChange={(v) => setSignDoc(Boolean(v))}
             />
-            <Label htmlFor="sign-doc">Подписать документ</Label>
+            <Label htmlFor="sign-doc">Убрать печать и подпись</Label>
           </div>
 
           {/* ---------- ДОГОВОР ---------- */}
@@ -183,7 +183,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
                 size="sm"
                 onClick={() =>
                   generateTechnicalConclusionPdf(data, {
-                    sign: signDoc,
+                    sign: !signDoc,
                     signatureSrc: "/sign.png",
                     stampSrc: "/stamp.png",
                     mode: "download",
@@ -198,7 +198,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
                 variant="outline"
                 onClick={() =>
                   generateTechnicalConclusionPdf(data, {
-                    sign: signDoc,
+                    sign: !signDoc,
                     signatureSrc: "/sign.png",
                     stampSrc: "/stamp.png",
                     mode: "preview",
@@ -226,7 +226,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
                 size="sm"
                 onClick={() =>
                   generateWarrantyPdf(data, {
-                    sign: signDoc,
+                    sign: !signDoc,
                     signatureSrc: "/sign.png",
                     stampSrc: "/stamp.png",
                     mode: "download",
@@ -241,7 +241,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
                 variant="outline"
                 onClick={() =>
                   generateWarrantyPdf(data, {
-                    sign: signDoc,
+                    sign: !signDoc,
                     signatureSrc: "/sign.png",
                     stampSrc: "/stamp.png",
                     mode: "preview",

@@ -33,7 +33,7 @@ Font.register({
 
 export const GenerateContractPdf = ({
   order,
-  sign = false,
+  sign = true,
 }: {
   order: OrderProps;
   sign?: boolean;
