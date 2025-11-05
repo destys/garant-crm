@@ -22,9 +22,14 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LEGAL_STATUSES } from "@/constants";
 import { GenerateOrdersReport } from "@/lib/pdf/generate-orders-report";
 
@@ -147,6 +152,47 @@ export const OrdersContent = () => {
   const from = total ? (page - 1) * pageSize + 1 : 0;
   const to = total ? Math.min(page * pageSize, total) : 0;
 
+  const renderPagination = () => {
+    const pages: (number | string)[] = [];
+    if (pageCount <= 6) {
+      pages.push(...Array.from({ length: pageCount }, (_, i) => i + 1));
+    } else {
+      if (page <= 3) {
+        pages.push(1, 2, 3, 4, "...", pageCount);
+      } else if (page >= pageCount - 2) {
+        pages.push(
+          1,
+          "...",
+          pageCount - 3,
+          pageCount - 2,
+          pageCount - 1,
+          pageCount
+        );
+      } else {
+        pages.push(1, "...", page - 1, page, page + 1, "...", pageCount);
+      }
+    }
+    return pages.map((p, i) => (
+      <PaginationItem key={i}>
+        {p === "..." ? (
+          <span className="px-2">...</span>
+        ) : (
+          <PaginationLink
+            href="#"
+            isActive={p === page}
+            className="px-2 py-1 text-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isLoading && p !== page) pushPage(p as number);
+            }}
+          >
+            {p}
+          </PaginationLink>
+        )}
+      </PaginationItem>
+    ));
+  };
+
   return (
     <div>
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
@@ -227,60 +273,34 @@ export const OrdersContent = () => {
             : "Нет данных"}
         </div>
 
-        <Pagination>
-          <PaginationContent className="gap-4">
-            <PaginationItem>
-              <Button asChild>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isLoading && page > 1) pushPage(page - 1);
-                  }}
-                  aria-disabled={isLoading || page <= 1}
-                  className={
-                    isLoading || page <= 1
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
-                />
-              </Button>
-            </PaginationItem>
+        <div className="max-md:flex gap-3">
+          <div className="block md:hidden w-full">
+            <Select
+              value={String(page)}
+              onValueChange={(val) => {
+                const num = Number(val);
+                if (!isNaN(num)) pushPage(num);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Выберите страницу" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+                  <SelectItem key={p} value={String(p)}>
+                    Стр. {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-              <PaginationItem key={p}>
-                <PaginationLink
-                  href="#"
-                  isActive={p === page}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isLoading && p !== page) pushPage(p);
-                  }}
-                >
-                  {p}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            <PaginationItem>
-              <Button asChild>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isLoading && page < pageCount) pushPage(page + 1);
-                  }}
-                  aria-disabled={isLoading || page >= pageCount}
-                  className={
-                    isLoading || page >= pageCount
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
-                />
-              </Button>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+          <Pagination>
+            <PaginationContent className="gap-2 overflow-x-auto">
+              {renderPagination()}
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </div>
   );

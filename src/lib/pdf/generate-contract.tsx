@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
 import type { OrderProps } from "@/types/order.types";
+import signImg from "@/../public/sign.png";
+import stampImg from "@/../public/stamp.png";
 
 Font.register({
   family: "Roboto",
@@ -164,36 +166,36 @@ export const GenerateContractPdf = ({
           </View>
         </View>
 
-        <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
-          Подписи сторон:
-        </Text>
-        <View style={styles.dateRow}>
-          <Text>Исполнитель: __________/___________ </Text>
-          <Text>Заказчик: ___________/___________</Text>
-        </View>
+        <View style={styles.footer}>
+          <Text
+            style={{
+              marginBottom: 10,
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+          >
+            Подписи сторон:
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              position: "relative",
+            }}
+          >
+            <Text>Заказчик: ____________________/____________</Text>
+            <Text>
+              Исполнитель: ____________________/ООО &rdquo;Гарант&rdquo;
+            </Text>
 
-        {sign && (
-          <>
-            <Image
-              src="/images/stamp.png"
-              style={{
-                position: "absolute",
-                bottom: 80,
-                left: 200,
-                width: 100,
-              }}
-            />
-            <Image
-              src="/images/sign.png"
-              style={{
-                position: "absolute",
-                bottom: 70,
-                right: 40,
-                width: 120,
-              }}
-            />
-          </>
-        )}
+            {sign && (
+              <>
+                <Image src={stampImg.src} style={styles.stamp} />
+                <Image src={signImg.src} style={styles.sign} />
+              </>
+            )}
+          </View>
+        </View>
       </Page>
 
       {/* ---------- ПРИЛОЖЕНИЕ № 2 ---------- */}
@@ -317,6 +319,37 @@ export const GenerateContractPdf = ({
             приобретения и доставки согласованных с Заказчиком запасных частей .{" "}
           </Text>
         </View>
+
+        <View style={styles.footer}>
+          <Text
+            style={{
+              marginBottom: 10,
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+          >
+            Подписи сторон:
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              position: "relative",
+            }}
+          >
+            <Text>Заказчик: ____________________/____________</Text>
+            <Text>
+              Исполнитель: ____________________/ООО &rdquo;Гарант&rdquo;
+            </Text>
+
+            {sign && (
+              <>
+                <Image src={stampImg.src} style={styles.stamp} />
+                <Image src={signImg.src} style={styles.sign} />
+              </>
+            )}
+          </View>
+        </View>
       </Page>
 
       {/* ---------- СОГЛАСИЕ НА ОБРАБОТКУ ПЕРСОНАЛЬНЫХ ДАННЫХ ---------- */}
@@ -421,7 +454,7 @@ const Lines = ({ lines }: { lines: string[] }) => (
 );
 
 const styles = StyleSheet.create({
-  page: { fontFamily: "Roboto", fontSize: 12, padding: 32, lineHeight: 1.4 },
+  page: { fontFamily: "Roboto", fontSize: 11, padding: 32, lineHeight: 1.2 },
   title: {
     textAlign: "center",
     fontSize: 14,
@@ -483,5 +516,20 @@ const styles = StyleSheet.create({
     width: "55%",
     padding: 4,
     fontSize: 9,
+  },
+  stamp: {
+    position: "absolute",
+    left: "40%",
+    bottom: -120,
+    width: 120,
+  },
+  sign: {
+    position: "absolute",
+    right: 90,
+    bottom: -10,
+    width: 80,
+  },
+  footer: {
+    marginTop: 20,
   },
 });

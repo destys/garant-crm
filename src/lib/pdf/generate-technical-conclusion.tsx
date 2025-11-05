@@ -133,7 +133,9 @@ const TechnicalConclusionDocument = ({
             }}
           >
             <Text>Заказчик: ____________________/____________</Text>
-            <Text>Исполнитель: ____________________/____________</Text>
+            <Text>
+              Исполнитель: ____________________/ООО &quot;Гарант&ldquo;
+            </Text>
 
             {options?.sign && (
               <>
@@ -225,13 +227,13 @@ const styles = StyleSheet.create({
   stamp: {
     position: "absolute",
     left: "40%",
-    bottom: -60,
+    bottom: -120,
     width: 120,
   },
   sign: {
     position: "absolute",
-    right: 40,
-    bottom: -50,
-    width: 100,
+    right: 60,
+    bottom: -10,
+    width: 80,
   },
 });

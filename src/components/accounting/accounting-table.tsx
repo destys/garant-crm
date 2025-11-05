@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import * as React from "react";
@@ -30,6 +29,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -73,32 +85,56 @@ export function AccountingTable<TData, TValue>({
     },
   });
 
-  // Helper function to generate pagination range with max 7 pages shown
-  const paginationRange = React.useMemo(() => {
-    const total = table.getPageCount();
-    const current = table.getState().pagination.pageIndex;
-    const maxPages = 7;
-    const pages = [];
-
-    if (total <= maxPages) {
-      for (let i = 0; i < total; i++) {
-        pages.push(i);
-      }
+  const renderPagination = React.useCallback(() => {
+    const pageCount = table.getPageCount();
+    const current = table.getState().pagination.pageIndex + 1;
+    const pages: (number | string)[] = [];
+    if (pageCount <= 6) {
+      pages.push(...Array.from({ length: pageCount }, (_, i) => i + 1));
     } else {
-      let start = Math.max(current - 3, 0);
-      const end = Math.min(start + maxPages - 1, total - 1);
-
-      if (end - start < maxPages - 1) {
-        start = Math.max(end - maxPages + 1, 0);
-      }
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
+      if (current <= 3) {
+        pages.push(1, 2, 3, 4, "...", pageCount);
+      } else if (current >= pageCount - 2) {
+        pages.push(
+          1,
+          "...",
+          pageCount - 3,
+          pageCount - 2,
+          pageCount - 1,
+          pageCount
+        );
+      } else {
+        pages.push(
+          1,
+          "...",
+          current - 1,
+          current,
+          current + 1,
+          "...",
+          pageCount
+        );
       }
     }
-
-    return pages;
-  }, [table.getPageCount(), table.getState().pagination.pageIndex]);
+    return pages.map((p, i) => (
+      <PaginationItem key={i}>
+        {p === "..." ? (
+          <span className="px-2">...</span>
+        ) : (
+          <PaginationLink
+            href="#"
+            isActive={p === current}
+            className="px-2 py-1 text-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              table.setPageIndex((p as number) - 1);
+            }}
+          >
+            {p}
+          </PaginationLink>
+        )}
+      </PaginationItem>
+    ));
+  }, [table]);
 
   return (
     <div className="w-full">
@@ -236,54 +272,51 @@ export function AccountingTable<TData, TValue>({
           )}
         </div>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 mt-10">
+        <div className="text-sm text-muted-foreground whitespace-nowrap">
+          {table.getFilteredRowModel().rows.length
+            ? `${
+                table.getState().pagination.pageIndex *
+                  table.getState().pagination.pageSize +
+                1
+              }–${Math.min(
+                (table.getState().pagination.pageIndex + 1) *
+                  table.getState().pagination.pageSize,
+                table.getFilteredRowModel().rows.length
+              )} из ${table.getFilteredRowModel().rows.length}`
+            : "Нет данных"}
         </div>
-        <div className="inline-flex items-center space-x-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="Previous Page"
-          >
-            &lt;
-          </Button>
-          {paginationRange.map((pageIndex) => (
-            <Button
-              key={pageIndex}
-              variant={
-                table.getState().pagination.pageIndex === pageIndex
-                  ? "default"
-                  : "outline"
-              }
-              size="sm"
-              className={
-                table.getState().pagination.pageIndex === pageIndex
-                  ? "bg-primary text-primary-foreground"
-                  : ""
-              }
-              onClick={() => table.setPageIndex(pageIndex)}
-              aria-current={
-                table.getState().pagination.pageIndex === pageIndex
-                  ? "page"
-                  : undefined
-              }
+
+        <div className="max-md:flex gap-3">
+          <div className="block md:hidden w-full">
+            <Select
+              value={String(table.getState().pagination.pageIndex + 1)}
+              onValueChange={(val) => {
+                const num = Number(val);
+                if (!isNaN(num)) table.setPageIndex(num - 1);
+              }}
             >
-              {pageIndex + 1}
-            </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            aria-label="Next Page"
-          >
-            &gt;
-          </Button>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Выберите страницу" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from(
+                  { length: table.getPageCount() },
+                  (_, i) => i + 1
+                ).map((p) => (
+                  <SelectItem key={p} value={String(p)}>
+                    Стр. {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Pagination>
+            <PaginationContent className="gap-2 overflow-x-auto">
+              {renderPagination()}
+            </PaginationContent>
+          </Pagination>
         </div>
       </div>
     </div>

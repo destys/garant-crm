@@ -107,7 +107,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
 
         <PopoverContent className="w-[340px] space-y-4">
           {/* Подпись */}
-          <div className="hidden items-center gap-2">
+          <div className="flex items-center gap-2">
             <Checkbox
               id="sign-doc"
               checked={signDoc}
