@@ -80,10 +80,11 @@ export const MasterAccounting = ({ data }: Props) => {
         type: m.type === "income" ? "income" : "outcome",
         source: "manual",
       })),
-    ].sort(
-      (a, b) =>
-        new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
-    );
+    ].sort((a, b) => {
+      const dateA = new Date(a.createdDate || a.createdAt).getTime();
+      const dateB = new Date(b.createdDate || b.createdAt).getTime();
+      return dateB - dateA;
+    });
   }, [outcomes, manualIO]);
 
   return (

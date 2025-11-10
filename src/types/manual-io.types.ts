@@ -6,7 +6,7 @@ export interface ManualIncomeOutcomeProps {
   agent?: string | null;
   note?: string | null;
   type: string;
-  /* createdAt: string; */
+  createdAt: string;
   createdDate: string;
   user: any;
 }

@@ -41,7 +41,11 @@ export const buildMasterAccountingColumns = ({
     {
       accessorKey: "date",
       header: "Дата",
-      cell: ({ row }) => formatDate(row.original.createdDate, "dd.MM.yy HH:mm"),
+      cell: ({ row }) =>
+        formatDate(
+          row.original.createdDate || row.original.createdAt,
+          "dd.MM.yy HH:mm"
+        ),
     },
     {
       accessorKey: "type",
@@ -84,7 +88,6 @@ export const buildMasterAccountingColumns = ({
             row.original.type === "income" ? "bg-green-500" : "bg-red-500"
           }
         >
-          {row.original.type === "income" ? "" : "-"}
           {row.original.count?.toLocaleString?.() ?? 0} ₽
         </Badge>
       ),

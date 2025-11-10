@@ -14,23 +14,26 @@ import {
 } from "@/components/ui/sidebar";
 import { OrdersSidebarMenu } from "@/components/orders-sidebar-menu";
 
+import { ThemeToggle } from "../theme-toggle";
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem className="flex justify-between items-center">
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/">
-                <IconInnerShadowTop className="!size-5" />
+                <IconInnerShadowTop className="size-5!" />
                 <span className="text-base font-semibold">
                   ООО &quot;Гарант&quot;
                 </span>
               </Link>
             </SidebarMenuButton>
+            <ThemeToggle />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

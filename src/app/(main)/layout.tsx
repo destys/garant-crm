@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import "@/app/globals.css";
 import { Providers } from "@/providers/providers";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { ThemeProvider } from "@/providers/theme-provider";
 
 export const metadata: Metadata = {
   title: "CRM Гарант v2",
@@ -63,21 +53,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`antialiased font-[system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif]`}
       >
-        <Providers>
-          <div className="flex flex-col overflow-hidden">
-            <main className="flex-auto p-4 pt-0">
-              <div className="flex flex-1 flex-col max-w-[1600px] mx-auto">
-                <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6 w-full">
-                  {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Providers>
+            <div className="flex flex-col overflow-hidden">
+              <main className="flex-auto p-4 pt-0">
+                <div className="flex flex-1 flex-col max-w-[1600px] mx-auto">
+                  <div className="@container/main flex flex-1 flex-col gap-2 py-4 md:py-6 w-full">
+                    {children}
+                  </div>
                 </div>
-              </div>
-            </main>
-          </div>
-        </Providers>
+              </main>
+            </div>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );
