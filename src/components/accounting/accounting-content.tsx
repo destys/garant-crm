@@ -92,10 +92,11 @@ export const AccountingContent = () => {
     return [
       ...incomes.map((i) => ({ ...i, type: "income" as const })),
       ...outcomes.map((o) => ({ ...o, type: "outcome" as const })),
-    ].sort(
-      (a, b) =>
-        new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
-    );
+    ].sort((a, b) => {
+      const dateA = new Date(a.createdDate || a.createdAt).getTime();
+      const dateB = new Date(b.createdDate || b.createdAt).getTime();
+      return dateB - dateA;
+    });
   }, [incomes, outcomes]);
 
   return (
