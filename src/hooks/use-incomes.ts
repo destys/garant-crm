@@ -103,12 +103,11 @@ export const useIncomes = (
   };
 };
 
-// 🔹 Версия, которая получает до 3000 записей и ревалидируется
 export const useIncomesAll = (query?: unknown) => {
   const { jwt } = useAuth();
   const authToken = jwt ?? "";
   const pageSize = 100;
-  const maxPages = 30;
+  const maxPages = 50;
   const sort = ["createdAt:desc"];
 
   const queryString = QueryString.stringify(

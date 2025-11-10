@@ -77,7 +77,7 @@ export const MasterAccounting = ({ data }: Props) => {
       ...outcomes.map((o) => ({ ...o, type: "income" as const })),
       ...manualIO.map((m) => ({
         ...m,
-        type: m.type === "income" ? "income" : "expense",
+        type: m.type === "income" ? "income" : "outcome",
         source: "manual",
       })),
     ].sort(

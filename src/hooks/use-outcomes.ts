@@ -106,7 +106,7 @@ export const useOutcomesAll = (query?: unknown) => {
     enabled: !!jwt,
     queryFn: async () => {
       const pageSize = 100;
-      const maxPages = 30;
+      const maxPages = 50;
       const sort = ["createdAt:desc"];
       const queryString = QueryString.stringify(
         { filters: query, sort },

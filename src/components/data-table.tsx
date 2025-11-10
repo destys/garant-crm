@@ -121,7 +121,7 @@ export function DataTable<TData, TValue>({
 
       {isTableView ? (
         <>
-          <div className="hidden md:table rounded-md border">
+          <div className="hidden md:table rounded-md border w-full">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (

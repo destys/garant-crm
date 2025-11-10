@@ -26,8 +26,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useIncomes } from "@/hooks/use-incomes";
-import { useOutcomes } from "@/hooks/use-outcomes";
+import { useIncomesAll } from "@/hooks/use-incomes";
+import { useOutcomesAll } from "@/hooks/use-outcomes";
 import { cn } from "@/lib/utils";
 
 import { NavUser } from "./nav-user";
@@ -37,8 +37,8 @@ export function SiteHeader() {
   const { cashbox } = useCashbox();
   const router = useRouter();
   const { openModal } = useModal();
-  const { total: totalIncomes } = useIncomes(1, 100, { isApproved: false });
-  const { total: totalOutcomes } = useOutcomes(1, 100, { isApproved: false });
+  const { data: totalIncomes } = useIncomesAll({ isApproved: false });
+  const { data: totalOutcomes } = useOutcomesAll({ isApproved: false });
 
   if (!user) return null;
 
@@ -74,7 +74,8 @@ export function SiteHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={"/accounting"}>
-                  Бухгалтерия ({totalIncomes + totalOutcomes})
+                  Бухгалтерия (
+                  {(totalIncomes?.length || 0) + (totalOutcomes?.length || 0)})
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="ml-auto">
@@ -101,7 +102,8 @@ export function SiteHeader() {
               <Link href={"/accounting"}>
                 <DollarSignIcon />
                 <span className="max-lg:hidden">
-                  Бухгалтерия ({totalIncomes + totalOutcomes})
+                  Бухгалтерия (
+                  {(totalIncomes?.length || 0) + (totalOutcomes?.length || 0)})
                 </span>
               </Link>
             </Button>

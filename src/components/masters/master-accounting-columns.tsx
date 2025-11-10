@@ -33,6 +33,7 @@ export const buildMasterAccountingColumns = ({
   updateUser,
   updateOutcome,
   deleteOutcome,
+  deleteIncome,
   deleteManualIO, // ✅ принимаем
   openModal,
 }: BuildColumnsProps): ColumnDef<IncomeOutcomeProps | any>[] => {
@@ -83,7 +84,7 @@ export const buildMasterAccountingColumns = ({
             row.original.type === "income" ? "bg-green-500" : "bg-red-500"
           }
         >
-          {row.original.type === "expense" ? "-" : ""}
+          {row.original.type === "income" ? "" : "-"}
           {row.original.count?.toLocaleString?.() ?? 0} ₽
         </Badge>
       ),
@@ -110,11 +111,11 @@ export const buildMasterAccountingColumns = ({
                 onClick={() =>
                   openModal("incomeOutcome", {
                     title:
-                      item.type === "income"
+                      item.type === "outcome"
                         ? "Редактировать приход"
                         : "Редактировать расход",
                     props: {
-                      type: item.type,
+                      type: item.type === "outcome" ? "income" : "outcome",
                       item,
                       isEdit: true,
                     },
@@ -137,7 +138,7 @@ export const buildMasterAccountingColumns = ({
                     variant="default"
                     className="bg-green-500"
                     onClick={() => {
-                      if (item.type === "expense") {
+                      if (item.type === "income") {
                         updateOutcome?.({
                           documentId: item.documentId,
                           updatedData: { isApproved: true },
@@ -196,7 +197,7 @@ export const buildMasterAccountingColumns = ({
                         });
                       }
                     } else if (item.type === "income") {
-                      // ✅ удаляем обычный расход
+                      // расход
                       if (
                         item.isApproved &&
                         item.user?.id &&
@@ -210,6 +211,21 @@ export const buildMasterAccountingColumns = ({
                         });
                       }
                       await deleteOutcome(item.documentId);
+                    } else if (item.type === "outcome") {
+                      // доход
+                      if (
+                        item.isApproved &&
+                        item.user?.id &&
+                        item.outcome_category === "Зарплата сотрудников"
+                      ) {
+                        await updateUser({
+                          userId: item.user.id,
+                          updatedData: {
+                            balance: (item.user.balance || 0) - item.count,
+                          },
+                        });
+                      }
+                      await deleteIncome(item.documentId);
                     }
                   } catch (err) {
                     console.error("Ошибка при удалении:", err);
