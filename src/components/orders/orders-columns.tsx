@@ -225,7 +225,7 @@ export const ordersColumns = (
         row,
         <div className="flex justify-center">
           <Badge variant={row.original.author ? "success" : "default"}>
-            {formatName(row.original.author) || "API"}
+            {formatName(row.original.author) || row.original.source}
           </Badge>
         </div>
       ),

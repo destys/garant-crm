@@ -121,7 +121,7 @@ export const OrdersCard = ({ data }: { data: OrderProps }) => {
             {deadlineText}
           </Badge>
         </div>
-        <Badge>Создал: {formatName(data.author)}</Badge>
+        <Badge>Создал: {formatName(data.author) || data.source}</Badge>
         <Separator />
 
         <div>
