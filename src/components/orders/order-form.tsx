@@ -204,11 +204,11 @@ export function RepairOrderForm({
     ? { order: { documentId: { $eq: data.documentId } } }
     : undefined;
 
-  const { createIncome, updateIncome, incomes: orderIncomes } = useIncomes(
-    1,
-    50,
-    incomeFilter
-  );
+  const {
+    createIncome,
+    updateIncome,
+    incomes: orderIncomes,
+  } = useIncomes(1, 50, incomeFilter);
 
   const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined;
   const visitTime = visitDate
@@ -359,14 +359,8 @@ export function RepairOrderForm({
         (i.note || "").toLowerCase().includes("доплата")
       );
 
-      console.log("orderIncomes:", orderIncomes);
-      console.log("orderIncomes notes:", orderIncomes.map((i) => i.note));
-      console.log("prepayIncome found:", prepayIncome?.documentId, prepayIncome?.note);
-      console.log("extraIncome found:", extraIncome?.documentId, extraIncome?.note);
-
       // === 🟢 ПРЕДОПЛАТА ===
       if (prepayIncome?.documentId) {
-        console.log("Updating prepay income:", prepayIncome.documentId, prepayNum);
         await updateIncome({
           documentId: prepayIncome.documentId,
           updatedData: {
@@ -375,7 +369,6 @@ export function RepairOrderForm({
           },
         });
       } else {
-        console.log("Creating new prepay income:", prepayNum);
         await createIncome({
           count: prepayNum,
           income_category: "Оплата за ремонт",
@@ -389,7 +382,6 @@ export function RepairOrderForm({
 
       // === 🟢 ДОПЛАТА ===
       if (extraIncome?.documentId) {
-        console.log("Updating extra income:", extraIncome.documentId, diff);
         await updateIncome({
           documentId: extraIncome.documentId,
           updatedData: {
@@ -398,7 +390,6 @@ export function RepairOrderForm({
           },
         });
       } else {
-        console.log("Creating new extra income:", diff);
         await createIncome({
           count: diff,
           income_category: "Оплата за ремонт",
