@@ -48,7 +48,33 @@ export const ServiceReport = ({ range }: Props) => {
     };
   }, [range, service]);
 
-  const accountingFilters = useMemo(() => orderFilters, [orderFilters]);
+  const accountingFilters = useMemo(() => {
+    if (!range?.from || !range?.to) return undefined;
+    return {
+      $and: [
+        ...(service !== "all"
+          ? [{ order: { kind_of_repair: { $eq: service } } }]
+          : []),
+        {
+          $or: [
+            {
+              $and: [
+                { createdDate: { $gte: range.from } },
+                { createdDate: { $lte: range.to } },
+              ],
+            },
+            {
+              $and: [
+                { createdDate: { $null: true } },
+                { createdAt: { $gte: range.from } },
+                { createdAt: { $lte: range.to } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }, [range, service]);
 
   // ---------- Data ----------
   const {

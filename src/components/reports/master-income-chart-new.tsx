@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import qs from "qs";
 import { format } from "date-fns";
+import { Loader2Icon } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIncomes } from "@/hooks/use-incomes";
@@ -35,9 +36,20 @@ export const MasterIncomeChart = ({ range }: Props) => {
   const filters = useMemo(() => {
     if (!range?.from || !range?.to) return undefined;
     return {
-      $and: [
-        { createdAt: { $gte: range.from } },
-        { createdAt: { $lte: range.to } },
+      $or: [
+        {
+          $and: [
+            { createdDate: { $gte: range.from } },
+            { createdDate: { $lte: range.to } },
+          ],
+        },
+        {
+          $and: [
+            { createdDate: { $null: true } },
+            { createdAt: { $gte: range.from } },
+            { createdAt: { $lte: range.to } },
+          ],
+        },
       ],
     };
   }, [range]);
@@ -152,90 +164,93 @@ export const MasterIncomeChart = ({ range }: Props) => {
         <CardTitle>Динамика доходов по мастерам</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={60}
-              tickFormatter={(val) => `${val.toLocaleString("ru-RU")}`}
-            />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("ru-RU", {
-                  month: "short",
-                  day: "numeric",
-                });
-              }}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("ru-RU", {
-                      month: "short",
-                      day: "numeric",
-                    });
-                  }}
-                  indicator="dot"
-                />
-              }
-            />
-            {allMasters.map((name) => {
-              const color = chartConfig[name]?.color || "hsl(0, 0%, 60%)"; // fallback to gray
-              return (
-                <Area
-                  key={name}
-                  dataKey={name}
-                  type="monotone"
-                  fill={color}
-                  stroke={color}
-                  fillOpacity={0.25}
-                />
-              );
-            })}
-            <ChartLegend content={<ChartLegendContent />} />
-          </AreaChart>
-        </ChartContainer>
-        {isLoading && (
-          <div className="mt-2 text-xs text-muted-foreground">Загрузка…</div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-[250px]">
+            <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-desktop)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-desktop)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+                <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-mobile)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-mobile)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                width={60}
+                tickFormatter={(val) => `${val.toLocaleString("ru-RU")}`}
+              />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("ru-RU", {
+                    month: "short",
+                    day: "numeric",
+                  });
+                }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => {
+                      return new Date(value).toLocaleDateString("ru-RU", {
+                        month: "short",
+                        day: "numeric",
+                      });
+                    }}
+                    indicator="dot"
+                  />
+                }
+              />
+              {allMasters.map((name) => {
+                const color = chartConfig[name]?.color || "hsl(0, 0%, 60%)"; // fallback to gray
+                return (
+                  <Area
+                    key={name}
+                    dataKey={name}
+                    type="monotone"
+                    fill={color}
+                    stroke={color}
+                    fillOpacity={0.25}
+                  />
+                );
+              })}
+              <ChartLegend content={<ChartLegendContent />} />
+            </AreaChart>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>

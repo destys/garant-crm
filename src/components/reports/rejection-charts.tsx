@@ -12,6 +12,7 @@ import {
 import { DateRange } from "react-day-picker";
 import { useQueries } from "@tanstack/react-query";
 import qs from "qs";
+import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrders } from "@/hooks/use-orders";
@@ -114,30 +115,33 @@ export const RejectionCharts = ({ range }: Props) => {
           <CardTitle>Причины отказов</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={refusalData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {refusalData.map((_, index) => (
-                  <Cell
-                    key={`refusal-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-          {isLoading && (
-            <div className="mt-2 text-xs text-muted-foreground">Загрузка…</div>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[350px]">
+              <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={refusalData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {refusalData.map((_, index) => (
+                    <Cell
+                      key={`refusal-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
@@ -147,30 +151,33 @@ export const RejectionCharts = ({ range }: Props) => {
           <CardTitle>Источники обращений</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={sourceData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {sourceData.map((_, index) => (
-                  <Cell
-                    key={`source-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-          {isLoading && (
-            <div className="mt-2 text-xs text-muted-foreground">Загрузка…</div>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[350px]">
+              <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={sourceData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {sourceData.map((_, index) => (
+                    <Cell
+                      key={`source-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           )}
         </CardContent>
       </Card>

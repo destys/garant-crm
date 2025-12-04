@@ -197,10 +197,18 @@ export function RepairOrderForm({
   const { settings } = useSettings();
   const { updateOrder, createOrder } = useOrders(1, 1);
   const { user, roleId } = useAuth();
-  const { createIncome, updateIncome, incomes } = useIncomes(1, 20, {
-    order: { documentId: data?.documentId },
-  });
   const queryClient = useQueryClient();
+
+  // Фильтр для получения доходов по заказу
+  const incomeFilter = data?.documentId
+    ? { order: { documentId: { $eq: data.documentId } } }
+    : undefined;
+
+  const { createIncome, updateIncome, incomes: orderIncomes } = useIncomes(
+    1,
+    50,
+    incomeFilter
+  );
 
   const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined;
   const visitTime = visitDate
@@ -342,15 +350,23 @@ export function RepairOrderForm({
       const totalNum = Number(value.total_cost || 0);
       const diff = totalNum - prepayNum;
 
-      const prepayIncome = incomes?.find((i: any) =>
-        i.note?.toLowerCase().includes("предоплата")
-      );
-      const extraIncome = incomes?.find((i: any) =>
-        i.note?.toLowerCase().includes("доплата")
+      // Ищем существующие доходы по заказу (используем данные из заказа)
+      const prepayIncome = orderIncomes.find((i) =>
+        (i.note || "").toLowerCase().includes("предоплата")
       );
 
+      const extraIncome = orderIncomes.find((i) =>
+        (i.note || "").toLowerCase().includes("доплата")
+      );
+
+      console.log("orderIncomes:", orderIncomes);
+      console.log("orderIncomes notes:", orderIncomes.map((i) => i.note));
+      console.log("prepayIncome found:", prepayIncome?.documentId, prepayIncome?.note);
+      console.log("extraIncome found:", extraIncome?.documentId, extraIncome?.note);
+
       // === 🟢 ПРЕДОПЛАТА ===
-      if (prepayIncome) {
+      if (prepayIncome?.documentId) {
+        console.log("Updating prepay income:", prepayIncome.documentId, prepayNum);
         await updateIncome({
           documentId: prepayIncome.documentId,
           updatedData: {
@@ -359,6 +375,7 @@ export function RepairOrderForm({
           },
         });
       } else {
+        console.log("Creating new prepay income:", prepayNum);
         await createIncome({
           count: prepayNum,
           income_category: "Оплата за ремонт",
@@ -371,7 +388,8 @@ export function RepairOrderForm({
       }
 
       // === 🟢 ДОПЛАТА ===
-      if (extraIncome) {
+      if (extraIncome?.documentId) {
+        console.log("Updating extra income:", extraIncome.documentId, diff);
         await updateIncome({
           documentId: extraIncome.documentId,
           updatedData: {
@@ -380,6 +398,7 @@ export function RepairOrderForm({
           },
         });
       } else {
+        console.log("Creating new extra income:", diff);
         await createIncome({
           count: diff,
           income_category: "Оплата за ремонт",
@@ -393,6 +412,9 @@ export function RepairOrderForm({
 
       form.reset(form.getValues());
       toast.success("Заказ и приходы обновлены");
+
+      // Инвалидируем кэш доходов чтобы получить актуальные данные
+      queryClient.invalidateQueries({ queryKey: ["incomes"] });
     } catch (error) {
       console.error(error);
       toast.error("Ошибка при сохранении");

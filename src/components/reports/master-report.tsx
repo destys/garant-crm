@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
-import { Check, ChevronsUpDown, PrinterCheckIcon } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2Icon, PrinterCheckIcon } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 import qs from "qs";
 
@@ -61,9 +61,24 @@ export const MasterReport = ({ range }: Props) => {
     if (!range?.from || !range?.to || !selected) return undefined;
     return {
       $and: [
-        { createdAt: { $gte: range.from } },
-        { createdAt: { $lte: range.to } },
         { user: { id: { $eq: Number(selected) } } },
+        {
+          $or: [
+            {
+              $and: [
+                { createdDate: { $gte: range.from } },
+                { createdDate: { $lte: range.to } },
+              ],
+            },
+            {
+              $and: [
+                { createdDate: { $null: true } },
+                { createdAt: { $gte: range.from } },
+                { createdAt: { $lte: range.to } },
+              ],
+            },
+          ],
+        },
       ],
     };
   }, [range, selected]);
@@ -266,7 +281,13 @@ export const MasterReport = ({ range }: Props) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-lg sm:text-2xl font-bold max-sm:px-3">
-                {!selected ? "—" : isLoading ? "…" : stat.value}
+                {!selected ? (
+                  "—"
+                ) : isLoading ? (
+                  <Loader2Icon className="h-6 w-6 animate-spin text-muted-foreground" />
+                ) : (
+                  stat.value
+                )}
               </CardContent>
             </Card>
           ))}

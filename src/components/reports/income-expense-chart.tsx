@@ -12,6 +12,7 @@ import { DateRange } from "react-day-picker";
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import qs from "qs";
+import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIncomes } from "@/hooks/use-incomes";
@@ -29,25 +30,40 @@ type Props = {
 };
 
 export const IncomeExpenseChart = ({ range }: Props) => {
+  const { jwt: token } = useAuth();
+
   const filters = useMemo(() => {
     if (!range?.from || !range?.to) return undefined;
     return {
-      $and: [
-        { createdAt: { $gte: range.from } },
-        { createdAt: { $lte: range.to } },
+      $or: [
+        {
+          $and: [
+            { createdDate: { $gte: range.from } },
+            { createdDate: { $lte: range.to } },
+          ],
+        },
+        {
+          $and: [
+            { createdDate: { $null: true } },
+            { createdAt: { $gte: range.from } },
+            { createdAt: { $lte: range.to } },
+          ],
+        },
       ],
     };
   }, [range]);
 
-  const { jwt: token } = useAuth();
+  const {
+    incomes: firstIncomes = [],
+    total: incomesTotal = 0,
+    isLoading: incomesLoading,
+  } = useIncomes(1, PAGE_SIZE, filters);
 
-  const { incomes: firstIncomes = [], total: incomesTotal = 0 } = useIncomes(
-    1,
-    PAGE_SIZE,
-    filters
-  );
-  const { outcomes: firstOutcomes = [], total: outcomesTotal = 0 } =
-    useOutcomes(1, PAGE_SIZE, filters);
+  const {
+    outcomes: firstOutcomes = [],
+    total: outcomesTotal = 0,
+    isLoading: outcomesLoading,
+  } = useOutcomes(1, PAGE_SIZE, filters);
 
   const incomesPageCount = Math.ceil(incomesTotal / PAGE_SIZE);
   const outcomesPageCount = Math.ceil(outcomesTotal / PAGE_SIZE);
@@ -98,6 +114,12 @@ export const IncomeExpenseChart = ({ range }: Props) => {
         : [],
   });
 
+  const isLoading =
+    incomesLoading ||
+    outcomesLoading ||
+    otherIncomesQueries.some((q) => q.isLoading) ||
+    otherOutcomesQueries.some((q) => q.isLoading);
+
   const allIncomes = useMemo(() => {
     const rest = otherIncomesQueries.map((q) => q.data?.incomes ?? []).flat();
     return [...firstIncomes, ...rest];
@@ -143,28 +165,34 @@ export const IncomeExpenseChart = ({ range }: Props) => {
           <CardTitle>Доходы</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={groupedIncomes}
-                dataKey="count"
-                nameKey="income_category"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {groupedIncomes.map((_, index) => (
-                  <Cell
-                    key={`income-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[350px]">
+              <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={groupedIncomes}
+                  dataKey="count"
+                  nameKey="income_category"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {groupedIncomes.map((_, index) => (
+                    <Cell
+                      key={`income-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 
@@ -173,28 +201,34 @@ export const IncomeExpenseChart = ({ range }: Props) => {
           <CardTitle>Расходы</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={groupedOutcomes}
-                dataKey="count"
-                nameKey="outcome_category"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {groupedOutcomes.map((_, index) => (
-                  <Cell
-                    key={`expense-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[350px]">
+              <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={groupedOutcomes}
+                  dataKey="count"
+                  nameKey="outcome_category"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {groupedOutcomes.map((_, index) => (
+                    <Cell
+                      key={`expense-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -59,8 +59,8 @@ const incomeSchema = z.object({
   note: z.string().optional(),
   master: z.string(),
   income_category: z.string().min(1, "Выберите статью расходов"),
-  createdDateDate: z.string().optional(),
-  createdDateTime: z.string().optional(),
+  createdDateDate: z.string(),
+  createdDateTime: z.string(),
 });
 type IncomeValues = z.infer<typeof incomeSchema>;
 
@@ -69,8 +69,8 @@ const outcomeSchema = z.object({
   master: z.string(),
   note: z.string().optional(),
   outcome_category: z.string().min(1, "Выберите статью расходов"),
-  createdDateDate: z.string().optional(),
-  createdDateTime: z.string().optional(),
+  createdDateDate: z.string(),
+  createdDateTime: z.string(),
 });
 type OutcomeValues = z.infer<typeof outcomeSchema>;
 

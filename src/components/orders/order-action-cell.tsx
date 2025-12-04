@@ -99,7 +99,7 @@ export const ActionsCell = ({
       {canDecide && (
         <>
           {row.original.is_approve ? (
-            <Badge variant={"secondary"} className="text-sm !h-auto">
+            <Badge variant={"secondary"} className="text-sm h-auto!">
               в архиве
             </Badge>
           ) : (

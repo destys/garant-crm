@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { useQueries } from "@tanstack/react-query";
 import qs from "qs";
+import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrders } from "@/hooks/use-orders";
@@ -26,9 +27,20 @@ export const StatsTiles = ({ range }: Props) => {
   const filtersIncomeOutcome = useMemo(() => {
     if (!range?.from || !range?.to) return undefined;
     return {
-      $and: [
-        { createdDate: { $gte: range.from } },
-        { createdDate: { $lte: range.to } },
+      $or: [
+        {
+          $and: [
+            { createdDate: { $gte: range.from } },
+            { createdDate: { $lte: range.to } },
+          ],
+        },
+        {
+          $and: [
+            { createdDate: { $null: true } },
+            { createdAt: { $gte: range.from } },
+            { createdAt: { $lte: range.to } },
+          ],
+        },
       ],
     };
   }, [range]);
@@ -70,19 +82,27 @@ export const StatsTiles = ({ range }: Props) => {
   const ordersQueryString = useMemo(
     () =>
       qs.stringify(
-        { filtersLeads, sort: ["createdAt:desc"] },
+        { filters: filtersLeads, sort: ["createdAt:desc"] },
         { encodeValuesOnly: true }
       ),
     [filtersLeads]
   );
 
   const incomesQueryString = useMemo(
-    () => qs.stringify({ filtersIncomeOutcome }, { encodeValuesOnly: true }),
+    () =>
+      qs.stringify(
+        { filters: filtersIncomeOutcome },
+        { encodeValuesOnly: true }
+      ),
     [filtersIncomeOutcome]
   );
 
   const outcomesQueryString = useMemo(
-    () => qs.stringify({ filtersIncomeOutcome }, { encodeValuesOnly: true }),
+    () =>
+      qs.stringify(
+        { filters: filtersIncomeOutcome },
+        { encodeValuesOnly: true }
+      ),
     [filtersIncomeOutcome]
   );
 
@@ -204,7 +224,11 @@ export const StatsTiles = ({ range }: Props) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-lg sm:text-2xl font-bold max-sm:px-3">
-            {isLoading ? "…" : stat.value}
+            {isLoading ? (
+              <Loader2Icon className="h-6 w-6 animate-spin text-muted-foreground" />
+            ) : (
+              stat.value
+            )}
           </CardContent>
         </Card>
       ))}
