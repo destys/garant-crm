@@ -63,6 +63,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { OrderProps } from "@/types/order.types";
+import {
+  IncomeOutcomeProps,
+  UpdateIncomeOutcomeDto,
+} from "@/types/income-outcome.types";
 import { useOrders } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
 import { useIncomes } from "@/hooks/use-incomes";
@@ -70,6 +74,131 @@ import { useIncomes } from "@/hooks/use-incomes";
 import { Checkbox } from "../ui/checkbox";
 
 const NEED_DEADLINE = new Set(["Согласовать", "Отремонтировать", "Готово"]);
+
+// ============================================================================
+// 💰 СИНХРОНИЗАЦИЯ ПРИХОДОВ (ПРЕДОПЛАТА + ДОПЛАТА)
+// ============================================================================
+
+interface SyncOrderIncomesParams {
+  orderDocumentId: string;
+  prepayValue: number;
+  totalCostValue: number;
+  currentIncomes: IncomeOutcomeProps[];
+  currentUserId?: number;
+  currentUserName?: string;
+  isAdmin: boolean;
+  createIncome: (data: Partial<UpdateIncomeOutcomeDto>) => void;
+  updateIncome: (params: {
+    documentId: string;
+    updatedData: Partial<IncomeOutcomeProps>;
+  }) => void;
+}
+
+/**
+ * Находит income по типу (предоплата/доплата) в массиве incomes
+ */
+const findIncomeByType = (
+  incomes: IncomeOutcomeProps[],
+  type: "предоплата" | "доплата"
+): IncomeOutcomeProps | undefined => {
+  return incomes.find((income) => {
+    const note = (income.note || "").toLowerCase();
+    return note.includes(type);
+  });
+};
+
+/**
+ * Синхронизирует приходы заказа (предоплата и доплата).
+ * - Создаёт приходы, если их нет
+ * - Обновляет значения, если они изменились
+ * - При изменении значения устанавливает текущего пользователя как автора
+ */
+const syncOrderIncomes = async ({
+  orderDocumentId,
+  prepayValue,
+  totalCostValue,
+  currentIncomes,
+  currentUserId,
+  currentUserName,
+  isAdmin,
+  createIncome,
+  updateIncome,
+}: SyncOrderIncomesParams): Promise<void> => {
+  const extraValue = totalCostValue - prepayValue;
+
+  // Находим существующие приходы
+  const existingPrepay = findIncomeByType(currentIncomes, "предоплата");
+  const existingExtra = findIncomeByType(currentIncomes, "доплата");
+
+  // Определяем, изменились ли значения
+  const prepayChanged =
+    !existingPrepay || (existingPrepay.count ?? 0) !== prepayValue;
+  const extraChanged =
+    !existingExtra || (existingExtra.count ?? 0) !== extraValue;
+
+  // Базовые данные для обновления (только если значение изменилось)
+  const getUpdateData = (
+    newCount: number,
+    valueChanged: boolean
+  ): Partial<IncomeOutcomeProps> => {
+    const data: Partial<IncomeOutcomeProps> = {
+      count: newCount,
+      isApproved: isAdmin,
+    };
+
+    // Если значение изменилось — устанавливаем текущего пользователя
+    if (valueChanged && currentUserId) {
+      (data as any).user = currentUserId;
+      data.author = currentUserName;
+    }
+
+    return data;
+  };
+
+  // === ПРЕДОПЛАТА ===
+  if (existingPrepay?.documentId) {
+    // Обновляем только если есть изменения ИЛИ если это первое сохранение с нулями
+    if (prepayChanged) {
+      await updateIncome({
+        documentId: existingPrepay.documentId,
+        updatedData: getUpdateData(prepayValue, true),
+      });
+    }
+  } else {
+    // Создаём новый приход
+    await createIncome({
+      count: prepayValue,
+      income_category: "Оплата за ремонт",
+      note: "Автосоздание (предоплата)",
+      order: orderDocumentId,
+      user: currentUserId,
+      author: currentUserName,
+      isApproved: isAdmin,
+    });
+  }
+
+  // === ДОПЛАТА ===
+  if (existingExtra?.documentId) {
+    // Обновляем только если есть изменения
+    if (extraChanged) {
+      await updateIncome({
+        documentId: existingExtra.documentId,
+        updatedData: getUpdateData(extraValue, true),
+      });
+    }
+  } else {
+    // Создаём новый приход
+    await createIncome({
+      count: extraValue,
+      income_category: "Оплата за ремонт",
+      note: "Автосоздание (доплата)",
+      order: orderDocumentId,
+      user: currentUserId,
+      author: currentUserName,
+      isApproved: isAdmin,
+    });
+  }
+};
 
 // Схема валидации
 const schema = z
@@ -345,61 +474,18 @@ export function RepairOrderForm({
         updatedData: payload,
       });
 
-      // 💰 Синхронизация приходов — создаем или обновляем оба, даже если 0
-      const prepayNum = Number(value.prepay || 0);
-      const totalNum = Number(value.total_cost || 0);
-      const diff = totalNum - prepayNum;
-
-      // Ищем существующие доходы по заказу (используем данные из заказа)
-      const prepayIncome = orderIncomes.find((i) =>
-        (i.note || "").toLowerCase().includes("предоплата")
-      );
-
-      const extraIncome = orderIncomes.find((i) =>
-        (i.note || "").toLowerCase().includes("доплата")
-      );
-
-      // === 🟢 ПРЕДОПЛАТА ===
-      if (prepayIncome?.documentId) {
-        await updateIncome({
-          documentId: prepayIncome.documentId,
-          updatedData: {
-            count: prepayNum,
-            isApproved: roleId === 3,
-          },
-        });
-      } else {
-        await createIncome({
-          count: prepayNum,
-          income_category: "Оплата за ремонт",
-          note: "Автосоздание (предоплата)",
-          order: data!.documentId,
-          user: user?.id,
-          author: user?.name,
-          isApproved: roleId === 3,
-        });
-      }
-
-      // === 🟢 ДОПЛАТА ===
-      if (extraIncome?.documentId) {
-        await updateIncome({
-          documentId: extraIncome.documentId,
-          updatedData: {
-            count: diff,
-            isApproved: roleId === 3,
-          },
-        });
-      } else {
-        await createIncome({
-          count: diff,
-          income_category: "Оплата за ремонт",
-          note: "Автосоздание (доплата)",
-          order: data!.documentId,
-          user: user?.id,
-          author: user?.name,
-          isApproved: roleId === 3,
-        });
-      }
+      // 💰 Синхронизация приходов — ВСЕГДА при сохранении заказа
+      await syncOrderIncomes({
+        orderDocumentId: data!.documentId,
+        prepayValue: Number(value.prepay || 0),
+        totalCostValue: Number(value.total_cost || 0),
+        currentIncomes: orderIncomes,
+        currentUserId: user?.id,
+        currentUserName: user?.name,
+        isAdmin: roleId === 3,
+        createIncome,
+        updateIncome,
+      });
 
       form.reset(form.getValues());
       toast.success("Заказ и приходы обновлены");
