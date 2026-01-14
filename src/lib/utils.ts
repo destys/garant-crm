@@ -56,3 +56,15 @@ const KIND_PREFIX: Record<string, string> = {
 };
 export const getPrefixByKind = (kind?: string) =>
   KIND_PREFIX[kind ?? ""] ?? "vz";
+
+/**
+ * Конвертирует Date в формат Strapi (yyyy-MM-dd)
+ */
+export const toStrapiDate = (d?: Date) =>
+  d ? format(d, "yyyy-MM-dd") : undefined;
+
+/**
+ * Конвертирует строку Strapi в Date
+ */
+export const fromStrapiDate = (s?: string) =>
+  s ? new Date(`${s}T00:00:00`) : undefined;

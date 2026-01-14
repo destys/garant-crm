@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -23,7 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn, getPrefixByKind } from "@/lib/utils";
+import { cn, getPrefixByKind, toStrapiDate, fromStrapiDate } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Command,
@@ -63,250 +62,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { OrderProps } from "@/types/order.types";
-import {
-  IncomeOutcomeProps,
-  UpdateIncomeOutcomeDto,
-} from "@/types/income-outcome.types";
 import { useOrders } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
 import { useIncomes } from "@/hooks/use-incomes";
+import { syncOrderIncomes } from "@/lib/sync-order-incomes";
+import { orderFormSchema, OrderFormData } from "@/lib/order-form-schema";
 
 import { Checkbox } from "../ui/checkbox";
-
-const NEED_DEADLINE = new Set(["Согласовать", "Отремонтировать", "Готово"]);
-
-// ============================================================================
-// 💰 СИНХРОНИЗАЦИЯ ПРИХОДОВ (ПРЕДОПЛАТА + ДОПЛАТА)
-// ============================================================================
-
-interface SyncOrderIncomesParams {
-  orderDocumentId: string;
-  prepayValue: number;
-  totalCostValue: number;
-  currentIncomes: IncomeOutcomeProps[];
-  currentUserId?: number;
-  currentUserName?: string;
-  isAdmin: boolean;
-  createIncome: (data: Partial<UpdateIncomeOutcomeDto>) => void;
-  updateIncome: (params: {
-    documentId: string;
-    updatedData: Partial<IncomeOutcomeProps>;
-  }) => void;
-}
-
-/**
- * Находит income по типу (предоплата/доплата) в массиве incomes
- */
-const findIncomeByType = (
-  incomes: IncomeOutcomeProps[],
-  type: "предоплата" | "доплата"
-): IncomeOutcomeProps | undefined => {
-  return incomes.find((income) => {
-    const note = (income.note || "").toLowerCase();
-    return note.includes(type);
-  });
-};
-
-/**
- * Синхронизирует приходы заказа (предоплата и доплата).
- * - Создаёт приходы, если их нет
- * - Обновляет значения, если они изменились
- * - При изменении значения устанавливает текущего пользователя как автора
- */
-const syncOrderIncomes = async ({
-  orderDocumentId,
-  prepayValue,
-  totalCostValue,
-  currentIncomes,
-  currentUserId,
-  currentUserName,
-  isAdmin,
-  createIncome,
-  updateIncome,
-}: SyncOrderIncomesParams): Promise<void> => {
-  const extraValue = totalCostValue - prepayValue;
-
-  // Находим существующие приходы
-  const existingPrepay = findIncomeByType(currentIncomes, "предоплата");
-  const existingExtra = findIncomeByType(currentIncomes, "доплата");
-
-  // Определяем, изменились ли значения
-  const prepayChanged =
-    !existingPrepay || (existingPrepay.count ?? 0) !== prepayValue;
-  const extraChanged =
-    !existingExtra || (existingExtra.count ?? 0) !== extraValue;
-
-  // Базовые данные для обновления (только если значение изменилось)
-  const getUpdateData = (
-    newCount: number,
-    valueChanged: boolean
-  ): Partial<IncomeOutcomeProps> => {
-    const data: Partial<IncomeOutcomeProps> = {
-      count: newCount,
-      isApproved: isAdmin,
-    };
-
-    // Если значение изменилось — устанавливаем текущего пользователя
-    if (valueChanged && currentUserId) {
-      (data as any).user = currentUserId;
-      data.author = currentUserName;
-    }
-
-    return data;
-  };
-
-  // === ПРЕДОПЛАТА ===
-  if (existingPrepay?.documentId) {
-    // Обновляем только если есть изменения ИЛИ если это первое сохранение с нулями
-    if (prepayChanged) {
-      await updateIncome({
-        documentId: existingPrepay.documentId,
-        updatedData: getUpdateData(prepayValue, true),
-      });
-    }
-  } else {
-    // Создаём новый приход
-    await createIncome({
-      count: prepayValue,
-      income_category: "Оплата за ремонт",
-      note: "Автосоздание (предоплата)",
-      order: orderDocumentId,
-      user: currentUserId,
-      author: currentUserName,
-      isApproved: isAdmin,
-    });
-  }
-
-  // === ДОПЛАТА ===
-  if (existingExtra?.documentId) {
-    // Обновляем только если есть изменения
-    if (extraChanged) {
-      await updateIncome({
-        documentId: existingExtra.documentId,
-        updatedData: getUpdateData(extraValue, true),
-      });
-    }
-  } else {
-    // Создаём новый приход
-    await createIncome({
-      count: extraValue,
-      income_category: "Оплата за ремонт",
-      note: "Автосоздание (доплата)",
-      order: orderDocumentId,
-      user: currentUserId,
-      author: currentUserName,
-      isApproved: isAdmin,
-    });
-  }
-};
-
-// Схема валидации
-const schema = z
-  .object({
-    orderStatus: z.string(),
-    source: z.string().optional(),
-    warranty: z.string().optional(),
-    type_of_repair: z.string(),
-    kind_of_repair: z.string(),
-    visit_date: z.date().optional(), // только дата
-    visit_time: z.string().optional(), // только время (часы:минуты)
-    diagnostic_date: z.date().optional(),
-    date_of_issue: z.date().optional(),
-    deadline: z.date().optional(),
-    device_type: z.string().optional(),
-    brand: z.string().optional(),
-    model: z.string().optional(),
-    serial_number: z.string().optional(),
-    reason_for_refusal: z.string().optional(),
-    defect: z.string().optional(),
-    conclusion: z.string().optional(),
-    total_cost: z
-      .string()
-      .refine((v) => /^\d+(\.\d+)?$/.test(v), {
-        message: "Введите только число",
-      })
-      .refine((v) => Number(v) >= 0, {
-        message: "Сумма не может быть отрицательной",
-      }),
-    prepay: z
-      .string()
-      .refine((v) => /^\d+(\.\d+)?$/.test(v), {
-        message: "Введите только число",
-      })
-      .refine((v) => Number(v) >= 0, {
-        message: "Сумма не может быть отрицательной",
-      }),
-    equipment: z.string().optional(),
-    completed_work: z.string().optional(),
-    note: z.string().optional(),
-    add_address: z.string(),
-    legal_status: z.string().optional(),
-    add_phone: z.string(),
-    isNeedReceipt: z.boolean().optional(),
-    refusal_comment: z.string().optional(),
-    totalCostNoAccounting: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.orderStatus === "Отказ") {
-      if (!data.reason_for_refusal?.trim()) {
-        ctx.addIssue({
-          path: ["reason_for_refusal"],
-          code: z.ZodIssueCode.custom,
-          message: "Укажите причину отказа",
-        });
-      }
-      if (!data.device_type?.trim()) {
-        ctx.addIssue({
-          path: ["device_type"],
-          code: z.ZodIssueCode.custom,
-          message: "Укажите тип устройства",
-        });
-      }
-      // 🆕 проверка комментария
-      if (!data.refusal_comment?.trim()) {
-        ctx.addIssue({
-          path: ["refusal_comment"],
-          code: z.ZodIssueCode.custom,
-          message: "Укажите комментарий к причине отказа",
-        });
-      }
-    }
-
-    if (NEED_DEADLINE.has(data.orderStatus) && !data.deadline) {
-      ctx.addIssue({
-        path: ["deadline"],
-        code: z.ZodIssueCode.custom,
-        message: "Укажите дедлайн",
-      });
-    }
-
-    // Проверка что оба поля заполнены
-    if (!data.total_cost || !data.prepay) {
-      ctx.addIssue({
-        path: ["total_cost"],
-        code: z.ZodIssueCode.custom,
-        message: "Укажите общую сумму и предоплату",
-      });
-      ctx.addIssue({
-        path: ["prepay"],
-        code: z.ZodIssueCode.custom,
-        message: "Укажите общую сумму и предоплату",
-      });
-    }
-
-    // Проверка что общая сумма >= предоплаты
-    const total = Number(data.total_cost || 0);
-    const prepay = Number(data.prepay || 0);
-    if (total < prepay) {
-      ctx.addIssue({
-        path: ["total_cost"],
-        code: z.ZodIssueCode.custom,
-        message: "Общая сумма не может быть меньше предоплаты",
-      });
-    }
-  });
-
-type FormData = z.infer<typeof schema>;
 
 interface Props {
   data?: OrderProps | null;
@@ -347,12 +109,8 @@ export function RepairOrderForm({
         .padStart(2, "0")}`
     : "";
 
-  const toStrapiDate = (d?: Date) => (d ? format(d, "yyyy-MM-dd") : undefined);
-  const fromStrapiDate = (s?: string) =>
-    s ? new Date(`${s}T00:00:00`) : undefined;
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const form = useForm<OrderFormData>({
+    resolver: zodResolver(orderFormSchema),
     defaultValues: {
       orderStatus: data?.orderStatus || "Новая",
       source: data?.source || "",
@@ -404,7 +162,7 @@ export function RepairOrderForm({
     onDirtyChange?.(form.formState.isDirty);
   }, [form.formState.isDirty, onDirtyChange]);
 
-  const onSubmit = async (value: FormData) => {
+  const onSubmit = async (value: OrderFormData) => {
     setIsSubmitting(true);
     let visitDateTime: string | undefined = undefined;
     if (value.visit_date) {
@@ -507,7 +265,7 @@ export function RepairOrderForm({
     }
   };
 
-  const renderDateField = (name: keyof FormData, label: string) => (
+  const renderDateField = (name: keyof OrderFormData, label: string) => (
     <FormField
       name={name}
       control={form.control}
