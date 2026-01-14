@@ -10,6 +10,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 
 import { useOutcomes } from "@/hooks/use-outcomes";
+import { useUsers } from "@/hooks/use-users";
+import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,7 +48,12 @@ export const ShiftBalanceModal = ({ close, props }: Props) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const { createOutcome } = useOutcomes(1, 1);
+  const { updateUser } = useUsers(1, 1);
   const { user, roleId } = useAuth();
+
+  // Получаем данные мастера для обновления баланса
+  const masterId = props?.masterId ? Number(props.masterId) : null;
+  const { data: masterData } = useUser(masterId);
 
   const form = useForm<OutcomeValues>({
     resolver: zodResolver(outcomeSchema),
@@ -61,10 +68,12 @@ export const ShiftBalanceModal = ({ close, props }: Props) => {
   const onSubmit = async (values: OutcomeValues) => {
     try {
       setLoading(true);
+      const countNum = +values.count;
+
       const payload: Record<string, any> = {
-        count: +values.count,
+        count: countNum,
         note: values.note,
-        user: user?.id,
+        user: masterId, // Используем ID мастера, а не текущего пользователя
         author: user?.name,
         isApproved: roleId === 3,
         outcome_category: SALARY_LABEL,
@@ -72,12 +81,29 @@ export const ShiftBalanceModal = ({ close, props }: Props) => {
 
       await createOutcome(payload);
 
+      // Обновляем баланс мастера если админ
+      if (roleId === 3 && masterId && masterData) {
+        const currentBalance = Number(masterData.balance ?? 0);
+        await updateUser({
+          userId: masterId,
+          updatedData: { balance: currentBalance + countNum },
+        });
+      }
+
       toast.success("Зарплата добавлена");
 
       await queryClient.refetchQueries({
         queryKey: ["order", String(props?.orderId)],
         exact: true,
       });
+
+      // Инвалидируем данные мастера
+      if (masterId) {
+        await queryClient.invalidateQueries({
+          queryKey: ["user", masterId],
+          exact: false,
+        });
+      }
 
       close();
     } catch (e) {

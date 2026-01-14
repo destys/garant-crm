@@ -106,8 +106,8 @@ export const mastersColumns = (
           size="icon"
           variant={!row.original.blocked ? "destructive" : "positive"}
           title="Заблокировать"
-          onClick={() => {
-            updateUser({
+          onClick={async () => {
+            await updateUser({
               userId: row.original.id,
               updatedData: { blocked: !row.original.blocked },
             });

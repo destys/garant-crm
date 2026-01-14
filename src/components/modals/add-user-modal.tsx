@@ -76,7 +76,7 @@ export const AddUserModal = ({ close }: { close: () => void }) => {
       close();
     } catch (e) {
       console.error("Ошибка создания пользователя:", e);
-      toast.success("Ошибка создания пользователя");
+      toast.error("Ошибка создания пользователя");
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ export const AddUserModal = ({ close }: { close: () => void }) => {
                 <FormControl>
                   <Input
                     placeholder="+7 (999) 123-45-67"
-                    mask="+7 (000) 000-0000"
+                    mask="+7 (000) 000-00-00"
                     {...field}
                   />
                 </FormControl>

@@ -65,7 +65,6 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
     type: "contract" | "act" | "technical" | "warranty"
   ) => {
     // 🔐 Подключим Podpislon позже
-    console.warn(`📤 Отправка на подпись документа: ${type}`);
   };
 
   return (

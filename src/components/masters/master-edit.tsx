@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Loader2Icon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ const formSchema = z.object({
 type MasterFormValues = z.infer<typeof formSchema>;
 
 export const MasterEdit = ({ data }: { data: UserProps }) => {
+  const [loading, setLoading] = useState(false);
   const { updateUser } = useUsers(1, 1);
   const { roleId } = useAuth();
   const form = useForm<MasterFormValues>({
@@ -55,7 +58,6 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
   const password = form.watch("password");
 
   const onSubmit = async (values: MasterFormValues) => {
-    console.warn("📦 Данные сотрудника:", data);
     const payload: Record<string, unknown> = {
       name: values.name,
       phone: values.phone,
@@ -68,11 +70,14 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
     }
 
     try {
+      setLoading(true);
       await updateUser({ userId: data.id, updatedData: payload });
       toast.success("Данные пользователя обновлены");
     } catch (e) {
       console.error(e);
       toast.error("Ошибка обновления данных");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,8 +197,8 @@ export const MasterEdit = ({ data }: { data: UserProps }) => {
           )}
 
           {/* Кнопка */}
-          <Button type="submit" className="w-fit">
-            Сохранить
+          <Button type="submit" className="w-fit" disabled={loading}>
+            {loading ? <Loader2Icon className="animate-spin" /> : "Сохранить"}
           </Button>
         </form>
       </Form>

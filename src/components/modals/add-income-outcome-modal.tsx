@@ -225,7 +225,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
               balance: roleId === 3 ? newBalance : currentBalance,
             };
 
-            updateUser({
+            await updateUser({
               userId: payload.user,
               updatedData: updatedData,
             });
@@ -233,7 +233,6 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
           } else {
             toast.success("Расход добавлен");
           }
-          toast.success("Расход добавлен");
         } else {
           payload.income_category = (values as IncomeValues).income_category;
           await createIncome(payload);

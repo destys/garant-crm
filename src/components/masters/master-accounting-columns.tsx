@@ -140,9 +140,9 @@ export const buildMasterAccountingColumns = ({
                   <Button
                     variant="default"
                     className="bg-green-500"
-                    onClick={() => {
+                    onClick={async () => {
                       if (item.type === "income") {
-                        updateOutcome?.({
+                        await updateOutcome?.({
                           documentId: item.documentId,
                           updatedData: { isApproved: true },
                         });
@@ -151,7 +151,7 @@ export const buildMasterAccountingColumns = ({
                           item.user?.id &&
                           item.outcome_category === "Зарплата сотрудников"
                         ) {
-                          updateUser({
+                          await updateUser({
                             userId: item.user.id,
                             updatedData: {
                               balance: (item.user.balance || 0) + item.count,

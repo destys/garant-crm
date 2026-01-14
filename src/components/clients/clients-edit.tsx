@@ -55,7 +55,7 @@ export const ClientsEdit = ({ data }: { data: ClientProps }) => {
             toast.success('Пользователь изменен')
         } catch (e) {
             console.error("Ошибка изменения пользователя:", e);
-            toast.success('Ошибка изменения пользователя')
+            toast.error('Ошибка изменения пользователя')
         } finally {
             setLoading(false)
         }
@@ -117,7 +117,7 @@ export const ClientsEdit = ({ data }: { data: ClientProps }) => {
                         name="rating"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Адрес</FormLabel>
+                                <FormLabel>Рейтинг</FormLabel>
                                 <FormControl>
                                     <RatingStars value={field.value} onChange={field.onChange} />
                                 </FormControl>

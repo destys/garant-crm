@@ -77,7 +77,7 @@ export const AddClientModal = ({
       close();
     } catch (e) {
       console.error("Ошибка создания пользователя:", e);
-      toast.success("Ошибка создания пользователя");
+      toast.error("Ошибка создания пользователя");
     } finally {
       setLoading(false);
     }

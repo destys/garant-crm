@@ -150,9 +150,9 @@ export const buildAccountingColumns = ({
                 <Button
                   variant="default"
                   className="bg-green-500"
-                  onClick={() => {
+                  onClick={async () => {
                     if (row.original.type === "outcome") {
-                      updateOutcome?.({
+                      await updateOutcome?.({
                         documentId: row.original.documentId,
                         updatedData: { isApproved: true },
                       });
@@ -160,7 +160,7 @@ export const buildAccountingColumns = ({
                         row.original.user?.id &&
                         row.original.outcome_category === "Зарплата сотрудников"
                       ) {
-                        updateUser({
+                        await updateUser({
                           userId: row.original.user.id,
                           updatedData: {
                             balance:
@@ -171,7 +171,7 @@ export const buildAccountingColumns = ({
                       }
                     }
                     if (row.original.type === "income") {
-                      updateIncome?.({
+                      await updateIncome?.({
                         documentId: row.original.documentId,
                         updatedData: { isApproved: true },
                       });
@@ -212,7 +212,7 @@ export const buildAccountingColumns = ({
           {roleId === 3 && (
             <Button
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
                 const {
                   type,
                   documentId,
@@ -223,7 +223,7 @@ export const buildAccountingColumns = ({
                 } = row.original;
 
                 if (type === "income") {
-                  deleteIncome?.(documentId);
+                  await deleteIncome?.(documentId);
                 }
 
                 if (type === "outcome") {
@@ -233,7 +233,7 @@ export const buildAccountingColumns = ({
                     user?.id &&
                     outcome_category === "Зарплата сотрудников"
                   ) {
-                    updateUser({
+                    await updateUser({
                       userId: user.id,
                       updatedData: {
                         balance: (user.balance || 0) - count,
@@ -242,7 +242,7 @@ export const buildAccountingColumns = ({
                   }
 
                   // Удаляем сам расход
-                  deleteOutcome?.(documentId);
+                  await deleteOutcome?.(documentId);
                 }
               }}
             >
