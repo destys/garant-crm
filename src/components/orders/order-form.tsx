@@ -655,7 +655,7 @@ export function RepairOrderForm({
                   <FormLabel>Источник</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите источник лида" />
+                      <SelectValue placeholder="Выберите источник" />
                     </SelectTrigger>
                     <SelectContent>
                       {settings?.orderSources.map((item) => (
