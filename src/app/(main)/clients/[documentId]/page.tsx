@@ -1,4 +1,6 @@
 "use client";
+
+import { Loader2Icon } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,8 +17,16 @@ const ClientPage = () => {
     documentId: documentId,
   };
 
-  const { clients } = useClients(1, 1, filters);
+  const { clients, isLoading } = useClients(1, 1, filters);
   const data = clients[0];
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!data) return null;
 

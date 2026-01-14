@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrashIcon } from "lucide-react";
+import { Loader2Icon, TrashIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,19 @@ export const SettingsWidget = ({
   settingKey,
   placeholder,
 }: SettingsWidgetProps) => {
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, isLoading } = useSettings();
   const [inputValue, setInputValue] = useState("");
+
+  if (isLoading) {
+    return (
+      <section>
+        <h2 className="text-xl font-semibold mb-4">{label}</h2>
+        <div className="flex justify-center py-8">
+          <Loader2Icon className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </section>
+    );
+  }
 
   if (!settings) return null;
 

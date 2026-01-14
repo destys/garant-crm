@@ -1,6 +1,10 @@
 "use client";
 
-import { BanknoteArrowDownIcon, BanknoteArrowUpIcon } from "lucide-react";
+import {
+  BanknoteArrowDownIcon,
+  BanknoteArrowUpIcon,
+  Loader2Icon,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,9 +20,17 @@ import { cn } from "@/lib/utils";
 const MasterPage = () => {
   const params = useParams();
   const { id } = params;
-  const { data } = useUser(id ? +id : null);
+  const { data, isLoading } = useUser(id ? +id : null);
   const { openModal } = useModal();
   const { user, roleId } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!data) return null;
 

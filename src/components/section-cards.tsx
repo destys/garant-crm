@@ -3,6 +3,7 @@
 
 import { useMemo } from "react";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { Loader2Icon } from "lucide-react";
 
 import { useAllClients } from "@/hooks/use-all-clients";
 import { useAllIncomes } from "@/hooks/use-all-incomes";
@@ -16,16 +17,22 @@ export function SectionCards() {
   const { current, prev } = getMonthRanges();
 
   // тянем полные наборы по сущностям
-  const { items: currOrders } = useAllOrders(current);
+  const { items: currOrders, isLoading: ordersLoading } = useAllOrders(current);
 
-  const { items: currClients } = useAllClients(current);
+  const { items: currClients, isLoading: clientsLoading } =
+    useAllClients(current);
   const { items: prevClients } = useAllClients(prev);
 
-  const { items: currIncomes } = useAllIncomes(current);
+  const { items: currIncomes, isLoading: incomesLoading } =
+    useAllIncomes(current);
   const { items: prevIncomes } = useAllIncomes(prev);
 
-  const { items: currOutcomes } = useAllOutcomes(current);
+  const { items: currOutcomes, isLoading: outcomesLoading } =
+    useAllOutcomes(current);
   const { items: prevOutcomes } = useAllOutcomes(prev);
+
+  const isLoading =
+    ordersLoading || clientsLoading || incomesLoading || outcomesLoading;
 
   // метрики
   const currentTurnover = currIncomes.reduce((s, i) => s + (i.count || 0), 0);
@@ -92,6 +99,14 @@ export function SectionCards() {
 
   const avgCostPerLead =
     directLeadsMonth.length > 0 ? adSpendMonth / directLeadsMonth.length : 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8 px-4 lg:px-6">
+        <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">

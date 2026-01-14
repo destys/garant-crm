@@ -23,7 +23,11 @@ export default function Page() {
     return {};
   }, [roleId, user?.id]);
 
-  const { data, updateOrder, deleteOrder } = useOrders(1, 50, filters);
+  const { data, updateOrder, deleteOrder, isLoading } = useOrders(
+    1,
+    50,
+    filters
+  );
   const { users } = useUsers(1, 50);
 
   if (!user || !roleId)
@@ -51,6 +55,7 @@ export default function Page() {
             user
           )}
           cardComponent={({ data }) => <OrdersCard data={data} />}
+          isLoading={isLoading}
         />
       )}
     </div>

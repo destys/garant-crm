@@ -30,7 +30,7 @@ export const useManualIncomesOutcomes = (
 
   const queryKey = ["manualIOs", page, pageSize, query];
 
-  // ✅ Получение списка
+  // ✅ Получение списка (кэшируем на 30 секунд)
   const listQuery = useQuery<
     { items: ManualIncomeOutcomeProps[]; total: number },
     Error
@@ -38,6 +38,7 @@ export const useManualIncomesOutcomes = (
     queryKey,
     queryFn: () => fetchManualIOs(authToken, page, pageSize, queryString),
     enabled: !!token,
+    staleTime: 1000 * 30, // 30 секунд
   });
 
   // ✅ Создание

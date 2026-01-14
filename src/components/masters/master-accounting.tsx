@@ -3,6 +3,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Loader2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useIncomes } from "@/hooks/use-incomes";
@@ -45,12 +46,17 @@ export const MasterAccounting = ({ data }: Props) => {
   const { updateIncome, deleteIncome } = useIncomes(1, 1);
   const { updateOutcome, deleteOutcome } = useOutcomes(1, 1);
 
-  const { data: manualIO, deleteManualIO } = useManualIncomesOutcomes(1, 100, {
+  const {
+    data: manualIO,
+    deleteManualIO,
+    isLoading: manualLoading,
+  } = useManualIncomesOutcomes(1, 100, {
     user: { id: data.id },
   });
   const out = useOutcomesAll(baseFilter);
 
   const outcomes = out?.data ?? [];
+  const isLoadingData = manualLoading || out.isLoading;
 
   const { users, updateUser } = useUsers(1, 100);
   const { openModal } = useModal();
@@ -113,7 +119,13 @@ export const MasterAccounting = ({ data }: Props) => {
         </Button>
       </div>
 
-      <AccountingTable data={allRows} columns={columns} />
+      {isLoadingData ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <AccountingTable data={allRows} columns={columns} />
+      )}
     </div>
   );
 };

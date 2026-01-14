@@ -20,6 +20,7 @@ import { MasterIncomeChart } from "@/components/reports/master-income-chart-new"
 import { MasterReport } from "@/components/reports/master-report";
 import { DateShortcuts } from "@/components/reports/date-shortcuts";
 import { ServiceReport } from "@/components/reports/service-report";
+import { ReportsDataProvider } from "@/components/reports/reports-data-provider";
 
 export const ReportsContent = () => {
   const [range, setRange] = useState<DateRange>({
@@ -73,10 +74,15 @@ export const ReportsContent = () => {
         <DateShortcuts setRange={setRange} />
       </div>
 
-      <StatsTiles range={range} />
-      <RejectionCharts range={range} />
-      <IncomeExpenseChart range={range} />
-      <MasterIncomeChart range={range} />
+      {/* Все компоненты используют общий провайдер данных */}
+      <ReportsDataProvider range={range}>
+        <StatsTiles />
+        <RejectionCharts />
+        <IncomeExpenseChart />
+        <MasterIncomeChart />
+      </ReportsDataProvider>
+
+      {/* Эти компоненты имеют свою логику фильтрации */}
       <MasterReport range={range} />
       <ServiceReport range={range} />
     </div>

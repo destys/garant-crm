@@ -34,7 +34,7 @@ export const useCashTransactions = (
   // ключ для списка
   const listKey = ["cash-transactions", page, pageSize, query, sort];
 
-  // Список
+  // Список (кэшируем на 30 секунд)
   const listQuery = useQuery<
     { items: CashboxTransactionProps[]; total: number },
     Error
@@ -43,6 +43,7 @@ export const useCashTransactions = (
     queryFn: () =>
       fetchCashTransactions(authToken, page, pageSize, queryString),
     enabled: !!token,
+    staleTime: 1000 * 30, // 30 секунд
   });
 
   // Создание

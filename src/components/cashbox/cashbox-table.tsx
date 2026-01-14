@@ -6,6 +6,7 @@ import {
   useReactTable,
   flexRender,
 } from "@tanstack/react-table";
+import { Loader2Icon } from "lucide-react";
 
 import {
   Table,
@@ -22,9 +23,11 @@ import { cashboxColumns } from "./cashbox-columns";
 export function CashboxTable({
   data,
   deleteTransaction,
+  isLoading = false,
 }: {
   data: CashboxTransactionProps[];
   deleteTransaction: (documentId: string) => void;
+  isLoading?: boolean;
 }) {
   const table = useReactTable({
     data,
@@ -78,7 +81,13 @@ export function CashboxTable({
                   colSpan={table.getAllColumns().length}
                   className="text-center py-6 text-muted-foreground"
                 >
-                  Нет данных
+                  {isLoading ? (
+                    <div className="flex justify-center">
+                      <Loader2Icon className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : (
+                    "Нет данных"
+                  )}
                 </TableCell>
               </TableRow>
             )}
@@ -123,7 +132,13 @@ export function CashboxTable({
           ))
         ) : (
           <div className="text-center py-6 text-muted-foreground">
-            Нет данных
+            {isLoading ? (
+              <div className="flex justify-center">
+                <Loader2Icon className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              "Нет данных"
+            )}
           </div>
         )}
       </div>

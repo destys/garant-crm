@@ -16,11 +16,12 @@ export const useOrder = (documentId: string) => {
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
-  // Получение заказа
+  // Получение заказа (кэшируем на 30 секунд)
   const orderQuery = useQuery<OrderProps, Error>({
-    queryKey: ["order", documentId], // уникальный ключ в кэше
+    queryKey: ["order", documentId],
     queryFn: () => fetchOrderById(authToken, documentId),
     enabled: !!token && !!documentId,
+    staleTime: 1000 * 30, // 30 секунд
   });
 
   // Обновление заказа

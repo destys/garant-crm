@@ -18,8 +18,35 @@ import { ShiftBalanceModal } from "@/components/modals/shift-balance-modal";
 import { AuthProvider } from "./auth-provider";
 import { ModalComponent, ModalProvider } from "./modal-provider";
 
+// ============================================================================
+// 🚀 ОПТИМИЗИРОВАННЫЕ НАСТРОЙКИ REACT QUERY
+// ============================================================================
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Данные считаются свежими 60 секунд — не будет лишних запросов
+        staleTime: 1000 * 60,
+        // Кэш хранится 10 минут после последнего использования
+        gcTime: 1000 * 60 * 10,
+        // Отключаем автоматический refetch при фокусе окна
+        refetchOnWindowFocus: false,
+        // Отключаем refetch при переподключении к сети
+        refetchOnReconnect: false,
+        // Не делать retry при ошибках (ускоряет отклик)
+        retry: 1,
+        // Показывать предыдущие данные пока загружаются новые
+        placeholderData: (prev: unknown) => prev,
+      },
+      mutations: {
+        // Быстрый отклик на мутации
+        retry: 0,
+      },
+    },
+  });
+
 export const Providers = ({ children }: { children: ReactNode }) => {
-  const [client] = useState(() => new QueryClient());
+  const [client] = useState(createQueryClient);
 
   return (
     <QueryClientProvider client={client}>

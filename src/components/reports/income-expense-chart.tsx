@@ -8,131 +8,20 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { DateRange } from "react-day-picker";
 import { useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
-import qs from "qs";
 import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useIncomes } from "@/hooks/use-incomes";
-import { useOutcomes } from "@/hooks/use-outcomes";
-import { useAuth } from "@/providers/auth-provider";
-import { fetchIncomes } from "@/services/incomes-service";
-import { fetchOutcomes } from "@/services/outcomes-service";
-
-const PAGE_SIZE = 100;
+import { useReportsData } from "./reports-data-provider";
 
 const COLORS = ["#4ade80", "#f87171", "#60a5fa", "#facc15", "#a78bfa"];
 
-type Props = {
-  range: DateRange | undefined;
-};
-
-export const IncomeExpenseChart = ({ range }: Props) => {
-  const { jwt: token } = useAuth();
-
-  const filters = useMemo(() => {
-    if (!range?.from || !range?.to) return undefined;
-    return {
-      $or: [
-        {
-          $and: [
-            { createdDate: { $gte: range.from } },
-            { createdDate: { $lte: range.to } },
-          ],
-        },
-        {
-          $and: [
-            { createdDate: { $null: true } },
-            { createdAt: { $gte: range.from } },
-            { createdAt: { $lte: range.to } },
-          ],
-        },
-      ],
-    };
-  }, [range]);
-
-  const {
-    incomes: firstIncomes = [],
-    total: incomesTotal = 0,
-    isLoading: incomesLoading,
-  } = useIncomes(1, PAGE_SIZE, filters);
-
-  const {
-    outcomes: firstOutcomes = [],
-    total: outcomesTotal = 0,
-    isLoading: outcomesLoading,
-  } = useOutcomes(1, PAGE_SIZE, filters);
-
-  const incomesPageCount = Math.ceil(incomesTotal / PAGE_SIZE);
-  const outcomesPageCount = Math.ceil(outcomesTotal / PAGE_SIZE);
-
-  const incomesQueryString = useMemo(
-    () => qs.stringify({ filters }, { encodeValuesOnly: true }),
-    [filters]
-  );
-  const outcomesQueryString = useMemo(
-    () => qs.stringify({ filters }, { encodeValuesOnly: true }),
-    [filters]
-  );
-
-  const otherIncomesQueries = useQueries({
-    queries:
-      incomesPageCount > 1
-        ? Array.from({ length: incomesPageCount - 1 }, (_, i) => {
-            const page = i + 2;
-            return {
-              queryKey: ["incomes", page, PAGE_SIZE, filters],
-              queryFn: () =>
-                fetchIncomes(token ?? "", page, PAGE_SIZE, incomesQueryString),
-              enabled: !!token && incomesTotal > PAGE_SIZE,
-              staleTime: 60000,
-            };
-          })
-        : [],
-  });
-
-  const otherOutcomesQueries = useQueries({
-    queries:
-      outcomesPageCount > 1
-        ? Array.from({ length: outcomesPageCount - 1 }, (_, i) => {
-            const page = i + 2;
-            return {
-              queryKey: ["outcomes", page, PAGE_SIZE, filters],
-              queryFn: () =>
-                fetchOutcomes(
-                  token ?? "",
-                  page,
-                  PAGE_SIZE,
-                  outcomesQueryString
-                ),
-              enabled: !!token && outcomesTotal > PAGE_SIZE,
-              staleTime: 60000,
-            };
-          })
-        : [],
-  });
-
-  const isLoading =
-    incomesLoading ||
-    outcomesLoading ||
-    otherIncomesQueries.some((q) => q.isLoading) ||
-    otherOutcomesQueries.some((q) => q.isLoading);
-
-  const allIncomes = useMemo(() => {
-    const rest = otherIncomesQueries.map((q) => q.data?.incomes ?? []).flat();
-    return [...firstIncomes, ...rest];
-  }, [firstIncomes, otherIncomesQueries]);
-
-  const allOutcomes = useMemo(() => {
-    const rest = otherOutcomesQueries.map((q) => q.data?.outcomes ?? []).flat();
-    return [...firstOutcomes, ...rest];
-  }, [firstOutcomes, otherOutcomesQueries]);
+export const IncomeExpenseChart = () => {
+  const { incomes, outcomes, isLoading } = useReportsData();
 
   const groupedIncomes = useMemo(() => {
     const result: Record<string, number> = {};
-    for (const income of allIncomes) {
+    for (const income of incomes) {
       const category = income.income_category || "Без категории";
       const amount = income.count || 0;
       result[category] = (result[category] || 0) + amount;
@@ -142,11 +31,11 @@ export const IncomeExpenseChart = ({ range }: Props) => {
       income_category,
       count,
     }));
-  }, [allIncomes]);
+  }, [incomes]);
 
   const groupedOutcomes = useMemo(() => {
     const result: Record<string, number> = {};
-    for (const outcome of allOutcomes) {
+    for (const outcome of outcomes) {
       const category = outcome.outcome_category || "Без категории";
       const amount = outcome.count || 0;
       result[category] = (result[category] || 0) + amount;
@@ -156,7 +45,7 @@ export const IncomeExpenseChart = ({ range }: Props) => {
       outcome_category,
       count,
     }));
-  }, [allOutcomes]);
+  }, [outcomes]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

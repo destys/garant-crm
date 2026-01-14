@@ -22,10 +22,12 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
     { encodeValuesOnly: true }
   );
 
+  // Пользователи редко меняются — кэшируем на 2 минуты
   const usersQuery = useQuery<{ users: UserProps[]; total: number }, Error>({
     queryKey: ["users", page, pageSize, query],
     queryFn: () => fetchUsers(authToken, page, pageSize, queryString),
     enabled: !!token,
+    staleTime: 1000 * 60 * 2, // 2 минуты
   });
 
   const createUserMutation = useMutation({

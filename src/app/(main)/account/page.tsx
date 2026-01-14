@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2Icon } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterEdit } from "@/components/masters/master-edit";
@@ -14,7 +15,7 @@ const VALID_TABS = ["edit", "leads", "accounting"] as const;
 
 const AccountPage = () => {
   const { user } = useAuth();
-  const { data } = useUser(user?.id ? +user.id : null);
+  const { data, isLoading } = useUser(user?.id ? +user.id : null);
 
   const [activeTab, setActiveTab] = useState<string>("edit");
 
@@ -35,6 +36,14 @@ const AccountPage = () => {
       window.history.replaceState(null, "", `#${val}`);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!data) return null;
 

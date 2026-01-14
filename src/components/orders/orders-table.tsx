@@ -11,7 +11,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { LayoutGrid, Table as TableIcon } from "lucide-react";
+import { LayoutGrid, Loader2Icon, Table as TableIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,12 +28,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   cardComponent?: React.ComponentType<{ data: TData }>;
+  isLoading?: boolean;
 }
 
 export function OrdersTable<TData, TValue>({
   columns,
   data,
   cardComponent: CardComponent,
+  isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const viewKey = CardComponent?.name ?? "default";
   const { views, setView } = useTableViewStore();
@@ -150,7 +152,13 @@ export function OrdersTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    Нет данных.
+                    {isLoading ? (
+                      <div className="flex justify-center">
+                        <Loader2Icon className="h-6 w-6 animate-spin" />
+                      </div>
+                    ) : (
+                      "Нет данных."
+                    )}
                   </TableCell>
                 </TableRow>
               )}
@@ -167,7 +175,13 @@ export function OrdersTable<TData, TValue>({
               ))
           ) : (
             <div className="col-span-full text-center text-muted-foreground py-8">
-              Нет данных.
+              {isLoading ? (
+                <div className="flex justify-center">
+                  <Loader2Icon className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                "Нет данных."
+              )}
             </div>
           )}
         </div>

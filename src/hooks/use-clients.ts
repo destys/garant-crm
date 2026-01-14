@@ -35,6 +35,7 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
     queryKey,
     queryFn: () => fetchClients(authToken, page, pageSize, queryString),
     enabled: !!token,
+    staleTime: 1000 * 30, // 30 секунд
   });
 
   const createMutation = useMutation({

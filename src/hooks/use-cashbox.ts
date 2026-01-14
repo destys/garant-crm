@@ -12,11 +12,12 @@ export const useCashbox = () => {
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
-  // Получение кассы
+  // Получение кассы (кэшируем на 1 минуту)
   const cashboxQuery = useQuery<CashboxProps, Error>({
     queryKey: ["cashbox"],
     queryFn: () => fetchCashbox(authToken),
     enabled: !!token,
+    staleTime: 1000 * 60, // 1 минута
   });
 
   // Обновление кассы

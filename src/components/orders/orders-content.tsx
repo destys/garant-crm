@@ -262,6 +262,7 @@ export const OrdersContent = () => {
           user
         )}
         cardComponent={({ data }) => <OrdersCard data={data} />}
+        isLoading={isLoading}
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 mt-10">

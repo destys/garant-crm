@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircleIcon } from "lucide-react";
+import { Loader2Icon, PlusCircleIcon } from "lucide-react";
 
 import { useModal } from "@/providers/modal-provider";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,20 @@ import { cn } from "@/lib/utils";
 
 export const CashboxContent = () => {
   const { openModal } = useModal();
-  const { items, deleteCashTransaction } = useCashTransactions(1, 100);
-  const { cashbox } = useCashbox();
+  const { items, deleteCashTransaction, isLoading } = useCashTransactions(
+    1,
+    100
+  );
+  const { cashbox, isLoading: cashboxLoading } = useCashbox();
   const { roleId } = useAuth();
+
+  if (cashboxLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!cashbox) return null;
   return (
@@ -45,6 +56,7 @@ export const CashboxContent = () => {
       <CashboxTable
         data={items}
         deleteTransaction={() => (roleId !== 1 ? deleteCashTransaction : null)}
+        isLoading={isLoading}
       />
     </div>
   );

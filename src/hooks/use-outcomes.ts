@@ -35,6 +35,7 @@ export const useOutcomes = (
     queryKey: ["outcomes", page, pageSize, query],
     queryFn: () => fetchOutcomes(authToken, page, pageSize, queryString),
     enabled: !!jwt,
+    staleTime: 1000 * 30, // 30 секунд
   });
 
   const createMutation = useMutation({
@@ -96,31 +97,54 @@ export const useOutcomes = (
   };
 };
 
-// Получить до 1000 outcomes параллельными запросами по 100 штук
+/**
+ * Оптимизированный хук для загрузки всех outcomes.
+ * Сначала загружает первую страницу чтобы узнать total,
+ * затем параллельно загружает только нужные страницы.
+ */
 export const useOutcomesAll = (query?: unknown) => {
   const { jwt } = useAuth();
   const authToken = jwt ?? "";
+  const pageSize = 100;
+  const sort = ["createdAt:desc"];
 
-  const resultsQuery = useQuery<IncomeOutcomeProps[], unknown>({
+  const queryString = QueryString.stringify(
+    { filters: query, sort },
+    { encodeValuesOnly: true }
+  );
+
+  return useQuery<IncomeOutcomeProps[], unknown>({
     queryKey: ["outcomes-all", query],
     enabled: !!jwt,
     queryFn: async () => {
-      const pageSize = 100;
-      const maxPages = 50;
-      const sort = ["createdAt:desc"];
-      const queryString = QueryString.stringify(
-        { filters: query, sort },
-        { encodeValuesOnly: true }
+      // Сначала получаем первую страницу чтобы узнать total
+      const firstPage = await fetchOutcomes(
+        authToken,
+        1,
+        pageSize,
+        queryString
       );
-      const requests = Array.from({ length: maxPages }, (_, idx) => {
-        const page = idx + 1;
-        return fetchOutcomes(authToken, page, pageSize, queryString);
-      });
-      const results = await Promise.all(requests);
-      const allOutcomes = results.flatMap((r) => r.outcomes);
-      return allOutcomes;
-    },
-  });
+      const total = firstPage.total;
 
-  return resultsQuery;
+      // Если все данные на первой странице — возвращаем сразу
+      if (total <= pageSize) {
+        return firstPage.outcomes;
+      }
+
+      // Вычисляем сколько страниц нужно загрузить
+      const totalPages = Math.ceil(total / pageSize);
+      const remainingPages = Math.min(totalPages - 1, 49); // максимум 50 страниц
+
+      // Загружаем остальные страницы параллельно
+      const requests = Array.from({ length: remainingPages }, (_, i) =>
+        fetchOutcomes(authToken, i + 2, pageSize, queryString)
+      );
+      const results = await Promise.all(requests);
+
+      // Объединяем результаты
+      return [firstPage.outcomes, ...results.map((r) => r.outcomes)].flat();
+    },
+    staleTime: 1000 * 60 * 2, // 2 минуты
+    gcTime: 1000 * 60 * 10,
+  });
 };

@@ -214,7 +214,13 @@ export function DataTable<TData, TValue>({
                 ))
               ) : (
                 <div className="text-center text-muted-foreground py-8">
-                  Нет данных.
+                  {isLoading ? (
+                    <div className="flex justify-center">
+                      <Loader2Icon className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : (
+                    "Нет данных."
+                  )}
                 </div>
               )}
             </div>
@@ -230,7 +236,13 @@ export function DataTable<TData, TValue>({
               ))
           ) : (
             <div className="col-span-full text-center text-muted-foreground py-8">
-              Нет данных.
+              {isLoading ? (
+                <div className="flex justify-center">
+                  <Loader2Icon className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                "Нет данных."
+              )}
             </div>
           )}
         </div>

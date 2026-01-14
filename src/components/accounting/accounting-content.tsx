@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { Loader2Icon, PlusIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
 
@@ -64,6 +64,7 @@ export const AccountingContent = () => {
 
   const incomes = inc.data ?? [];
   const outcomes = out?.data ?? [];
+  const isLoadingData = inc.isLoading || out.isLoading;
 
   const { users, updateUser } = useUsers(1, 100);
   const { openModal } = useModal();
@@ -179,7 +180,13 @@ export const AccountingContent = () => {
             </div>
           </div>
 
-          <AccountingTable data={allRows} columns={columns} />
+          {isLoadingData ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <AccountingTable data={allRows} columns={columns} />
+          )}
 
           {lightboxIndex !== null && (
             <Lightbox

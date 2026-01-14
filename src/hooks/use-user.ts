@@ -8,6 +8,7 @@ export const useUser = (userId: number | null) => {
   const { jwt } = useAuth();
   const authToken = jwt ?? "";
 
+  // Кэшируем на 2 минуты — пользователи редко меняются
   const query = useQuery<UserProps, Error>({
     queryKey: ["user", userId],
     queryFn: () => {
@@ -15,6 +16,7 @@ export const useUser = (userId: number | null) => {
       return getUserById(authToken, userId);
     },
     enabled: !!jwt && !!userId,
+    staleTime: 1000 * 60 * 2, // 2 минуты
   });
 
   return query; // здесь внутри есть refetch

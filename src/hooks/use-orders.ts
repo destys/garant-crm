@@ -39,6 +39,8 @@ export const useOrders = (
     queryKey: ["orders", page, pageSize, query],
     queryFn: () => fetchOrders(authToken, page, pageSize, queryString),
     enabled: !!token,
+    // Кэшируем на 30 секунд — уменьшает количество запросов в сайдбаре
+    staleTime: 1000 * 30,
   });
 
   // ✅ Создание заказа

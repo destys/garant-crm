@@ -38,6 +38,7 @@ export const useIncomes = (
     queryKey: ["incomes", page, pageSize, query],
     queryFn: () => fetchIncomes(authToken, page, pageSize, queryString),
     enabled: !!token,
+    staleTime: 1000 * 30, // 30 секунд
   });
 
   // 🔹 Мутации с инвалидацией всех связанных запросов
@@ -103,11 +104,15 @@ export const useIncomes = (
   };
 };
 
+/**
+ * Оптимизированный хук для загрузки всех incomes.
+ * Сначала загружает первую страницу чтобы узнать total,
+ * затем параллельно загружает только нужные страницы.
+ */
 export const useIncomesAll = (query?: unknown) => {
   const { jwt } = useAuth();
   const authToken = jwt ?? "";
   const pageSize = 100;
-  const maxPages = 50;
   const sort = ["createdAt:desc"];
 
   const queryString = QueryString.stringify(
@@ -119,14 +124,29 @@ export const useIncomesAll = (query?: unknown) => {
     queryKey: ["incomes-all", query],
     enabled: !!jwt,
     queryFn: async () => {
-      const requests = Array.from({ length: maxPages }, (_, i) =>
-        fetchIncomes(authToken, i + 1, pageSize, queryString)
+      // Сначала получаем первую страницу чтобы узнать total
+      const firstPage = await fetchIncomes(authToken, 1, pageSize, queryString);
+      const total = firstPage.total;
+
+      // Если все данные на первой странице — возвращаем сразу
+      if (total <= pageSize) {
+        return firstPage.incomes;
+      }
+
+      // Вычисляем сколько страниц нужно загрузить
+      const totalPages = Math.ceil(total / pageSize);
+      const remainingPages = Math.min(totalPages - 1, 49); // максимум 50 страниц
+
+      // Загружаем остальные страницы параллельно
+      const requests = Array.from({ length: remainingPages }, (_, i) =>
+        fetchIncomes(authToken, i + 2, pageSize, queryString)
       );
       const results = await Promise.all(requests);
-      const allIncomes = results.flatMap((r) => r.incomes);
-      return allIncomes;
+
+      // Объединяем результаты
+      return [firstPage.incomes, ...results.map((r) => r.incomes)].flat();
     },
-    staleTime: 0, // сразу будет инвалидироваться после мутаций
+    staleTime: 1000 * 60 * 2, // 2 минуты — данные не устареют сразу
     gcTime: 1000 * 60 * 10,
   });
 };

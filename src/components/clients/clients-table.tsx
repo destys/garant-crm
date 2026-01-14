@@ -6,6 +6,7 @@ import {
   useReactTable,
   flexRender,
 } from "@tanstack/react-table";
+import { Loader2Icon } from "lucide-react";
 
 import {
   Table,
@@ -22,9 +23,11 @@ import { clientsColumns } from "./client-columns";
 export function ClientsTable({
   data,
   deleteClient,
+  isLoading = false,
 }: {
   data: ClientProps[];
   deleteClient: (documentId: string) => void;
+  isLoading?: boolean;
 }) {
   const table = useReactTable({
     data,
@@ -78,7 +81,13 @@ export function ClientsTable({
                   colSpan={table.getAllColumns().length}
                   className="text-center py-6 text-muted-foreground"
                 >
-                  Нет данных
+                  {isLoading ? (
+                    <div className="flex justify-center">
+                      <Loader2Icon className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : (
+                    "Нет данных"
+                  )}
                 </TableCell>
               </TableRow>
             )}
@@ -123,7 +132,13 @@ export function ClientsTable({
           ))
         ) : (
           <div className="text-center py-6 text-muted-foreground">
-            Нет данных
+            {isLoading ? (
+              <div className="flex justify-center">
+                <Loader2Icon className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              "Нет данных"
+            )}
           </div>
         )}
       </div>

@@ -12,11 +12,13 @@ export const useSettings = () => {
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
-  // Получение настроек
+  // Получение настроек (редко меняются — кэшируем на 5 минут)
   const settingsQuery = useQuery<SettingsProps, Error>({
     queryKey: ["settings"],
     queryFn: () => fetchSettings(authToken),
     enabled: !!token,
+    staleTime: 1000 * 60 * 5, // 5 минут
+    gcTime: 1000 * 60 * 30, // 30 минут в кэше
   });
 
   // Обновление настроек
