@@ -65,6 +65,7 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
     type: "contract" | "act" | "technical" | "warranty"
   ) => {
     // 🔐 Подключим Podpislon позже
+    console.warn("Signing not implemented yet:", type);
   };
 
   return (

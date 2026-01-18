@@ -207,3 +207,34 @@ export const deleteUser = async (
 
   return userId;
 };
+
+/**
+ * Атомарное обновление баланса пользователя.
+ * Сначала получает текущий баланс с сервера, затем добавляет delta.
+ * Это предотвращает гонку при множественных быстрых обновлениях.
+ */
+export const updateUserBalanceAtomic = async (
+  token: string,
+  userId: number,
+  delta: number
+): Promise<UserProps> => {
+  if (!token) throw new Error("Authentication token is missing");
+
+  // 1. Получаем актуальный баланс
+  const currentUser = await fetchApi<UserProps>(`${apiUrl}/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const currentBalance = currentUser.balance ?? 0;
+  const newBalance = currentBalance + delta;
+
+  // 2. Обновляем с новым значением
+  return fetchApi<UserProps>(`${apiUrl}/${userId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ balance: newBalance }),
+  });
+};

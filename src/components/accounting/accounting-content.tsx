@@ -66,7 +66,7 @@ export const AccountingContent = () => {
   const outcomes = out?.data ?? [];
   const isLoadingData = inc.isLoading || out.isLoading;
 
-  const { users, updateUser } = useUsers(1, 100);
+  const { users, updateBalanceAtomic } = useUsers(1, 100);
   const { openModal } = useModal();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [lightboxImages, setLightboxImages] = useState<{ src: string }[]>([]);
@@ -77,7 +77,7 @@ export const AccountingContent = () => {
       buildAccountingColumns({
         roleId,
         users,
-        updateUser,
+        updateBalanceAtomic,
         updateIncome,
         deleteIncome,
         updateOutcome,
@@ -86,7 +86,7 @@ export const AccountingContent = () => {
         setLightboxIndex,
         openModal,
       }),
-    [roleId, users, updateUser, updateIncome, updateOutcome]
+    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome]
   );
 
   const allRows = useMemo(() => {

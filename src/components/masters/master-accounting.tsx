@@ -58,7 +58,7 @@ export const MasterAccounting = ({ data }: Props) => {
   const outcomes = out?.data ?? [];
   const isLoadingData = manualLoading || out.isLoading;
 
-  const { users, updateUser } = useUsers(1, 100);
+  const { users, updateBalanceAtomic } = useUsers(1, 100);
   const { openModal } = useModal();
   const { roleId } = useAuth();
 
@@ -67,7 +67,7 @@ export const MasterAccounting = ({ data }: Props) => {
       buildMasterAccountingColumns({
         roleId,
         users,
-        updateUser,
+        updateBalanceAtomic,
         updateIncome,
         deleteIncome,
         updateOutcome,
@@ -75,7 +75,7 @@ export const MasterAccounting = ({ data }: Props) => {
         deleteManualIO,
         openModal,
       }),
-    [roleId, users, updateUser, updateIncome, updateOutcome]
+    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome]
   );
 
   const allRows: any[] = useMemo(() => {

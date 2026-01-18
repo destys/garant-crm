@@ -19,7 +19,7 @@ import { cn, formatDate, formatName } from "@/lib/utils";
 interface BuildColumnsProps {
   roleId: number | null;
   users: any[];
-  updateUser: (args: any) => void;
+  updateBalanceAtomic: (args: { userId: number; delta: number }) => Promise<any>;
   updateIncome: any;
   updateOutcome: any;
   deleteIncome: any;
@@ -30,7 +30,7 @@ interface BuildColumnsProps {
 
 export const buildMasterAccountingColumns = ({
   roleId,
-  updateUser,
+  updateBalanceAtomic,
   updateOutcome,
   deleteOutcome,
   deleteIncome,
@@ -147,15 +147,14 @@ export const buildMasterAccountingColumns = ({
                           updatedData: { isApproved: true },
                         });
 
+                        // Атомарно обновляем баланс
                         if (
                           item.user?.id &&
                           item.outcome_category === "Зарплата сотрудников"
                         ) {
-                          await updateUser({
+                          await updateBalanceAtomic({
                             userId: item.user.id,
-                            updatedData: {
-                              balance: (item.user.balance || 0) + item.count,
-                            },
+                            delta: item.count,
                           });
                         }
                       }
@@ -188,15 +187,13 @@ export const buildMasterAccountingColumns = ({
                     if (item.source === "manual") {
                       await deleteManualIO(item.documentId);
 
-                      // обновляем баланс
+                      // Атомарно обновляем баланс
                       if (item.user?.id) {
                         const delta =
                           item.type === "income" ? -item.count : item.count;
-                        await updateUser({
+                        await updateBalanceAtomic({
                           userId: item.user.id,
-                          updatedData: {
-                            balance: (item.user.balance || 0) + delta,
-                          },
+                          delta,
                         });
                       }
                     } else if (item.type === "income") {
@@ -206,11 +203,9 @@ export const buildMasterAccountingColumns = ({
                         item.user?.id &&
                         item.outcome_category === "Зарплата сотрудников"
                       ) {
-                        await updateUser({
+                        await updateBalanceAtomic({
                           userId: item.user.id,
-                          updatedData: {
-                            balance: (item.user.balance || 0) - item.count,
-                          },
+                          delta: -item.count,
                         });
                       }
                       await deleteOutcome(item.documentId);
@@ -221,11 +216,9 @@ export const buildMasterAccountingColumns = ({
                         item.user?.id &&
                         item.outcome_category === "Зарплата сотрудников"
                       ) {
-                        await updateUser({
+                        await updateBalanceAtomic({
                           userId: item.user.id,
-                          updatedData: {
-                            balance: (item.user.balance || 0) - item.count,
-                          },
+                          delta: -item.count,
                         });
                       }
                       await deleteIncome(item.documentId);

@@ -11,7 +11,6 @@ import z from "zod";
 
 import { useOutcomes } from "@/hooks/use-outcomes";
 import { useUsers } from "@/hooks/use-users";
-import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,12 +47,10 @@ export const ShiftBalanceModal = ({ close, props }: Props) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const { createOutcome } = useOutcomes(1, 1);
-  const { updateUser } = useUsers(1, 1);
+  const { updateBalanceAtomic } = useUsers(1, 1);
   const { user, roleId } = useAuth();
 
-  // Получаем данные мастера для обновления баланса
   const masterId = props?.masterId ? Number(props.masterId) : null;
-  const { data: masterData } = useUser(masterId);
 
   const form = useForm<OutcomeValues>({
     resolver: zodResolver(outcomeSchema),
@@ -81,12 +78,11 @@ export const ShiftBalanceModal = ({ close, props }: Props) => {
 
       await createOutcome(payload);
 
-      // Обновляем баланс мастера если админ
-      if (roleId === 3 && masterId && masterData) {
-        const currentBalance = Number(masterData.balance ?? 0);
-        await updateUser({
+      // Атомарно обновляем баланс мастера если админ
+      if (roleId === 3 && masterId) {
+        await updateBalanceAtomic({
           userId: masterId,
-          updatedData: { balance: currentBalance + countNum },
+          delta: countNum,
         });
       }
 

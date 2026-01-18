@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -8,10 +9,10 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { useMemo } from "react";
 import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { useReportsData } from "./reports-data-provider";
 
 const COLORS = ["#4ade80", "#f87171", "#60a5fa", "#facc15", "#a78bfa"];

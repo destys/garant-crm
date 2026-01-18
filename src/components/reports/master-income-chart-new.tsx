@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useMemo } from "react";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { format } from "date-fns";
 import { Loader2Icon } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useReportsData } from "./reports-data-provider";
-
 import {
   ChartConfig,
   ChartContainer,
@@ -16,7 +14,9 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "../ui/chart";
+} from "@/components/ui/chart";
+
+import { useReportsData } from "./reports-data-provider";
 
 export const MasterIncomeChart = () => {
   const { incomes, range, isLoading } = useReportsData();

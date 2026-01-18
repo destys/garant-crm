@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2Icon, PlusCircleIcon } from "lucide-react";
+import { PlusCircleIcon } from "lucide-react";
 import { useState } from "react";
 
 import { useClients } from "@/hooks/use-clients";

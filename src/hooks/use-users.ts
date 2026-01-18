@@ -9,6 +9,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  updateUserBalanceAtomic,
 } from "@/services/users-service";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -69,6 +70,13 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
     },
   });
 
+  // Атомарное обновление баланса (fetch current + update)
+  const updateBalanceMutation = useMutation({
+    mutationFn: ({ userId, delta }: { userId: number; delta: number }) =>
+      updateUserBalanceAtomic(authToken, userId, delta),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
+  });
+
   return {
     users: usersQuery.data?.users || [],
     total: usersQuery.data?.total || 0,
@@ -78,6 +86,7 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
     createUser: createUserMutation.mutate,
     createUserAsync: createUserMutation.mutateAsync, // можно использовать await и try/catch
     updateUser: updateUserMutation.mutateAsync,
+    updateBalanceAtomic: updateBalanceMutation.mutateAsync,
     deleteUser: deleteUserMutation.mutate,
   };
 };

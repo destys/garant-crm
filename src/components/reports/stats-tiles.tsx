@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { useReportsData } from "./reports-data-provider";
 
 export const StatsTiles = () => {

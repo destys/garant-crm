@@ -92,7 +92,7 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
   const queryClient = useQueryClient();
   const { createIncome, updateIncome } = useIncomes(1, 1);
   const { createOutcome, updateOutcome } = useOutcomes(1, 1);
-  const { users, updateUser } = useUsers(1, 100);
+  const { users, updateBalanceAtomic } = useUsers(1, 100);
   const { user, roleId, jwt } = useAuth();
   const [photo, setPhoto] = useState<MediaProps | null>(null);
   const { settings } = useSettings();
@@ -214,20 +214,12 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
           payload.outcome_category = (values as OutcomeValues).outcome_category;
           await createOutcome(payload);
 
-          if (payload.outcome_category === SALARY_LABEL) {
-            const userObj = users.find((u) => u.id === +payload.user);
-            const currentBalance = userObj?.balance || 0;
+          if (payload.outcome_category === SALARY_LABEL && roleId === 3) {
             const countNum = Number(payload.count);
-
-            const newBalance = currentBalance + countNum;
-
-            const updatedData = {
-              balance: roleId === 3 ? newBalance : currentBalance,
-            };
-
-            await updateUser({
+            // Атомарно обновляем баланс
+            await updateBalanceAtomic({
               userId: payload.user,
-              updatedData: updatedData,
+              delta: countNum,
             });
             toast.success("Зарплата добавлена");
           } else {

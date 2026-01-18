@@ -12,6 +12,7 @@ import {
 import { Loader2Icon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { useReportsData } from "./reports-data-provider";
 
 const COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#00C49F", "#8884D8"];

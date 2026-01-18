@@ -22,7 +22,7 @@ import { API_URL } from "@/constants";
 interface BuildColumnsProps {
   roleId: number | null;
   users: any[];
-  updateUser: (args: any) => void;
+  updateBalanceAtomic: (args: { userId: number; delta: number }) => Promise<any>;
   updateIncome: any;
   updateOutcome: any;
   deleteIncome: any;
@@ -35,7 +35,7 @@ interface BuildColumnsProps {
 export const buildAccountingColumns = ({
   roleId,
   users,
-  updateUser,
+  updateBalanceAtomic,
   updateIncome,
   updateOutcome,
   deleteIncome,
@@ -156,17 +156,14 @@ export const buildAccountingColumns = ({
                         documentId: row.original.documentId,
                         updatedData: { isApproved: true },
                       });
+                      // Атомарно обновляем баланс (fetch current + add delta)
                       if (
                         row.original.user?.id &&
                         row.original.outcome_category === "Зарплата сотрудников"
                       ) {
-                        await updateUser({
+                        await updateBalanceAtomic({
                           userId: row.original.user.id,
-                          updatedData: {
-                            balance:
-                              (row.original.user.balance || 0) +
-                              row.original.count,
-                          },
+                          delta: row.original.count,
                         });
                       }
                     }
@@ -233,11 +230,9 @@ export const buildAccountingColumns = ({
                     user?.id &&
                     outcome_category === "Зарплата сотрудников"
                   ) {
-                    await updateUser({
+                    await updateBalanceAtomic({
                       userId: user.id,
-                      updatedData: {
-                        balance: (user.balance || 0) - count,
-                      },
+                      delta: -count, // вычитаем
                     });
                   }
 
