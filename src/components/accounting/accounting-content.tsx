@@ -44,7 +44,10 @@ export const AccountingContent = () => {
 
   // Основной фильтр: комбинируем поиск + isApproved
   const baseFilter = useMemo(() => {
-    const filters: Record<string, any> = { ...searchFilter };
+    const filters: Record<string, any> = {
+      ...searchFilter,
+      count: { $ne: 0 },
+    };
 
     if (filterType === "approved") {
       filters.isApproved = { $eq: true };
@@ -86,7 +89,7 @@ export const AccountingContent = () => {
         setLightboxIndex,
         openModal,
       }),
-    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome]
+    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome],
   );
 
   const allRows = useMemo(() => {
