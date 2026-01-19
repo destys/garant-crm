@@ -35,7 +35,7 @@ const findIncomeByType = (
  * Синхронизирует приходы заказа (предоплата и доплата).
  * - Создаёт приходы, если их нет
  * - Обновляет значения, если они изменились
- * - При изменении значения устанавливает текущего пользователя как автора
+ * - При изменении ЛЮБОГО значения устанавливает текущего пользователя как автора на ОБА прихода
  */
 export const syncOrderIncomes = async ({
   orderDocumentId,
@@ -60,18 +60,21 @@ export const syncOrderIncomes = async ({
   const extraChanged =
     !existingExtra || (existingExtra.count ?? 0) !== extraValue;
 
-  // Базовые данные для обновления (только если значение изменилось)
+  // Если изменилось хотя бы одно значение — обновляем user на обоих приходах
+  const anyValueChanged = prepayChanged || extraChanged;
+
+  // Базовые данные для обновления
   const getUpdateData = (
     newCount: number,
-    valueChanged: boolean
+    shouldUpdateUser: boolean
   ): Partial<IncomeOutcomeProps> => {
     const data: Partial<IncomeOutcomeProps> = {
       count: newCount,
       isApproved: isAdmin,
     };
 
-    // Если значение изменилось — устанавливаем текущего пользователя
-    if (valueChanged && currentUserId) {
+    // Если хотя бы одно значение изменилось — устанавливаем текущего пользователя на оба прихода
+    if (shouldUpdateUser && currentUserId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (data as any).user = currentUserId;
       data.author = currentUserName;
@@ -82,8 +85,8 @@ export const syncOrderIncomes = async ({
 
   // === ПРЕДОПЛАТА ===
   if (existingPrepay?.documentId) {
-    // Обновляем только если есть изменения ИЛИ если это первое сохранение с нулями
-    if (prepayChanged) {
+    // Обновляем если изменилось хотя бы одно значение (чтобы обновить user на обоих)
+    if (anyValueChanged) {
       await updateIncome({
         documentId: existingPrepay.documentId,
         updatedData: getUpdateData(prepayValue, true),
@@ -104,8 +107,8 @@ export const syncOrderIncomes = async ({
 
   // === ДОПЛАТА ===
   if (existingExtra?.documentId) {
-    // Обновляем только если есть изменения
-    if (extraChanged) {
+    // Обновляем если изменилось хотя бы одно значение (чтобы обновить user на обоих)
+    if (anyValueChanged) {
       await updateIncome({
         documentId: existingExtra.documentId,
         updatedData: getUpdateData(extraValue, true),
