@@ -64,11 +64,11 @@ import {
 import { OrderProps } from "@/types/order.types";
 import { useOrders } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
-import { useIncomes } from "@/hooks/use-incomes";
-import { syncOrderIncomes } from "@/lib/sync-order-incomes";
 import { orderFormSchema, OrderFormData } from "@/lib/order-form-schema";
 
 import { Checkbox } from "../ui/checkbox";
+
+import { OrderIncomesSync } from "./order-incomes-sync";
 
 interface Props {
   data?: OrderProps | null;
@@ -89,17 +89,6 @@ export function RepairOrderForm({
   const { updateOrder, createOrder } = useOrders(1, 1);
   const { user, roleId } = useAuth();
   const queryClient = useQueryClient();
-
-  // Фильтр для получения доходов по заказу
-  const incomeFilter = data?.documentId
-    ? { order: { documentId: { $eq: data.documentId } } }
-    : undefined;
-
-  const {
-    createIncome,
-    updateIncome,
-    incomes: orderIncomes,
-  } = useIncomes(1, 50, incomeFilter);
 
   const visitDate = data?.visit_date ? parseISO(data.visit_date) : undefined;
   const visitTime = visitDate
@@ -133,8 +122,6 @@ export function RepairOrderForm({
       reason_for_refusal: data?.reason_for_refusal || "",
       defect: data?.defect || "",
       conclusion: data?.conclusion || "",
-      total_cost: data?.total_cost || "0",
-      prepay: data?.prepay || "0",
       equipment: data?.equipment || "",
       completed_work: data?.completed_work || "",
       note: data?.note || "",
@@ -232,21 +219,8 @@ export function RepairOrderForm({
         updatedData: payload,
       });
 
-      // 💰 Синхронизация приходов — ВСЕГДА при сохранении заказа
-      await syncOrderIncomes({
-        orderDocumentId: data!.documentId,
-        prepayValue: Number(value.prepay || 0),
-        totalCostValue: Number(value.total_cost || 0),
-        currentIncomes: orderIncomes,
-        currentUserId: user?.id,
-        currentUserName: user?.name,
-        isAdmin: roleId === 3,
-        createIncome,
-        updateIncome,
-      });
-
       form.reset(form.getValues());
-      toast.success("Заказ и приходы обновлены");
+      toast.success("Заказ обновлен");
 
       // Инвалидируем кэш доходов чтобы получить актуальные данные
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
@@ -279,7 +253,7 @@ export function RepairOrderForm({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left",
-                    !field.value && "text-muted-foreground"
+                    !field.value && "text-muted-foreground",
                   )}
                 >
                   {field.value
@@ -542,7 +516,7 @@ export function RepairOrderForm({
 
           {/* Дата выезда */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-1">
               <div className="col-span-2">
                 {renderDateField("visit_date", "Дата выезда")}
               </div>
@@ -551,7 +525,7 @@ export function RepairOrderForm({
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Время выезда</FormLabel>
+                    <FormLabel>Время</FormLabel>
                     <FormControl>
                       <Input type="time" {...field} />
                     </FormControl>
@@ -605,7 +579,7 @@ export function RepairOrderForm({
                                   "mr-2 h-4 w-4",
                                   device.title === field.value
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                               {device.title}
@@ -714,30 +688,6 @@ export function RepairOrderForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <FormField
-              name="total_cost"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="relative">
-                  <FormLabel>Общая стоимость</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              name="prepay"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="relative">
-                  <FormLabel>Предоплата</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
               name="totalCostNoAccounting"
               control={form.control}
               render={({ field }) => (
@@ -789,6 +739,7 @@ export function RepairOrderForm({
           </div>
         </form>
       </Form>
+      {data && <OrderIncomesSync data={data} />}
     </div>
   );
 }

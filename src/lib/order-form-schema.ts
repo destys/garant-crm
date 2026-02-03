@@ -21,22 +21,6 @@ export const orderFormSchema = z
     reason_for_refusal: z.string().optional(),
     defect: z.string().optional(),
     conclusion: z.string().optional(),
-    total_cost: z
-      .string()
-      .refine((v) => /^\d+(\.\d+)?$/.test(v), {
-        message: "Введите только число",
-      })
-      .refine((v) => Number(v) >= 0, {
-        message: "Сумма не может быть отрицательной",
-      }),
-    prepay: z
-      .string()
-      .refine((v) => /^\d+(\.\d+)?$/.test(v), {
-        message: "Введите только число",
-      })
-      .refine((v) => Number(v) >= 0, {
-        message: "Сумма не может быть отрицательной",
-      }),
     equipment: z.string().optional(),
     completed_work: z.string().optional(),
     note: z.string().optional(),
@@ -77,29 +61,6 @@ export const orderFormSchema = z
         path: ["deadline"],
         code: z.ZodIssueCode.custom,
         message: "Укажите дедлайн",
-      });
-    }
-
-    if (!data.total_cost || !data.prepay) {
-      ctx.addIssue({
-        path: ["total_cost"],
-        code: z.ZodIssueCode.custom,
-        message: "Укажите общую сумму и предоплату",
-      });
-      ctx.addIssue({
-        path: ["prepay"],
-        code: z.ZodIssueCode.custom,
-        message: "Укажите общую сумму и предоплату",
-      });
-    }
-
-    const total = Number(data.total_cost || 0);
-    const prepay = Number(data.prepay || 0);
-    if (total < prepay) {
-      ctx.addIssue({
-        path: ["total_cost"],
-        code: z.ZodIssueCode.custom,
-        message: "Общая сумма не может быть меньше предоплаты",
       });
     }
   });
