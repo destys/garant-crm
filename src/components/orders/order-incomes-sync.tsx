@@ -65,7 +65,7 @@ const orderFormSchema = z
 
 export const OrderIncomesSync = ({ data }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { roleId, user } = useAuth();
+  const { user } = useAuth();
   const { createIncome, updateIncome } = useIncomes(1, 1);
   const { updateOrder } = useOrders(1, 1);
   const queryClient = useQueryClient();
@@ -94,7 +94,7 @@ export const OrderIncomesSync = ({ data }: Props) => {
           documentId: orderPrepayValue?.documentId,
           updatedData: {
             count: +value.prepay,
-            isApproved: roleId === 3,
+            //isApproved: roleId === 3,
             user: {
               id: user?.id,
             },
@@ -104,7 +104,7 @@ export const OrderIncomesSync = ({ data }: Props) => {
           documentId: orderSurchargeValue?.documentId,
           updatedData: {
             count: +value.total_cost - +value.prepay,
-            isApproved: roleId === 3,
+            //isApproved: roleId === 3,
             user: {
               id: user?.id,
             },
@@ -115,7 +115,7 @@ export const OrderIncomesSync = ({ data }: Props) => {
       if (!orderPrepayValue) {
         await createIncome({
           count: +value.prepay,
-          isApproved: roleId === 3,
+          //isApproved: roleId === 3,
           order: data.documentId,
           user: user?.id,
           income_category: "Оплата за ремонт",
@@ -126,7 +126,7 @@ export const OrderIncomesSync = ({ data }: Props) => {
       if (!orderSurchargeValue) {
         await createIncome({
           count: +value.total_cost - +value.prepay,
-          isApproved: roleId === 3,
+          //isApproved: roleId === 3,
           order: data.documentId,
           user: user?.id,
           income_category: "Оплата за ремонт",
