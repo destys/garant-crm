@@ -151,6 +151,8 @@ export const buildAccountingColumns = ({
                   variant="default"
                   className="bg-green-500"
                   onClick={async () => {
+                    const confirmApprove = confirm("Подтвердить запись?");
+                    if (!confirmApprove) return;
                     if (row.original.type === "outcome") {
                       await updateOutcome?.({
                         documentId: row.original.documentId,
@@ -210,6 +212,9 @@ export const buildAccountingColumns = ({
             <Button
               variant="destructive"
               onClick={async () => {
+                const confirmDelete = confirm("Удалить эту запись?");
+                if (!confirmDelete) return;
+
                 const {
                   type,
                   documentId,

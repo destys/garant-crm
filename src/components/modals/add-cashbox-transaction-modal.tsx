@@ -95,8 +95,8 @@ export const AddCashboxTransactionModal = ({
 
       close();
     } catch (e) {
-      console.error("Ошибка создания пользователя:", e);
-      toast.success("Ошибка создания пользователя");
+      console.error("Ошибка сохранения транзакции:", e);
+      toast.error("Ошибка сохранения транзакции");
     } finally {
       setLoading(false);
     }

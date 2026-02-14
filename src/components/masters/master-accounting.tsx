@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,16 @@ export const MasterAccounting = ({ data }: Props) => {
   const { users, updateBalanceAtomic } = useUsers(1, 100);
   const { openModal } = useModal();
   const { roleId } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Callback для обновления UI после удаления
+  const handleDeleteSuccess = useCallback(() => {
+    // Инвалидируем все связанные запросы
+    queryClient.invalidateQueries({ queryKey: ["manualIOs"] });
+    queryClient.invalidateQueries({ queryKey: ["outcomes"] });
+    queryClient.invalidateQueries({ queryKey: ["incomes"] });
+    queryClient.invalidateQueries({ queryKey: ["user", data.id] });
+  }, [queryClient, data.id]);
 
   const columns = useMemo(
     () =>
@@ -74,8 +85,9 @@ export const MasterAccounting = ({ data }: Props) => {
         deleteOutcome,
         deleteManualIO,
         openModal,
+        onDeleteSuccess: handleDeleteSuccess,
       }),
-    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome]
+    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome, handleDeleteSuccess]
   );
 
   const allRows: any[] = useMemo(() => {

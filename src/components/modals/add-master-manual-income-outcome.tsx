@@ -46,7 +46,7 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
   const userId = props?.masterId ? Number(props.masterId) : null;
 
   const { data: user } = useUser(userId);
-  const { updateUser } = useUsers(1, 1);
+  const { updateBalanceAtomic } = useUsers(1, 1);
   const { createManualIO } = useManualIncomesOutcomes(1, 1);
   const queryClient = useQueryClient();
 
@@ -79,9 +79,6 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
       const amount = normalizeAmount(values.count);
       const signedAmount = isOutcome ? -amount : amount;
 
-      // текущие данные пользователя
-      const currentBalance = Number(user.balance ?? 0);
-
       // запись для incomesOutcomes: count, agent, date, note
       const payload = {
         count: signedAmount,
@@ -94,10 +91,8 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
       };
 
       await createManualIO(payload);
-      const payloadUser = {
-        balance: currentBalance + signedAmount,
-      };
-      await updateUser({ userId: user.id, updatedData: payloadUser });
+      // Атомарно обновляем баланс
+      await updateBalanceAtomic({ userId: user.id, delta: signedAmount });
 
       if (props?.masterId) {
         await queryClient.invalidateQueries({

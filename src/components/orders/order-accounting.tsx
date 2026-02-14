@@ -40,7 +40,7 @@ export const OrderAccounting = ({ data }: Props) => {
   const { roleId } = useAuth();
   const queryClient = useQueryClient();
 
-  const { updateUser } = useUsers(1, 100);
+  const { updateBalanceAtomic } = useUsers(1, 100);
   const { updateIncome, deleteIncome } = useIncomes(1, 100);
   const { updateOutcome, deleteOutcome } = useOutcomes(1, 100);
 
@@ -127,6 +127,8 @@ export const OrderAccounting = ({ data }: Props) => {
                             variant="default"
                             className="bg-green-500"
                             onClick={async () => {
+                              const confirmApprove = confirm("Подтвердить запись?");
+                              if (!confirmApprove) return;
                               try {
                                 if (type === "expenses") {
                                   await updateOutcome({
@@ -138,12 +140,9 @@ export const OrderAccounting = ({ data }: Props) => {
                                     item.outcome_category ===
                                       "Зарплата сотрудников"
                                   ) {
-                                    await updateUser({
+                                    await updateBalanceAtomic({
                                       userId: item.user.id,
-                                      updatedData: {
-                                        balance:
-                                          (item.user.balance || 0) + item.count,
-                                      },
+                                      delta: item.count,
                                     });
                                   }
                                 }
@@ -167,6 +166,8 @@ export const OrderAccounting = ({ data }: Props) => {
                           variant="destructive"
                           size="icon"
                           onClick={async () => {
+                            const confirmDelete = confirm("Удалить эту запись?");
+                            if (!confirmDelete) return;
                             try {
                               const {
                                 isApproved,
@@ -184,11 +185,9 @@ export const OrderAccounting = ({ data }: Props) => {
                                   user?.id &&
                                   outcome_category === "Зарплата сотрудников"
                                 ) {
-                                  await updateUser({
+                                  await updateBalanceAtomic({
                                     userId: user.id,
-                                    updatedData: {
-                                      balance: (user.balance || 0) - count,
-                                    },
+                                    delta: -count,
                                   });
                                 }
                                 await deleteOutcome(documentId);
@@ -280,6 +279,8 @@ export const OrderAccounting = ({ data }: Props) => {
                       variant="default"
                       className="bg-green-500"
                       onClick={async () => {
+                        const confirmApprove = confirm("Подтвердить запись?");
+                        if (!confirmApprove) return;
                         try {
                           if (type === "expenses") {
                             await updateOutcome({
@@ -290,12 +291,9 @@ export const OrderAccounting = ({ data }: Props) => {
                               item.user?.id &&
                               item.outcome_category === "Зарплата сотрудников"
                             ) {
-                              await updateUser({
+                              await updateBalanceAtomic({
                                 userId: item.user.id,
-                                updatedData: {
-                                  balance:
-                                    (item.user.balance || 0) + item.count,
-                                },
+                                delta: item.count,
                               });
                             }
                           }
@@ -319,6 +317,8 @@ export const OrderAccounting = ({ data }: Props) => {
                     variant="destructive"
                     size="icon"
                     onClick={async () => {
+                      const confirmDelete = confirm("Удалить эту запись?");
+                      if (!confirmDelete) return;
                       try {
                         const {
                           isApproved,
@@ -336,11 +336,9 @@ export const OrderAccounting = ({ data }: Props) => {
                             user?.id &&
                             outcome_category === "Зарплата сотрудников"
                           ) {
-                            await updateUser({
+                            await updateBalanceAtomic({
                               userId: user.id,
-                              updatedData: {
-                                balance: (user.balance || 0) - count,
-                              },
+                              delta: -count,
                             });
                           }
                           await deleteOutcome(documentId);

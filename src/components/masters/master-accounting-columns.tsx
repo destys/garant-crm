@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   CheckCheckIcon,
   CheckIcon,
+  HandIcon,
   Link2Icon,
   PencilIcon,
   Trash2Icon,
@@ -19,13 +20,17 @@ import { cn, formatDate, formatName } from "@/lib/utils";
 interface BuildColumnsProps {
   roleId: number | null;
   users: any[];
-  updateBalanceAtomic: (args: { userId: number; delta: number }) => Promise<any>;
+  updateBalanceAtomic: (args: {
+    userId: number;
+    delta: number;
+  }) => Promise<any>;
   updateIncome: any;
   updateOutcome: any;
   deleteIncome: any;
   deleteOutcome: any;
-  deleteManualIO: any; // ✅ добавили
+  deleteManualIO: any;
   openModal: (a: string, b: any) => void;
+  onDeleteSuccess?: () => void; // Callback для обновления UI после удаления
 }
 
 export const buildMasterAccountingColumns = ({
@@ -34,8 +39,9 @@ export const buildMasterAccountingColumns = ({
   updateOutcome,
   deleteOutcome,
   deleteIncome,
-  deleteManualIO, // ✅ принимаем
+  deleteManualIO,
   openModal,
+  onDeleteSuccess,
 }: BuildColumnsProps): ColumnDef<IncomeOutcomeProps | any>[] => {
   return [
     {
@@ -44,21 +50,28 @@ export const buildMasterAccountingColumns = ({
       cell: ({ row }) =>
         formatDate(
           row.original.createdDate || row.original.createdAt,
-          "dd.MM.yy HH:mm"
+          "dd.MM.yy HH:mm",
         ),
     },
     {
       accessorKey: "type",
       header: "Тип",
       cell: ({ row }) => (
-        <Badge
-          variant={row.original.type === "income" ? "default" : "destructive"}
-          className={
-            row.original.type === "income" ? "bg-green-500" : "bg-red-500"
-          }
-        >
-          {row.original.type === "income" ? "Приход" : "Расход"}
-        </Badge>
+        <div className="flex gap-1">
+          <Badge
+            variant={row.original.type === "income" ? "default" : "destructive"}
+            className={
+              row.original.type === "income" ? "bg-green-500" : "bg-red-500"
+            }
+          >
+            {row.original.type === "income" ? "Приход" : "Расход"}
+          </Badge>
+          {row.original.source === "manual" && (
+            <Badge variant="outline" className="text-xs w-fit">
+              <HandIcon />
+            </Badge>
+          )}
+        </div>
       ),
     },
     {
@@ -141,6 +154,8 @@ export const buildMasterAccountingColumns = ({
                     variant="default"
                     className="bg-green-500"
                     onClick={async () => {
+                      const confirmApprove = confirm("Подтвердить запись?");
+                      if (!confirmApprove) return;
                       if (item.type === "income") {
                         await updateOutcome?.({
                           documentId: item.documentId,
@@ -188,9 +203,10 @@ export const buildMasterAccountingColumns = ({
                       await deleteManualIO(item.documentId);
 
                       // Атомарно обновляем баланс
+                      // При создании: income добавляет +count, outcome добавляет -count (отрицательный)
+                      // При удалении: всегда инвертируем (- count), чтобы отменить эффект
                       if (item.user?.id) {
-                        const delta =
-                          item.type === "income" ? -item.count : item.count;
+                        const delta = -item.count;
                         await updateBalanceAtomic({
                           userId: item.user.id,
                           delta,
@@ -223,6 +239,8 @@ export const buildMasterAccountingColumns = ({
                       }
                       await deleteIncome(item.documentId);
                     }
+                    // Обновляем UI после успешного удаления
+                    onDeleteSuccess?.();
                   } catch (err) {
                     console.error("Ошибка при удалении:", err);
                     alert("Не удалось удалить запись. Попробуйте позже.");
