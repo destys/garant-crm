@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "100mb",
     },
   },
+  webpack: (config) => {
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: /strapi-scheme/,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

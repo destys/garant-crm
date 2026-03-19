@@ -7,6 +7,7 @@ import {
   MenuIcon,
   MoveLeftIcon,
   PersonStandingIcon,
+  PhoneIcon,
   SettingsIcon,
   Users2Icon,
 } from "lucide-react";
@@ -85,6 +86,9 @@ export function SiteHeader() {
                 <Link href={"/clients"}>Клиенты</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <Link href={"/calls"}>Звонки</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href={"/masters"}>Сотрудники</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -111,6 +115,12 @@ export function SiteHeader() {
               <Link href={"/clients"}>
                 <Users2Icon />
                 <span className="max-lg:hidden">Клиенты</span>
+              </Link>
+            </Button>
+            <Button variant={"link"} asChild>
+              <Link href={"/calls"}>
+                <PhoneIcon />
+                <span className="max-lg:hidden">Звонки</span>
               </Link>
             </Button>
             <Button variant={"link"} asChild>
