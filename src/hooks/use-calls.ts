@@ -10,21 +10,18 @@ import {
   fetchUnknownCalls,
   deleteUnknownCall,
 } from "@/services/calls-service";
-import { CallProps, UnknownCallProps } from "@/types/call.types";
+import { CallProps } from "@/types/call.types";
 
 export const useCalls = (
   page: number,
   pageSize: number,
-  filters?: Record<string, unknown>
+  filters?: Record<string, unknown>,
 ) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
-  const queryString = qs.stringify(
-    { filters },
-    { encodeValuesOnly: true }
-  );
+  const queryString = qs.stringify({ filters }, { encodeValuesOnly: true });
 
   const queryKey = ["calls", page, pageSize, filters];
 
@@ -91,16 +88,13 @@ export const useCall = (documentId: string | null) => {
 export const useUnknownCalls = (
   page: number,
   pageSize: number,
-  filters?: Record<string, unknown>
+  filters?: Record<string, unknown>,
 ) => {
   const { jwt: token } = useAuth();
   const queryClient = useQueryClient();
   const authToken = token ?? "";
 
-  const queryString = qs.stringify(
-    { filters },
-    { encodeValuesOnly: true }
-  );
+  const queryString = qs.stringify({ filters }, { encodeValuesOnly: true });
 
   const queryKey = ["unknownCalls", page, pageSize, filters];
 

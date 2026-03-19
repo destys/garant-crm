@@ -39,11 +39,16 @@ export const CallsContent = () => {
     return undefined;
   }, [filter]);
 
-  const { calls, total, meta, isLoading, isError, error, updateCall, deleteCall } = useCalls(
-    page,
-    PAGE_SIZE,
-    filters
-  );
+  const {
+    calls,
+    total,
+    meta,
+    isLoading,
+    isError,
+    error,
+    updateCall,
+    deleteCall,
+  } = useCalls(page, PAGE_SIZE, filters);
 
   const handlePlay = (call: CallProps) => {
     setPlayingCall(call);
@@ -75,7 +80,7 @@ export const CallsContent = () => {
         onMarkSeen: handleMarkSeen,
         onDelete: handleDelete,
       }),
-    [roleId]
+    [roleId],
   );
 
   const unseenCount = calls.filter((c) => !c.seen).length;
@@ -89,7 +94,14 @@ export const CallsContent = () => {
       if (page <= 3) {
         pages.push(1, 2, 3, 4, "...", pageCount);
       } else if (page >= pageCount - 2) {
-        pages.push(1, "...", pageCount - 3, pageCount - 2, pageCount - 1, pageCount);
+        pages.push(
+          1,
+          "...",
+          pageCount - 3,
+          pageCount - 2,
+          pageCount - 1,
+          pageCount,
+        );
       } else {
         pages.push(1, "...", page - 1, page, page + 1, "...", pageCount);
       }
@@ -183,7 +195,11 @@ export const CallsContent = () => {
             <>
               <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <div className="min-w-[500px] px-4 sm:px-0">
-                  <DataTable columns={columns} data={calls} isLoading={isLoading} />
+                  <DataTable
+                    columns={columns}
+                    data={calls}
+                    isLoading={isLoading}
+                  />
                 </div>
               </div>
 
@@ -202,7 +218,9 @@ export const CallsContent = () => {
                             e.preventDefault();
                             if (page > 1) setPage(page - 1);
                           }}
-                          className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            page <= 1 ? "pointer-events-none opacity-50" : ""
+                          }
                         />
                       </PaginationItem>
                       {renderPagination()}
@@ -213,7 +231,11 @@ export const CallsContent = () => {
                             e.preventDefault();
                             if (page < pageCount) setPage(page + 1);
                           }}
-                          className={page >= pageCount ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            page >= pageCount
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
