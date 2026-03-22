@@ -51,6 +51,49 @@ export const fetchCalls = async (
   };
 };
 
+export const fetchCallsByClient = async (
+  token: string,
+  clientPhone: string,
+  page = 1,
+  pageSize = 50
+): Promise<{ calls: CallProps[]; total: number; meta: MetaProps }> => {
+  if (!token) throw new Error("Authentication token is missing");
+
+  const normalizedPhone = clientPhone.replace(/\D/g, "");
+
+  const query = QueryString.stringify(
+    {
+      pagination: { page, pageSize },
+      sort: ["createdAt:desc"],
+      filters: {
+        $or: [
+          { fromNumber: { $contains: normalizedPhone } },
+          { toNumber: { $contains: normalizedPhone } },
+        ],
+      },
+      populate: {
+        client: { populate: "*" },
+        order: { populate: "*" },
+        recording: { populate: "*" },
+        unknown_call: { populate: "*" },
+      },
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const response = await fetch(`${apiUrl}?${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const data = await handleResponse(response);
+
+  return {
+    calls: data.data,
+    meta: data.meta,
+    total: data.meta?.pagination?.total ?? 0,
+  };
+};
+
 export const fetchCallById = async (
   token: string,
   documentId: string

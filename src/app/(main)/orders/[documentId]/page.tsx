@@ -24,6 +24,8 @@ import { useOrder } from "@/hooks/use-order";
 import { OrderDocs } from "@/components/orders/order-docs";
 import { useAuth } from "@/providers/auth-provider";
 import { OrderChat } from "@/components/orders/order-chat";
+import { OrderSms } from "@/components/orders/order-sms";
+import { OrderCalls } from "@/components/orders/order-calls";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -184,7 +186,7 @@ const OrderPage = () => {
           <TabsList className="md:flex-auto">
             <TabsTrigger value="edit">Редактирование</TabsTrigger>
             <TabsTrigger value="photo">Фото</TabsTrigger>
-            <TabsTrigger value="call">Звонки</TabsTrigger>
+            {roleId === 3 && <TabsTrigger value="call">Звонки</TabsTrigger>}
             <TabsTrigger value="sms">СМС</TabsTrigger>
             <TabsTrigger value="client">Клиент</TabsTrigger>
             <TabsTrigger value="chat">Чат</TabsTrigger>
@@ -198,8 +200,14 @@ const OrderPage = () => {
         <TabsContent value="photo">
           <OrderMedia data={order} />
         </TabsContent>
-        <TabsContent value="call">Информация появится в будущем</TabsContent>
-        <TabsContent value="sms">Информация появится в будущем</TabsContent>
+        {roleId === 3 && (
+          <TabsContent value="call">
+            <OrderCalls data={order} />
+          </TabsContent>
+        )}
+        <TabsContent value="sms">
+          <OrderSms data={order} />
+        </TabsContent>
         <TabsContent value="client">
           <OrderClient data={order} />
         </TabsContent>

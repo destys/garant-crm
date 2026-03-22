@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Loader2Icon, PhoneIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,27 +50,36 @@ export const CallsContent = () => {
     deleteCall,
   } = useCalls(page, PAGE_SIZE, filters);
 
-  const handlePlay = (call: CallProps) => {
-    setPlayingCall(call);
-    if (!call.seen) {
-      updateCall({ documentId: call.documentId, updatedData: { seen: true } });
-    }
-  };
+  const handlePlay = useCallback(
+    (call: CallProps) => {
+      setPlayingCall(call);
+      if (!call.seen) {
+        updateCall({ documentId: call.documentId, updatedData: { seen: true } });
+      }
+    },
+    [updateCall]
+  );
 
-  const handleMarkSeen = async (call: CallProps) => {
-    const confirmMark = confirm("Отметить звонок как просмотренный?");
-    if (!confirmMark) return;
-    await updateCall({
-      documentId: call.documentId,
-      updatedData: { seen: true },
-    });
-  };
+  const handleMarkSeen = useCallback(
+    async (call: CallProps) => {
+      const confirmMark = confirm("Отметить звонок как просмотренный?");
+      if (!confirmMark) return;
+      await updateCall({
+        documentId: call.documentId,
+        updatedData: { seen: true },
+      });
+    },
+    [updateCall]
+  );
 
-  const handleDelete = async (call: CallProps) => {
-    const confirmDelete = confirm("Удалить этот звонок?");
-    if (!confirmDelete) return;
-    await deleteCall(call.documentId);
-  };
+  const handleDelete = useCallback(
+    async (call: CallProps) => {
+      const confirmDelete = confirm("Удалить этот звонок?");
+      if (!confirmDelete) return;
+      await deleteCall(call.documentId);
+    },
+    [deleteCall]
+  );
 
   const columns = useMemo(
     () =>
@@ -80,7 +89,7 @@ export const CallsContent = () => {
         onMarkSeen: handleMarkSeen,
         onDelete: handleDelete,
       }),
-    [roleId],
+    [roleId, handlePlay, handleMarkSeen, handleDelete]
   );
 
   const unseenCount = calls.filter((c) => !c.seen).length;

@@ -5,6 +5,7 @@ import { useAuth } from "@/providers/auth-provider";
 import {
   fetchCalls,
   fetchCallById,
+  fetchCallsByClient,
   updateCall,
   deleteCall,
   fetchUnknownCalls,
@@ -122,5 +123,44 @@ export const useUnknownCalls = (
     error: callsQuery.error,
     refetch: callsQuery.refetch,
     deleteUnknownCall: deleteMutation.mutateAsync,
+  };
+};
+
+export const useClientCalls = (clientPhone: string | null, pageSize = 50) => {
+  const { jwt: token } = useAuth();
+  const queryClient = useQueryClient();
+  const authToken = token ?? "";
+
+  const queryKey = ["calls", "client", clientPhone];
+
+  const callsQuery = useQuery({
+    queryKey,
+    queryFn: () => fetchCallsByClient(authToken, clientPhone!, 1, pageSize),
+    enabled: !!token && !!clientPhone,
+    staleTime: 1000 * 30,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      documentId,
+      updatedData,
+    }: {
+      documentId: string;
+      updatedData: Partial<CallProps>;
+    }) => updateCall(authToken, documentId, updatedData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calls"] });
+    },
+  });
+
+  return {
+    calls: callsQuery.data?.calls ?? [],
+    total: callsQuery.data?.total ?? 0,
+    meta: callsQuery.data?.meta,
+    isLoading: callsQuery.isLoading,
+    isError: callsQuery.isError,
+    error: callsQuery.error,
+    refetch: callsQuery.refetch,
+    updateCall: updateMutation.mutateAsync,
   };
 };

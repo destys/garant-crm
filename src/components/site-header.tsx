@@ -85,9 +85,11 @@ export function SiteHeader() {
               <DropdownMenuItem asChild>
                 <Link href={"/clients"}>Клиенты</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={"/calls"}>Звонки</Link>
-              </DropdownMenuItem>
+              {roleId === 3 && (
+                <DropdownMenuItem asChild>
+                  <Link href={"/calls"}>Звонки</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href={"/masters"}>Сотрудники</Link>
               </DropdownMenuItem>
@@ -117,12 +119,14 @@ export function SiteHeader() {
                 <span className="max-lg:hidden">Клиенты</span>
               </Link>
             </Button>
-            <Button variant={"link"} asChild>
-              <Link href={"/calls"}>
-                <PhoneIcon />
-                <span className="max-lg:hidden">Звонки</span>
-              </Link>
-            </Button>
+            {roleId === 3 && (
+              <Button variant={"link"} asChild>
+                <Link href={"/calls"}>
+                  <PhoneIcon />
+                  <span className="max-lg:hidden">Звонки</span>
+                </Link>
+              </Button>
+            )}
             <Button variant={"link"} asChild>
               <Link href={"/cashbox"}>
                 <CircleDollarSignIcon />
