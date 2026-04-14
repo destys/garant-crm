@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Loader2Icon, PhoneIcon } from "lucide-react";
+import { PhoneIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { DataLoadingOverlay } from "@/components/data-loading-overlay";
 import { useCalls } from "@/hooks/use-calls";
 import { useAuth } from "@/providers/auth-provider";
 import { CallProps } from "@/types/call.types";
@@ -44,11 +45,13 @@ export const CallsContent = () => {
     total,
     meta,
     isLoading,
+    isFetching,
     isError,
     error,
     updateCall,
     deleteCall,
   } = useCalls(page, PAGE_SIZE, filters);
+  const listBusy = isLoading || isFetching;
 
   const handlePlay = useCallback(
     (call: CallProps) => {
@@ -126,7 +129,7 @@ export const CallsContent = () => {
             className="px-2 py-1 text-sm"
             onClick={(e) => {
               e.preventDefault();
-              if (!isLoading && p !== page) setPage(p as number);
+              if (!listBusy && p !== page) setPage(p as number);
             }}
           >
             {p}
@@ -184,74 +187,76 @@ export const CallsContent = () => {
             </Button>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : isError ? (
+          {isError ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-red-500 mb-2">Ошибка загрузки звонков</p>
               <p className="text-sm text-muted-foreground">
                 {error?.message || "Попробуйте обновить страницу"}
               </p>
             </div>
-          ) : calls.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <PhoneIcon className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Звонков пока нет</p>
-            </div>
           ) : (
-            <>
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <div className="min-w-[500px] px-4 sm:px-0">
-                  <DataTable
-                    columns={columns}
-                    data={calls}
-                    isLoading={isLoading}
-                  />
+            <DataLoadingOverlay show={listBusy} minHeight="min-h-[320px]">
+              {!listBusy && calls.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <PhoneIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Звонков пока нет</p>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-[500px] px-4 sm:px-0">
+                      <DataTable
+                        columns={columns}
+                        data={calls}
+                        isLoading={listBusy}
+                      />
+                    </div>
+                  </div>
 
-              {pageCount > 1 && (
-                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-                  <p className="text-sm text-muted-foreground">
-                    Показано {(page - 1) * PAGE_SIZE + 1} -{" "}
-                    {Math.min(page * PAGE_SIZE, total)} из {total}
-                  </p>
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (page > 1) setPage(page - 1);
-                          }}
-                          className={
-                            page <= 1 ? "pointer-events-none opacity-50" : ""
-                          }
-                        />
-                      </PaginationItem>
-                      {renderPagination()}
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (page < pageCount) setPage(page + 1);
-                          }}
-                          className={
-                            page >= pageCount
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
+                  {pageCount > 1 && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        Показано {(page - 1) * PAGE_SIZE + 1} -{" "}
+                        {Math.min(page * PAGE_SIZE, total)} из {total}
+                      </p>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (page > 1) setPage(page - 1);
+                              }}
+                              className={
+                                page <= 1
+                                  ? "pointer-events-none opacity-50"
+                                  : ""
+                              }
+                            />
+                          </PaginationItem>
+                          {renderPagination()}
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (page < pageCount) setPage(page + 1);
+                              }}
+                              className={
+                                page >= pageCount
+                                  ? "pointer-events-none opacity-50"
+                                  : ""
+                              }
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
               )}
-            </>
+            </DataLoadingOverlay>
           )}
         </CardContent>
       </Card>

@@ -2,7 +2,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  darkMode: ["class"],
+  transpilePackages: [
+    "@tanstack/react-query",
+    "@tanstack/react-table",
+    "@radix-ui/react-alert-dialog",
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-popover",
+    "@radix-ui/react-select",
+    "@radix-ui/react-tabs",
+    "@radix-ui/react-dropdown-menu",
+    "lucide-react",
+    "recharts",
+  ],
   images: {
     remotePatterns: [
       {

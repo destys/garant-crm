@@ -31,11 +31,17 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
     });
   };
 
-  const clientsQuery = useQuery<{ clients: ClientProps[]; total: number }>({
+  const clientsQuery = useQuery<{ clients: ClientProps[]; total: number; pageCount: number }>({
     queryKey,
-    queryFn: () => fetchClients(authToken, page, pageSize, queryString),
+    queryFn: async () => {
+      const result = await fetchClients(authToken, page, pageSize, queryString);
+      return {
+        ...result,
+        pageCount: Math.ceil(result.total / pageSize),
+      };
+    },
     enabled: !!token,
-    staleTime: 1000 * 30, // 30 секунд
+    staleTime: 1000 * 30,
   });
 
   const createMutation = useMutation({
@@ -142,10 +148,11 @@ export const useClients = (page: number, pageSize: number, query?: unknown) => {
   return {
     clients: clientsQuery.data?.clients || [],
     total: clientsQuery.data?.total || 0,
+    pageCount: clientsQuery.data?.pageCount || 1,
     isLoading: clientsQuery.isLoading,
+    isFetching: clientsQuery.isFetching,
     isError: clientsQuery.isError,
     error: clientsQuery.error,
-    // ВОЗВРАЩАЕМ mutateAsync, чтобы await в модалке реально ждал завершения
     createClient: createMutation.mutateAsync,
     updateClient: updateMutation.mutateAsync,
     deleteClient: deleteMutation.mutateAsync,

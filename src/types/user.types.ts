@@ -6,6 +6,7 @@ export interface UserProps {
   id: number;
   balance: number;
   name: string;
+  username?: string;
   phone: string;
   orders: OrderProps[];
   blocked: boolean;

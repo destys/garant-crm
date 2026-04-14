@@ -27,18 +27,25 @@ export const useIncomes = (
   const authToken = token ?? "";
 
   const queryString = QueryString.stringify(
-    { filters: query, sort: sort, pagination: pagination },
+    { filters: query, sort: sort ? sort : ["createdAt:desc"], pagination: pagination },
     { encodeValuesOnly: true }
   );
 
   const incomesQuery = useQuery<{
     incomes: IncomeOutcomeProps[];
     total: number;
+    pageCount: number;
   }>({
     queryKey: ["incomes", page, pageSize, query],
-    queryFn: () => fetchIncomes(authToken, page, pageSize, queryString),
+    queryFn: async () => {
+      const result = await fetchIncomes(authToken, page, pageSize, queryString);
+      return {
+        ...result,
+        pageCount: Math.ceil(result.total / pageSize),
+      };
+    },
     enabled: !!token,
-    staleTime: 1000 * 30, // 30 секунд
+    staleTime: 1000 * 30,
   });
 
   // 🔹 Мутации с инвалидацией всех связанных запросов
@@ -95,7 +102,9 @@ export const useIncomes = (
   return {
     incomes: incomesQuery.data?.incomes || [],
     total: incomesQuery.data?.total || 0,
+    pageCount: incomesQuery.data?.pageCount || 1,
     isLoading: incomesQuery.isLoading,
+    isFetching: incomesQuery.isFetching,
     isError: incomesQuery.isError,
     error: incomesQuery.error,
     createIncome: createMutation.mutate,

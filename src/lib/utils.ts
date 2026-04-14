@@ -68,3 +68,37 @@ export const toStrapiDate = (d?: Date) =>
  */
 export const fromStrapiDate = (s?: string) =>
   s ? new Date(`${s}T00:00:00`) : undefined;
+
+/**
+ * Нормализация телефона в международный вид только из цифр (без +), для wa.me / t.me.
+ * РФ: 8XXXXXXXXXX → 7XXXXXXXXXX; 10 цифр → добавляется 7.
+ */
+export function normalizePhoneDigits(phone?: string | null): string | null {
+  if (!phone) return null;
+  let d = phone.replace(/\D/g, "");
+  if (!d) return null;
+  if (d.length === 11 && d.startsWith("8")) {
+    d = "7" + d.slice(1);
+  }
+  if (d.length === 10 && !d.startsWith("7")) {
+    d = "7" + d;
+  }
+  return d;
+}
+
+/** Ссылка WhatsApp по номеру */
+export function buildWhatsappUrl(phone?: string | null): string | null {
+  const d = normalizePhoneDigits(phone);
+  if (!d) return null;
+  return `https://wa.me/${d}`;
+}
+
+/**
+ * Ссылка Telegram по номеру (чат по телефону).
+ * Важно: нужен префикс + в пути, иначе t.me воспринимает строку как @username.
+ */
+export function buildTelegramUrl(phone?: string | null): string | null {
+  const d = normalizePhoneDigits(phone);
+  if (!d) return null;
+  return `https://t.me/+${d}`;
+}

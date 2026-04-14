@@ -63,6 +63,13 @@
     "zod": "^4.0.2",
     "zustand": "^5.0.6"
   },
+  "browserslist": [
+    "Chrome >= 91",
+    "Firefox >= 89",
+    "Safari >= 14",
+    "iOS >= 14",
+    "Edge >= 91"
+  ],
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",

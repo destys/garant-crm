@@ -58,6 +58,7 @@ export const useCalls = (
     total: callsQuery.data?.total ?? 0,
     meta: callsQuery.data?.meta,
     isLoading: callsQuery.isLoading,
+    isFetching: callsQuery.isFetching,
     isError: callsQuery.isError,
     error: callsQuery.error,
     refetch: callsQuery.refetch,

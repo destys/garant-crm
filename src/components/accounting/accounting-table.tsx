@@ -6,7 +6,6 @@ import {
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
@@ -29,20 +28,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-} from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -68,7 +53,6 @@ export function AccountingTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
@@ -78,63 +62,7 @@ export function AccountingTable<TData, TValue>({
       columnVisibility,
       rowSelection,
     },
-    initialState: {
-      pagination: {
-        pageSize: 15, // 🔹 здесь задаёшь нужное количество строк
-      },
-    },
   });
-
-  const renderPagination = React.useCallback(() => {
-    const pageCount = table.getPageCount();
-    const current = table.getState().pagination.pageIndex + 1;
-    const pages: (number | string)[] = [];
-    if (pageCount <= 6) {
-      pages.push(...Array.from({ length: pageCount }, (_, i) => i + 1));
-    } else {
-      if (current <= 3) {
-        pages.push(1, 2, 3, 4, "...", pageCount);
-      } else if (current >= pageCount - 2) {
-        pages.push(
-          1,
-          "...",
-          pageCount - 3,
-          pageCount - 2,
-          pageCount - 1,
-          pageCount
-        );
-      } else {
-        pages.push(
-          1,
-          "...",
-          current - 1,
-          current,
-          current + 1,
-          "...",
-          pageCount
-        );
-      }
-    }
-    return pages.map((p, i) => (
-      <PaginationItem key={i}>
-        {p === "..." ? (
-          <span className="px-2">...</span>
-        ) : (
-          <PaginationLink
-            href="#"
-            isActive={p === current}
-            className="px-2 py-1 text-sm"
-            onClick={(e) => {
-              e.preventDefault();
-              table.setPageIndex((p as number) - 1);
-            }}
-          >
-            {p}
-          </PaginationLink>
-        )}
-      </PaginationItem>
-    ));
-  }, [table]);
 
   return (
     <div className="w-full">
@@ -270,53 +198,6 @@ export function AccountingTable<TData, TValue>({
               No results.
             </div>
           )}
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 mt-10">
-        <div className="text-sm text-muted-foreground whitespace-nowrap">
-          {table.getFilteredRowModel().rows.length
-            ? `${
-                table.getState().pagination.pageIndex *
-                  table.getState().pagination.pageSize +
-                1
-              }–${Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                table.getFilteredRowModel().rows.length
-              )} из ${table.getFilteredRowModel().rows.length}`
-            : "Нет данных"}
-        </div>
-
-        <div className="max-md:flex gap-3">
-          <div className="block md:hidden w-full">
-            <Select
-              value={String(table.getState().pagination.pageIndex + 1)}
-              onValueChange={(val) => {
-                const num = Number(val);
-                if (!isNaN(num)) table.setPageIndex(num - 1);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Выберите страницу" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from(
-                  { length: table.getPageCount() },
-                  (_, i) => i + 1
-                ).map((p) => (
-                  <SelectItem key={p} value={String(p)}>
-                    Стр. {p}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Pagination>
-            <PaginationContent className="gap-2 overflow-x-auto">
-              {renderPagination()}
-            </PaginationContent>
-          </Pagination>
         </div>
       </div>
     </div>

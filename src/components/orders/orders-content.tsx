@@ -1,11 +1,11 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2Icon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { pdf } from "@react-pdf/renderer";
+import QueryString from "qs";
 
 import { SearchBlock } from "@/components/search-block";
 import { useOrders } from "@/hooks/use-orders";
@@ -32,16 +32,20 @@ import {
 } from "@/components/ui/select";
 import { LEGAL_STATUSES } from "@/constants";
 import { GenerateOrdersReport } from "@/lib/pdf/generate-orders-report";
+import { fetchOrders } from "@/services/orders-service";
+import { DataLoadingOverlay } from "@/components/data-loading-overlay";
 
 export const OrdersContent = () => {
   const activeTitle =
     useOrderFilterStore((state) => state.activeTitle) || undefined;
   const filters = useOrderFilterStore((state) => state.filters);
-  const { user, roleId } = useAuth();
+  const { user, roleId, jwt } = useAuth();
 
   const [period, setPeriod] = useState<{ from?: Date; to?: Date }>({});
   const [formFilters, setFormFilters] = useState<Record<string, any>>({});
   const [searchFilter, setSearchFilter] = useState<Record<string, any>>({});
+  const searchFilterRef = useRef(searchFilter);
+  searchFilterRef.current = searchFilter;
   const [legalFilter, setLegalFilter] = useState<string | null>(null);
 
   const router = useRouter();
@@ -58,18 +62,33 @@ export const OrdersContent = () => {
   const [page, setPage] = useState<number>(pageFromUrl);
   const [pageSize] = useState<number>(12);
 
-  // ⭐ при изменении адреса (напрямую) обновляем состояние страницы
+  // ⭐ при изменении адреса (напрямую или через историю) обновляем состояние страницы
   useEffect(() => {
     setPage(pageFromUrl);
   }, [pageFromUrl]);
 
   // ⭐ функция смены страницы
-  const pushPage = (next: number) => {
-    const sp = new URLSearchParams(searchParams.toString());
-    sp.set("page", String(next));
-    router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
-    setPage(next);
-  };
+  const pushPage = useCallback(
+    (next: number) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.set("page", String(next));
+      router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+      setPage(next);
+    },
+    [pathname, router, searchParams]
+  );
+
+  const handleSearchFilterChange = useCallback(
+    (nextFilter: Record<string, any>) => {
+      const hadSearch = Object.keys(searchFilterRef.current).length > 0;
+      const hasSearch = Object.keys(nextFilter).length > 0;
+      setSearchFilter(nextFilter);
+      if (page !== 1 && (hasSearch || (hadSearch && !hasSearch))) {
+        pushPage(1);
+      }
+    },
+    [page, pushPage]
+  );
 
   // ----------------------------
   // фильтры
@@ -111,32 +130,60 @@ export const OrdersContent = () => {
   }, [baseFilters, roleId, user?.id]);
 
   const sortString = activeTitle === "Дедлайны" ? ["deadline:asc"] : undefined;
-  const { data, meta, isLoading, updateOrder, deleteOrder } = useOrders(
-    page,
-    pageSize,
-    finalFilters,
-    sortString
-  );
+  const {
+    data,
+    meta,
+    isLoading,
+    isFetching,
+    updateOrder,
+    deleteOrder,
+  } = useOrders(page, pageSize, finalFilters, sortString);
+  const listBusy = isLoading || isFetching;
   const { users } = useUsers(1, 100);
 
-  // ⭐ при изменении фильтров, поиска и сортировки — сбрасываем страницу в 1
-  useEffect(() => {
-    pushPage(1);
-  }, [JSON.stringify(finalFilters), JSON.stringify(sortString)]);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const handleDownloadPdf = async () => {
-    if (!data?.length) return;
+    if (!jwt) return;
+    setIsGeneratingPdf(true);
+    try {
+      const reportQuery = QueryString.stringify(
+        {
+          filters: finalFilters,
+          sort: sortString ? sortString : ["createdAt:desc"],
+        },
+        { encodeValuesOnly: true }
+      );
 
-    const blob = await pdf(
-      <GenerateOrdersReport title={activeTitle} orders={data} period={period} />
-    ).toBlob();
+      const firstPage = await fetchOrders(jwt, 1, 100, reportQuery);
+      const pageCountForReport = firstPage.meta?.pagination?.pageCount ?? 1;
+      let allOrders = firstPage.orders;
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Отчет_${activeTitle || "заявки"}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+      if (pageCountForReport > 1) {
+        const requests = Array.from({ length: pageCountForReport - 1 }, (_, i) =>
+          fetchOrders(jwt, i + 2, 100, reportQuery)
+        );
+        const pages = await Promise.all(requests);
+        allOrders = [firstPage.orders, ...pages.map((p) => p.orders)].flat();
+      }
+
+      if (!allOrders.length) {
+        return;
+      }
+
+      const blob = await pdf(
+        <GenerateOrdersReport title={activeTitle} orders={allOrders} period={period} />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Отчет_${activeTitle || "заявки"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   if (!user || !roleId) {
@@ -183,7 +230,7 @@ export const OrdersContent = () => {
             className="px-2 py-1 text-sm"
             onClick={(e) => {
               e.preventDefault();
-              if (!isLoading && p !== page) pushPage(p as number);
+              if (!listBusy && p !== page) pushPage(p as number);
             }}
           >
             {p}
@@ -199,15 +246,23 @@ export const OrdersContent = () => {
         <h1 className="flex-auto">{activeTitle || "Все заявки"}</h1>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <SearchBlock onChange={setSearchFilter} />
+          <SearchBlock onChange={handleSearchFilterChange} />
           <Button
             onClick={handleDownloadPdf}
             disabled={
+              isGeneratingPdf ||
               ((!period.from || !period.to) && !baseFilters.master) ||
               !data.length
             }
           >
-            Скачать отчет в PDF
+            {isGeneratingPdf ? (
+              <>
+                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                Формирование...
+              </>
+            ) : (
+              "Скачать отчет в PDF"
+            )}
           </Button>
         </div>
       </div>
@@ -219,9 +274,10 @@ export const OrdersContent = () => {
             <Button
               key={status}
               variant={legalFilter === status ? "default" : "outline"}
-              onClick={() =>
-                setLegalFilter((prev) => (prev === status ? null : status))
-              }
+              onClick={() => {
+                setLegalFilter((prev) => (prev === status ? null : status));
+                if (page !== 1) pushPage(1);
+              }}
             >
               {status}
             </Button>
@@ -232,6 +288,7 @@ export const OrdersContent = () => {
       <OrdersFilters
         onChange={(filters: any) => {
           setFormFilters(filters);
+          if (page !== 1) pushPage(1);
           const vFrom = filters?.visit_date?.$gte
             ? new Date(filters.visit_date.$gte)
             : undefined;
@@ -251,23 +308,25 @@ export const OrdersContent = () => {
         }}
       />
 
-      <OrdersTable
-        data={data}
-        columns={ordersColumns(
-          users,
-          updateOrder,
-          deleteOrder,
-          undefined,
-          roleId,
-          user
-        )}
-        cardComponent={({ data }) => <OrdersCard data={data} />}
-        isLoading={isLoading}
-      />
+      <DataLoadingOverlay show={listBusy} minHeight="min-h-[320px]">
+        <OrdersTable
+          data={data}
+          columns={ordersColumns(
+            users,
+            updateOrder,
+            deleteOrder,
+            undefined,
+            roleId,
+            user
+          )}
+          cardComponent={({ data }) => <OrdersCard data={data} />}
+          isLoading={listBusy}
+        />
+      </DataLoadingOverlay>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 mt-10">
         <div className="text-sm text-muted-foreground whitespace-nowrap">
-          {isLoading
+          {listBusy
             ? "Загрузка…"
             : total
             ? `${from}–${to} из ${total}`

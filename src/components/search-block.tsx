@@ -35,6 +35,8 @@ export const SearchBlock = ({ onChange }: SearchBlockProps) => {
 
   const searchValue = useWatch({ control: form.control, name: "search" });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -43,11 +45,11 @@ export const SearchBlock = ({ onChange }: SearchBlockProps) => {
       const trimmed = searchValue?.trim();
 
       if (!trimmed || trimmed.length < 2) {
-        onChange({});
+        onChangeRef.current({});
         return;
       }
 
-      onChange({
+      onChangeRef.current({
         $or: [
           { title: { $containsi: trimmed } },
           { client: { phone: { $containsi: trimmed } } },
@@ -59,7 +61,7 @@ export const SearchBlock = ({ onChange }: SearchBlockProps) => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchValue, onChange]);
+  }, [searchValue]);
 
   const handleReset = () => {
     form.setValue("search", "");

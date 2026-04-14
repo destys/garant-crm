@@ -36,14 +36,19 @@ export const useCashTransactions = (
 
   // Список (кэшируем на 30 секунд)
   const listQuery = useQuery<
-    { items: CashboxTransactionProps[]; total: number },
+    { items: CashboxTransactionProps[]; total: number; pageCount: number },
     Error
   >({
     queryKey: listKey,
-    queryFn: () =>
-      fetchCashTransactions(authToken, page, pageSize, queryString),
+    queryFn: async () => {
+      const result = await fetchCashTransactions(authToken, page, pageSize, queryString);
+      return {
+        ...result,
+        pageCount: Math.ceil(result.total / pageSize),
+      };
+    },
     enabled: !!token,
-    staleTime: 1000 * 30, // 30 секунд
+    staleTime: 1000 * 30,
   });
 
   // Создание
@@ -106,7 +111,9 @@ export const useCashTransactions = (
   return {
     items: listQuery.data?.items ?? [],
     total: listQuery.data?.total ?? 0,
+    pageCount: listQuery.data?.pageCount ?? 1,
     isLoading: listQuery.isLoading,
+    isFetching: listQuery.isFetching,
     isError: listQuery.isError,
     error: listQuery.error,
     refetch: listQuery.refetch,

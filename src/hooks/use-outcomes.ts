@@ -24,18 +24,25 @@ export const useOutcomes = (
   const authToken = jwt ?? "";
 
   const queryString = QueryString.stringify(
-    { filters: query, sort: sort },
+    { filters: query, sort: sort ? sort : ["createdAt:desc"] },
     { encodeValuesOnly: true }
   );
 
   const outcomesQuery = useQuery<{
     outcomes: IncomeOutcomeProps[];
     total: number;
+    pageCount: number;
   }>({
     queryKey: ["outcomes", page, pageSize, query],
-    queryFn: () => fetchOutcomes(authToken, page, pageSize, queryString),
+    queryFn: async () => {
+      const result = await fetchOutcomes(authToken, page, pageSize, queryString);
+      return {
+        ...result,
+        pageCount: Math.ceil(result.total / pageSize),
+      };
+    },
     enabled: !!jwt,
-    staleTime: 1000 * 30, // 30 секунд
+    staleTime: 1000 * 30,
   });
 
   const createMutation = useMutation({
@@ -88,7 +95,9 @@ export const useOutcomes = (
   return {
     outcomes: outcomesQuery.data?.outcomes || [],
     total: outcomesQuery.data?.total || 0,
+    pageCount: outcomesQuery.data?.pageCount || 1,
     isLoading: outcomesQuery.isLoading,
+    isFetching: outcomesQuery.isFetching,
     isError: outcomesQuery.isError,
     error: outcomesQuery.error,
     createOutcome: createMutation.mutate,

@@ -81,6 +81,7 @@ export const useUsers = (page: number, pageSize: number, query?: unknown) => {
     users: usersQuery.data?.users || [],
     total: usersQuery.data?.total || 0,
     isLoading: usersQuery.isLoading,
+    isFetching: usersQuery.isFetching,
     isError: usersQuery.isError,
     error: usersQuery.error,
     createUser: createUserMutation.mutate,

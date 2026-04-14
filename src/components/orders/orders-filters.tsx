@@ -8,7 +8,7 @@ import { z } from "zod"
 import { format, startOfDay, endOfDay, parseISO } from "date-fns"
 import { CalendarIcon, CheckIcon, ChevronsUpDown } from "lucide-react"
 import { DateRange } from "react-day-picker"
-import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect } from "react"
 
 import {
@@ -60,6 +60,8 @@ const formSchema = z.object({
 })
 
 export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
+    const router = useRouter()
+    const pathname = usePathname()
     const { users } = useUsers(1, 100);
     const { roleId } = useAuth();
 
@@ -160,12 +162,11 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
             values.master ? params.set("master", values.master) : params.delete("master")
 
             const qs = params.toString()
-            const next = qs ? `?${qs}` : ""
-            // Меняем URL на месте, НЕ выполняя роутинг
-            window.history.replaceState(null, "", `${window.location.pathname}${next}`)
+            const href = qs ? `${pathname}?${qs}` : pathname
+            router.replace(href, { scroll: false })
         })
         return () => sub.unsubscribe()
-    }, [form])
+    }, [form, pathname, router])
 
     return (
         <Form {...form}>
@@ -174,8 +175,12 @@ export const OrdersFilters = ({ onChange }: OrdersFiltersProps) => {
                 onReset={() => {
                     form.reset()
                     onChange({})
-                    const path = window.location.pathname
-                    window.history.replaceState(null, "", path)
+                    const sp = new URLSearchParams(window.location.search)
+                    ;["dr_from", "dr_to", "vr_from", "vr_to", "master"].forEach((k) =>
+                        sp.delete(k)
+                    )
+                    const qs = sp.toString()
+                    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
                 }}
                 className="grid lg:grid-cols-4 items-start gap-4 border rounded-md p-4 mb-6 lg:mb-14"
             >

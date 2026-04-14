@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { OrderProps } from "@/types/order.types";
+import {
+  buildTelegramUrl,
+  buildWhatsappUrl,
+} from "@/lib/utils";
 import { GenerateContractPdf } from "@/lib/pdf/generate-contract";
 import { generateActPdf } from "@/lib/pdf/generate-act";
 import { generateTechnicalConclusionPdf } from "@/lib/pdf/generate-technical-conclusion";
@@ -30,6 +34,9 @@ type Mode = "download" | "preview";
 
 export const OrderDocs = ({ data }: { data: OrderProps }) => {
   const [signDoc, setSignDoc] = useState<boolean>(false);
+  const clientPhone = data.client?.phone || data.add_phone || "";
+  const waUrl = buildWhatsappUrl(clientPhone);
+  const tgUrl = buildTelegramUrl(clientPhone);
 
   // ---------- Договор ----------
   const handleGenerateContract = async (mode: Mode) => {
@@ -71,31 +78,53 @@ export const OrderDocs = ({ data }: { data: OrderProps }) => {
   return (
     <div className="flex gap-2">
       {/* Звонок */}
-      <Button asChild>
-        <Link href={`tel:${data.client?.phone}`}>
+      {clientPhone.trim() ? (
+        <Button asChild>
+          <Link href={`tel:${clientPhone}`}>
+            <PhoneCallIcon />
+          </Link>
+        </Button>
+      ) : (
+        <Button type="button" disabled title="Нет номера телефона">
           <PhoneCallIcon />
-        </Link>
-      </Button>
+        </Button>
+      )}
 
       {/* WhatsApp */}
-      <Button asChild className="bg-[#2cb742] hover:bg-[#2ca83c]">
-        <Link
-          href={`https://wa.me/${data.client?.phone?.replace(/\D/g, "")}`}
-          target="_blank"
+      {waUrl ? (
+        <Button asChild className="bg-[#2cb742] hover:bg-[#2ca83c]">
+          <Link href={waUrl} target="_blank" rel="noopener noreferrer">
+            <IconBrandWhatsapp />
+          </Link>
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          className="bg-[#2cb742] hover:bg-[#2ca83c]"
+          disabled
+          title="Нет номера телефона"
         >
           <IconBrandWhatsapp />
-        </Link>
-      </Button>
+        </Button>
+      )}
 
-      {/* Telegram */}
-      <Button asChild className="bg-[#27a7e7] hover:bg-[#1b95d1]">
-        <Link
-          href={`https://t.me/${data.client?.phone?.replace(/\D/g, "")}`}
-          target="_blank"
+      {/* Telegram — t.me/+<кодстраны><номер>, иначе t.me воспринимает путь как @username */}
+      {tgUrl ? (
+        <Button asChild className="bg-[#27a7e7] hover:bg-[#1b95d1]">
+          <Link href={tgUrl} target="_blank" rel="noopener noreferrer">
+            <IconBrandTelegram />
+          </Link>
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          className="bg-[#27a7e7] hover:bg-[#1b95d1]"
+          disabled
+          title="Нет номера телефона"
         >
           <IconBrandTelegram />
-        </Link>
-      </Button>
+        </Button>
+      )}
 
       {/* PDF / Печать */}
       <Popover>

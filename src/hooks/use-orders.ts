@@ -12,6 +12,49 @@ import { useAuth } from "@/providers/auth-provider";
 import { MetaProps } from "@/types/meta.types";
 
 /**
+ * Хук для загрузки ВСЕХ заявок по фильтрам (для отчетов)
+ */
+export const useOrdersAll = (
+  query?: unknown,
+  sort?: unknown,
+  enabled = false
+) => {
+  const { jwt } = useAuth();
+  const authToken = jwt ?? "";
+  const pageSize = 100;
+
+  const queryString = qs.stringify(
+    { filters: query, sort: sort ? sort : ["createdAt:desc"] },
+    { encodeValuesOnly: true }
+  );
+
+  return useQuery({
+    queryKey: ["orders-all", query, sort],
+    enabled: !!jwt && enabled,
+    queryFn: async () => {
+      const firstPage = await fetchOrders(authToken, 1, pageSize, queryString);
+      const total = firstPage.total;
+
+      if (total <= pageSize) {
+        return firstPage.orders;
+      }
+
+      const totalPages = Math.ceil(total / pageSize);
+      const remainingPages = Math.min(totalPages - 1, 49);
+
+      const requests = Array.from({ length: remainingPages }, (_, i) =>
+        fetchOrders(authToken, i + 2, pageSize, queryString)
+      );
+      const results = await Promise.all(requests);
+
+      return [firstPage.orders, ...results.map((r) => r.orders)].flat();
+    },
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+/**
  * Хук для работы с заказами (получение, создание, обновление, удаление)
  */
 export const useOrders = (
@@ -117,6 +160,7 @@ export const useOrders = (
     meta: ordersQuery.data?.meta,
     total: ordersQuery.data?.total || 0,
     isLoading: ordersQuery.isLoading,
+    isFetching: ordersQuery.isFetching,
     isError: ordersQuery.isError,
     error: ordersQuery.error,
     refetch: ordersQuery.refetch,

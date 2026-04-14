@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
+import { DataLoadingOverlay } from "@/components/data-loading-overlay";
 import { useUsers } from "@/hooks/use-users";
 import { useModal } from "@/providers/modal-provider";
 
@@ -19,11 +20,12 @@ export const MastersContent = () => {
   };
 
   const { openModal } = useModal();
-  const { users, updateUser, deleteUser, isLoading } = useUsers(
+  const { users, updateUser, deleteUser, isLoading, isFetching } = useUsers(
     1,
     100,
     filters
   );
+  const listBusy = isLoading || isFetching;
 
   return (
     <div>
@@ -38,11 +40,13 @@ export const MastersContent = () => {
         <PlusCircleIcon />
         Добавить сотрудника
       </Button>
-      <DataTable
-        data={users}
-        columns={mastersColumns(updateUser, deleteUser)}
-        isLoading={isLoading}
-      />
+      <DataLoadingOverlay show={listBusy} minHeight="min-h-[280px]">
+        <DataTable
+          data={users}
+          columns={mastersColumns(updateUser, deleteUser)}
+          isLoading={listBusy}
+        />
+      </DataLoadingOverlay>
     </div>
   );
 };
