@@ -78,14 +78,40 @@ interface Props {
   close: () => void;
   props?: {
     type: "income" | "outcome";
-    orderId: string;
-    masterId: number;
+    orderId?: string;
+    masterId?: number;
     item?: any;
     isEdit?: boolean;
   };
 }
 
 const SALARY_LABEL = "Зарплата сотрудников";
+
+const resolveNumericUserId = (
+  masterId: number | undefined,
+  item: any,
+  payloadUser: unknown
+): number | null => {
+  if (masterId != null && Number.isFinite(Number(masterId))) {
+    return Number(masterId);
+  }
+  const fromItem = item?.user?.id;
+  if (fromItem != null && Number.isFinite(Number(fromItem))) {
+    return Number(fromItem);
+  }
+  if (
+    payloadUser &&
+    typeof payloadUser === "object" &&
+    "id" in (payloadUser as object)
+  ) {
+    const id = (payloadUser as { id: number }).id;
+    if (Number.isFinite(Number(id))) return Number(id);
+  }
+  if (payloadUser != null && Number.isFinite(Number(payloadUser))) {
+    return Number(payloadUser);
+  }
+  return null;
+};
 
 export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
   const [loading, setLoading] = useState(false);
@@ -170,6 +196,12 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
   const onSubmit = async (values: IncomeValues | OutcomeValues) => {
     try {
       setLoading(true);
+
+      if (props?.isEdit && roleId !== 3) {
+        toast.error("Редактирование доступно только администратору");
+        return;
+      }
+
       // Собираем дату и время в ISO строку
       let createdDate = "";
       if (values.createdDateDate && values.createdDateTime) {
@@ -201,6 +233,27 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
             updatedData: payload,
           });
           toast.success("Расход обновлён");
+
+          if (roleId === 3) {
+            const uid = resolveNumericUserId(
+              props.masterId,
+              props.item,
+              payload.user
+            );
+            const newCat = (values as OutcomeValues).outcome_category;
+            const newCnt = Number(values.count);
+            const old = props.item;
+            const oldEffective =
+              old?.isApproved && old?.outcome_category === SALARY_LABEL
+                ? Number(old.count)
+                : 0;
+            const newEffective =
+              newCat === SALARY_LABEL ? newCnt : 0;
+            const balanceDelta = newEffective - oldEffective;
+            if (uid != null && balanceDelta !== 0) {
+              await updateBalanceAtomic({ userId: uid, delta: balanceDelta });
+            }
+          }
         } else {
           payload.income_category = (values as IncomeValues).income_category;
           await updateIncome({
@@ -208,6 +261,26 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
             updatedData: payload,
           });
           toast.success("Приход обновлён");
+        }
+
+        const uidAfter = resolveNumericUserId(
+          props.masterId,
+          props.item,
+          payload.user
+        );
+        await queryClient.invalidateQueries({
+          queryKey: ["outcomes"],
+          exact: false,
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["incomes"],
+          exact: false,
+        });
+        if (uidAfter != null) {
+          await queryClient.invalidateQueries({
+            queryKey: ["user", uidAfter],
+            exact: false,
+          });
         }
       } else {
         if (isOutcome) {
@@ -232,10 +305,12 @@ export const AddIncomeOutcomeModal = ({ close, props }: Props) => {
         }
       }
 
-      await queryClient.refetchQueries({
-        queryKey: ["order", String(props?.orderId)],
-        exact: true,
-      });
+      if (props?.orderId) {
+        await queryClient.refetchQueries({
+          queryKey: ["order", String(props.orderId)],
+          exact: true,
+        });
+      }
 
       close();
     } catch (e) {

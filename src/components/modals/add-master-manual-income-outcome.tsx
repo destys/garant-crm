@@ -23,6 +23,8 @@ import {
 import { useUser } from "@/hooks/use-user";
 import { useUsers } from "@/hooks/use-users";
 import { useManualIncomesOutcomes } from "@/hooks/use-manual-incomes-outcomes";
+import { useAuth } from "@/providers/auth-provider";
+import { ManualIncomeOutcomeProps } from "@/types/manual-io.types";
 
 const baseSchema = z.object({
   count: z.string().min(1, "Укажите сумму"),
@@ -36,23 +38,33 @@ interface Props {
     type: "income" | "outcome";
     agent: string;
     masterId: number;
+    isEdit?: boolean;
+    item?: ManualIncomeOutcomeProps;
   };
 }
 
 export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
   const [loading, setLoading] = useState(false);
+  const { roleId } = useAuth();
 
   const isOutcome = props?.type === "outcome";
   const userId = props?.masterId ? Number(props.masterId) : null;
 
   const { data: user } = useUser(userId);
   const { updateBalanceAtomic } = useUsers(1, 1);
-  const { createManualIO } = useManualIncomesOutcomes(1, 1);
+  const { createManualIO, updateManualIO } = useManualIncomesOutcomes(1, 1);
   const queryClient = useQueryClient();
+
+  const editItem = props?.isEdit ? props.item : undefined;
+  const defaultCount =
+    editItem != null
+      ? String(Math.abs(Number(editItem.count) || 0))
+      : "0";
+  const defaultNote = editItem?.note ?? "";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(baseSchema),
-    defaultValues: { count: "0", note: "" },
+    defaultValues: { count: defaultCount, note: defaultNote },
   });
 
   if (!user) {
@@ -75,6 +87,11 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
     try {
       setLoading(true);
 
+      if (props?.isEdit && roleId !== 3) {
+        toast.error("Редактирование доступно только администратору");
+        return;
+      }
+
       // сумма со знаком
       const amount = normalizeAmount(values.count);
       const signedAmount = isOutcome ? -amount : amount;
@@ -90,9 +107,26 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
         },
       };
 
-      await createManualIO(payload);
-      // Атомарно обновляем баланс
-      await updateBalanceAtomic({ userId: user.id, delta: signedAmount });
+      if (props?.isEdit && editItem?.documentId) {
+        await updateManualIO({
+          documentId: editItem.documentId,
+          updatedData: {
+            count: signedAmount,
+            note: values.note || "",
+            type: payload.type,
+          },
+        });
+        const prevSigned = Number(editItem.count) || 0;
+        const balanceDelta = signedAmount - prevSigned;
+        if (balanceDelta !== 0) {
+          await updateBalanceAtomic({ userId: user.id, delta: balanceDelta });
+        }
+        toast.success("Запись обновлена");
+      } else {
+        await createManualIO(payload);
+        await updateBalanceAtomic({ userId: user.id, delta: signedAmount });
+        toast.success(isOutcome ? "Расход добавлен" : "Приход добавлен");
+      }
 
       if (props?.masterId) {
         await queryClient.invalidateQueries({
@@ -100,8 +134,11 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
           exact: false,
         });
       }
+      await queryClient.invalidateQueries({
+        queryKey: ["manualIOs"],
+        exact: false,
+      });
 
-      toast.success(isOutcome ? "Расход добавлен" : "Приход добавлен");
       close();
     } catch (e: any) {
       const msg =
@@ -155,7 +192,13 @@ export const AddMasterManualIncomeOutcome = ({ close, props }: Props) => {
           />
 
           <Button type="submit" className="col-span-2" disabled={loading}>
-            {loading ? <Loader2Icon className="animate-spin" /> : "Сохранить"}
+            {loading ? (
+              <Loader2Icon className="animate-spin" />
+            ) : props?.isEdit ? (
+              "Сохранить изменения"
+            ) : (
+              "Сохранить"
+            )}
           </Button>
         </form>
       </Form>

@@ -18,6 +18,8 @@ import { IncomeOutcomeProps } from "@/types/income-outcome.types";
 import { cn, formatDate, formatName } from "@/lib/utils";
 
 interface BuildColumnsProps {
+  /** id сотрудника (страница мастера) — для модалки редактирования */
+  masterUserId?: number;
   roleId: number | null;
   users: any[];
   updateBalanceAtomic: (args: {
@@ -34,6 +36,7 @@ interface BuildColumnsProps {
 }
 
 export const buildMasterAccountingColumns = ({
+  masterUserId,
   roleId,
   updateBalanceAtomic,
   updateOutcome,
@@ -124,19 +127,34 @@ export const buildMasterAccountingColumns = ({
             {roleId === 3 && (
               <Button
                 variant="outline"
-                onClick={() =>
+                onClick={() => {
+                  if (item.source === "manual") {
+                    openModal("manualIncomeOutcome", {
+                      title:
+                        item.type === "outcome"
+                          ? "Редактировать расход"
+                          : "Редактировать приход",
+                      props: {
+                        type: item.type === "income" ? "income" : "outcome",
+                        agent: item.agent || "",
+                        masterId: item.user?.id ?? masterUserId,
+                        isEdit: true,
+                        item,
+                      },
+                    });
+                    return;
+                  }
+                  const modalType = "outcome" as const;
                   openModal("incomeOutcome", {
-                    title:
-                      item.type === "outcome"
-                        ? "Редактировать приход"
-                        : "Редактировать расход",
+                    title: "Редактировать расход",
                     props: {
-                      type: item.type === "outcome" ? "income" : "outcome",
+                      type: modalType,
                       item,
                       isEdit: true,
+                      masterId: masterUserId,
                     },
-                  })
-                }
+                  });
+                }}
               >
                 <PencilIcon />
               </Button>

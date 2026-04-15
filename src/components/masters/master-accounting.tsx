@@ -76,6 +76,7 @@ export const MasterAccounting = ({ data }: Props) => {
   const columns = useMemo(
     () =>
       buildMasterAccountingColumns({
+        masterUserId: data.id,
         roleId,
         users,
         updateBalanceAtomic,
@@ -87,7 +88,15 @@ export const MasterAccounting = ({ data }: Props) => {
         openModal,
         onDeleteSuccess: handleDeleteSuccess,
       }),
-    [roleId, users, updateBalanceAtomic, updateIncome, updateOutcome, handleDeleteSuccess]
+    [
+      data.id,
+      roleId,
+      users,
+      updateBalanceAtomic,
+      updateIncome,
+      updateOutcome,
+      handleDeleteSuccess,
+    ]
   );
 
   const allRows: any[] = useMemo(() => {
